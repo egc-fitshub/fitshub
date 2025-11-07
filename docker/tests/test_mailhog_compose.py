@@ -10,13 +10,7 @@ COMPOSE_FILE = os.path.join(os.path.dirname(__file__), "..", "docker-compose.dev
 
 
 def send_email(host: str, port: int, sender: str, recipients: list[str], subject: str, body: str) -> None:
-    msg = (
-        f"Subject: {subject}\r\n"
-        f"From: {sender}\r\n"
-        f"To: {', '.join(recipients)}\r\n"
-        "\r\n"
-        f"{body}"
-    )
+    msg = f"Subject: {subject}\r\nFrom: {sender}\r\nTo: {', '.join(recipients)}\r\n\r\n{body}"
     with smtplib.SMTP(host, port, timeout=5) as s:
         s.sendmail(sender, recipients, msg)
 
@@ -38,11 +32,11 @@ def find_message(api_url: str, subject: str, timeout: float = 10.0, poll_interva
 
 
 def test_mailhog_via_compose(mailhog_compose):
-
     subject = "Test-mailhog-test_mailhog_via_compose"
 
-    send_email(mailhog_compose["smtp_host"], mailhog_compose["smtp_port"],
-               "from@test", ["to@test.com"], subject, "body")
+    send_email(
+        mailhog_compose["smtp_host"], mailhog_compose["smtp_port"], "from@test", ["to@test.com"], subject, "body"
+    )
 
     found = find_message(mailhog_compose["api"], subject)
     assert found is not None, "Message did not appear in MailHog API"
@@ -61,8 +55,16 @@ def test_web_sends_mail(mailhog_compose):
     ) % subject
 
     cmd = [
-        "docker", "compose", "-f", COMPOSE_FILE, "exec", "-T", "web",
-        "python", "-c", python_code,
+        "docker",
+        "compose",
+        "-f",
+        COMPOSE_FILE,
+        "exec",
+        "-T",
+        "web",
+        "python",
+        "-c",
+        python_code,
     ]
     subprocess.run(cmd, check=True)
 
