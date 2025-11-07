@@ -41,7 +41,8 @@ def test_mailhog_via_compose(mailhog_compose):
 
     subject = "Test-mailhog-test_mailhog_via_compose"
 
-    send_email(mailhog_compose["smtp_host"], mailhog_compose["smtp_port"], "from@test", ["to@test.com"], subject, "body")
+    send_email(mailhog_compose["smtp_host"], mailhog_compose["smtp_port"],
+               "from@test", ["to@test.com"], subject, "body")
 
     found = find_message(mailhog_compose["api"], subject)
     assert found is not None, "Message did not appear in MailHog API"

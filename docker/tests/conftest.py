@@ -33,7 +33,8 @@ def _wait_for_web(timeout: float = 20.0) -> bool:
     while time.time() < web_ready_deadline:
         try:
             proc = subprocess.run(
-                ["docker", "compose", "-f", COMPOSE_FILE, "exec", "-T", "web", "python", "-c", "import sys; sys.exit(0)"],
+                ["docker", "compose", "-f", COMPOSE_FILE, "exec", "-T", "web",
+                 "python", "-c", "import sys; sys.exit(0)"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
