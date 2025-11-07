@@ -71,7 +71,6 @@ class DataSetForm(FlaskForm):
     submit = SubmitField("Submit")
 
     def get_dsmetadata(self):
-
         publication_type_converted = self.convert_publication_type(self.publication_type.data)
 
         return {

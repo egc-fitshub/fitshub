@@ -4,9 +4,7 @@ from flask import abort
 
 
 def pass_or_abort(condition):
-
     def decorator(f):
-
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not condition(**kwargs):

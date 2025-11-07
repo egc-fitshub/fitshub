@@ -17,7 +17,6 @@ def test_app():
 
 @pytest.fixture(scope="module")
 def test_client(test_app):
-
     with test_app.test_client() as testing_client:
         with test_app.app_context():
             print("TESTING SUITE (2): Blueprints registrados:", test_app.blueprints)

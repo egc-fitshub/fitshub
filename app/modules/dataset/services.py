@@ -173,7 +173,6 @@ class DSViewRecordService(BaseService):
         return self.repository.create_new_record(dataset, user_cookie)
 
     def create_cookie(self, dataset: DataSet) -> str:
-
         user_cookie = request.cookies.get("view_cookie")
         if not user_cookie:
             user_cookie = str(uuid.uuid4())
@@ -199,7 +198,6 @@ class DOIMappingService(BaseService):
 
 
 class SizeService:
-
     def __init__(self):
         pass
 
@@ -209,6 +207,6 @@ class SizeService:
         elif size < 1024**2:
             return f"{round(size / 1024, 2)} KB"
         elif size < 1024**3:
-            return f"{round(size / (1024 ** 2), 2)} MB"
+            return f"{round(size / (1024**2), 2)} MB"
         else:
-            return f"{round(size / (1024 ** 3), 2)} GB"
+            return f"{round(size / (1024**3), 2)} GB"
