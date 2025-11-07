@@ -2,9 +2,9 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
 
 from core.configuration.configuration import get_app_version
 from core.managers.config_manager import ConfigManager
@@ -31,7 +31,7 @@ def create_app(config_name="development"):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
-    
+
     # Initialize Flask-Mail
     mail.init_app(app)
 
