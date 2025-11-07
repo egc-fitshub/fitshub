@@ -45,10 +45,9 @@ def get_module_seeders(module_path, specific_module=None):
 @click.argument("module", required=False)
 @with_appcontext
 def db_seed(reset, yes, module):
-
     if reset:
         if yes or click.confirm(
-            click.style("This will reset the database, do you want " "to continue?", fg="red"),
+            click.style("This will reset the database, do you want to continue?", fg="red"),
             abort=True,
         ):
             click.echo(click.style("Resetting the database...", fg="yellow"))
@@ -75,7 +74,7 @@ def db_seed(reset, yes, module):
             click.echo(click.style(f"Error running seeder {seeder.__class__.__name__}: {e}", fg="red"))
             click.echo(
                 click.style(
-                    f"Rolled back the transaction of {seeder.__class__.__name__} to keep the session " f"clean.",
+                    f"Rolled back the transaction of {seeder.__class__.__name__} to keep the session clean.",
                     fg="yellow",
                 )
             )

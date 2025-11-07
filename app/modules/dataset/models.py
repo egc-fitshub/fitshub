@@ -119,7 +119,7 @@ class DataSet(db.Model):
             "dataset_doi": self.ds_meta_data.dataset_doi,
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
             "url": self.get_uvlhub_doi(),
-            "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
+            "download": f"{request.host_url.rstrip('/')}/dataset/download/{self.id}",
             "zenodo": self.get_zenodo_url(),
             "files": [file.to_dict() for fm in self.feature_models for file in fm.files],
             "files_count": self.get_files_count(),

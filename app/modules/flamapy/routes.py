@@ -25,13 +25,13 @@ def check_uvl(file_id):
         def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
             if "\\t" in msg:
                 warning_message = (
-                    f"The UVL has the following warning that prevents reading it: " f"Line {line}:{column} - {msg}"
+                    f"The UVL has the following warning that prevents reading it: Line {line}:{column} - {msg}"
                 )
                 print(warning_message)
                 self.errors.append(warning_message)
             else:
                 error_message = (
-                    f"The UVL has the following error that prevents reading it: " f"Line {line}:{column} - {msg}"
+                    f"The UVL has the following error that prevents reading it: Line {line}:{column} - {msg}"
                 )
                 self.errors.append(error_message)
 
