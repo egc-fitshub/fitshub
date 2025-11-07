@@ -16,6 +16,9 @@ class User(db.Model, UserMixin):
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
+    reset_token = db.Column(db.String(255), nullable=True)
+    token_expiration = db.Column(db.DateTime, nullable=True)
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if "password" in kwargs:
