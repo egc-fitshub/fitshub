@@ -1,8 +1,8 @@
-import uuid
-import time
+import os
 import smtplib
+import subprocess
+import time
 from typing import Optional
-import os, subprocess
 
 import requests
 
@@ -39,16 +39,16 @@ def find_message(api_url: str, subject: str, timeout: float = 10.0, poll_interva
 
 def test_mailhog_via_compose(mailhog_compose):
 
-    subject = f"Test-mailhog-test_mailhog_via_compose"
+    subject = "Test-mailhog-test_mailhog_via_compose"
 
     send_email(mailhog_compose["smtp_host"], mailhog_compose["smtp_port"], "from@test", ["to@test.com"], subject, "body")
 
     found = find_message(mailhog_compose["api"], subject)
     assert found is not None, "Message did not appear in MailHog API"
-    
-    
+
+
 def test_web_sends_mail(mailhog_compose):
-    subject = f"Test-from-web-container-test_web_sends_mail"
+    subject = "Test-from-web-container-test_web_sends_mail"
 
     python_code = (
         "from app import create_app, mail\n"

@@ -1,12 +1,11 @@
+import os
+import socket
 import subprocess
 import time
-import socket
-import os
 from typing import Dict
 
 import pytest
 import requests
-
 
 COMPOSE_FILE = os.path.join(os.path.dirname(__file__), "..", "docker-compose.dev.yml")
 COMPOSE_FILE = os.path.abspath(COMPOSE_FILE)
@@ -65,7 +64,7 @@ def mailhog_compose() -> Dict[str, str]:
 
         if not _wait_for_web(timeout=20.0):
             raise RuntimeError("web service did not become ready in time")
-        
+
         yield {"smtp_host": host, "smtp_port": smtp_port, "api": api_url}
     finally:
         subprocess.run(["docker", "compose", "-f", COMPOSE_FILE, "down", "-v"], check=True)
