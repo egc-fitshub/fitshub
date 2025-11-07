@@ -80,6 +80,7 @@ pillow==11.3.0
 platformdirs==4.3.8
 pluggy==1.6.0
 ply==3.10
+pre-commit==4.3.0
 psutil==7.0.0
 pyasn1==0.6.1
 pycodestyle==2.14.0
@@ -106,6 +107,7 @@ referencing==0.36.2
 requests==2.32.4
 rpds-py==0.26.0
 rq==2.4.1
+ruff==0.14.3
 selenium==4.34.2
 selenium-wire==5.1.0
 setuptools==80.9.0

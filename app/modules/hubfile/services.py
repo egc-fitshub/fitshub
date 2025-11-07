@@ -24,7 +24,6 @@ class HubfileService(BaseService):
         return self.repository.get_dataset_by_hubfile(hubfile)
 
     def get_path_by_hubfile(self, hubfile: Hubfile) -> str:
-
         hubfile_user = self.get_owner_user_by_hubfile(hubfile)
         hubfile_dataset = self.get_dataset_by_hubfile(hubfile)
         working_dir = os.getenv("WORKING_DIR")

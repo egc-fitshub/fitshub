@@ -20,7 +20,7 @@ def selenium(module):
             selenium_test_path = os.path.join(module_path, "tests", "test_selenium.py")
             if not os.path.exists(selenium_test_path):
                 raise click.UsageError(
-                    f"Selenium test for module '{module}' does not exist at path " f"'{selenium_test_path}'."
+                    f"Selenium test for module '{module}' does not exist at path '{selenium_test_path}'."
                 )
 
     def run_selenium_tests_in_local(module):
@@ -51,7 +51,6 @@ def selenium(module):
         validate_module(module)
 
     if working_dir == "/app/":
-
         click.echo(
             click.style(
                 "Currently it is not possible to run this "
@@ -64,7 +63,6 @@ def selenium(module):
         run_selenium_tests_in_local(module)
 
     elif working_dir == "/vagrant/":
-
         click.echo(
             click.style(
                 "Currently it is not possible to run this "

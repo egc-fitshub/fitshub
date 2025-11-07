@@ -6,7 +6,6 @@ import click
 
 @click.command("linter", help="Runs flake8 linter on the 'app' and 'rosemary' directories.")
 def linter():
-
     # Define the directories to be checked with flake8
     working_dir = os.getenv("WORKING_DIR", "")
     directories = [

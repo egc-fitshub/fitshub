@@ -31,14 +31,18 @@ packages = ["rosemary"]
 # Formatting & linting
 # --------------------
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ["py313"]
+target-version = "py313"
+exclude = ["migrations"]
 
-[tool.isort]
-line_length = 120
-profile = "black"
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E203"]
 
-[tool.flake8]
-max-line-length = 120
-extend-ignore = ["E203", "W503"]
+[tool.ruff.lint.isort]
+known-first-party = ["fitshub"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

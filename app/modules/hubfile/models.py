@@ -42,7 +42,7 @@ class Hubfile(db.Model):
             "checksum": self.checksum,
             "size_in_bytes": self.size,
             "size_in_human_format": self.get_formatted_size(),
-            "url": f'{request.host_url.rstrip("/")}/file/download/{self.id}',
+            "url": f"{request.host_url.rstrip('/')}/file/download/{self.id}",
         }
 
     def __repr__(self):

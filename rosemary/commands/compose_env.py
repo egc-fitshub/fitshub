@@ -11,7 +11,6 @@ from flask.cli import with_appcontext
 )
 @with_appcontext
 def compose_env():
-
     base_path = os.path.join(os.getenv("WORKING_DIR", ""), "app/modules")
     root_env_path = os.path.join(os.getenv("WORKING_DIR", ""), ".env")
 
@@ -25,7 +24,7 @@ def compose_env():
         # Add or update the blueprint variables in the root .env dictionary
         for key, value in blueprint_env_vars.items():
             if key in root_env_vars and root_env_vars[key] != value:
-                conflict_msg = f"Conflict found for variable '{key}' in {env_path}. " "Keeping the original value."
+                conflict_msg = f"Conflict found for variable '{key}' in {env_path}. Keeping the original value."
                 click.echo(click.style(conflict_msg, fg="yellow"))
                 continue
             root_env_vars[key] = value

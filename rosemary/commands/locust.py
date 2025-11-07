@@ -11,7 +11,6 @@ import docker
 @click.command("locust", help="Launches Locust for load testing based on the environment.")
 @click.argument("module", required=False)
 def locust(module):
-
     # Absolute paths
     working_dir = os.getenv("WORKING_DIR", "")
     core_dir = os.path.join(working_dir, "core")
@@ -26,9 +25,7 @@ def locust(module):
                 raise click.UsageError(f"module '{module}' does not exist.")
             locustfile_path = os.path.join(module_path, "tests", "locustfile.py")
             if not os.path.exists(locustfile_path):
-                raise click.UsageError(
-                    f"Locustfile for module '{module}' does not exist at path " f"'{locustfile_path}'."
-                )
+                raise click.UsageError(f"Locustfile for module '{module}' does not exist at path '{locustfile_path}'.")
 
     def run_docker_locust(volume_name, module):
         """Build and run the Locust container with the specified volume."""
@@ -91,7 +88,6 @@ def locust(module):
         return False
 
     def run_in_console(module):
-
         if is_locust_running():
             click.echo("Locust is already running.")
             return
