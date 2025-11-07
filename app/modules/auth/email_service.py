@@ -1,8 +1,10 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from flask_mail import Message
+
 from flask import url_for
-from app import mail, db
+from flask_mail import Message
+
+from app import db, mail
 
 
 def send_password_reset_email(user):
