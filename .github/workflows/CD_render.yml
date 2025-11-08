@@ -1,10 +1,12 @@
 name: Deploy to Render
 
 on:
-  workflow_run:
-    workflows: [Codacy CI]
-    types: [completed]
-    branches: [main, trunk-g1, trunk-g2, integration-trunk]
+  push:
+    branches:
+      - main
+      - integration-trunk
+      - trunk-g1
+      - trunk-g2
 
 jobs:
   failure:
