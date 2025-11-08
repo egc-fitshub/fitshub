@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     depends_on:
       - db
+      - mailhog
     build:
       context: ../
       dockerfile: docker/images/Dockerfile.dev
@@ -42,6 +43,15 @@ services:
       - "80:80"
     depends_on:
       - web
+    networks:
+      - fitshub_network
+
+  mailhog:
+    container_name: mailhog_container
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
     networks:
       - fitshub_network
 

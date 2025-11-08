@@ -1,0 +1,29 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+      - integration-trunk
+      - trunk-g1
+      - trunk-g2
+
+jobs:
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5        
+
+      - name: Deploy to Render
+        env:
+          deploy_url: |-
+            ${{
+                github.ref_name == 'main' && secrets.RENDER_DEPLOY_MAIN_HOOK_URL
+            ||  github.ref_name == 'integration-trunk' && secrets.RENDER_DEPLOY_DEV_HOOK_URL
+            ||  github.ref_name == 'trunk-g1' && secrets.RENDER_DEPLOY_G1_HOOK_URL
+            ||  github.ref_name == 'trunk-g2' && secrets.RENDER_DEPLOY_G2_HOOK_URL
+            }}
+        run: |
+          curl "$deploy_url"
