@@ -1,0 +1,34 @@
+name: Deploy to Render
+
+on:
+  workflow_run:
+    workflows: [Codacy CI]
+    types: [completed]
+    branches: [main, trunk-g1, trunk-g2, integration-trunk]
+
+jobs:
+  failure:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering workflow failed.'
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5        
+
+      - name: Deploy to Render
+        env:
+          deploy_url: |-
+            ${{
+                github.ref_name == 'main' && secrets.RENDER_DEPLOY_MAIN_HOOK_URL
+            ||  github.ref_name == 'integration-trunk' && secrets.RENDER_DEPLOY_DEV_HOOK_URL
+            ||  github.ref_name == 'trunk-g1' && secrets.RENDER_DEPLOY_G1_HOOK_URL
+            ||  github.ref_name == 'trunk-g2' && secrets.RENDER_DEPLOY_G2_HOOK_URL
+            }}
+        run: |
+          curl "$deploy_url"
