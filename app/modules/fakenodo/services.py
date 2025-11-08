@@ -1,10 +1,8 @@
 import logging
 import random
-import string
 
 from flask import Response, jsonify
 
-from app.modules.fakenodo.repositories import FakenodoRepository
 from core.services.BaseService import BaseService
 
 logger = logging.getLogger(__name__)
@@ -12,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class FakenodoService(BaseService):
     def __init__(self):
-        super().__init__(FakenodoRepository())
+        super().__init__(None)
 
     def test_full_connection(self) -> Response:
         """
@@ -21,38 +19,37 @@ class FakenodoService(BaseService):
         logger.info("Simulating connection to FakeNodo...")
         return jsonify({"success": True, "message": "FakeNodo connection test successful."})
 
-    def create_new_deposition(self, title: str, description: str) -> dict:
-        """Simulation of the creation of a new deposition in FakeNODO"""
-        fake_doi = f"10.5078/{random.choices(string.ascii_lowercase + string.digits, k=8)}"
-
-        deposition = {"id": random.randint(1000, 9999), "title": title, "description": description, "doi": fake_doi}
-        logger.info(f"Created new fake deposition: {deposition}")
-        return deposition
-
-    def edit_metadata(self, deposition_id: int, title: str = None, description: str = None) -> dict:
-        """Simulation of editing metadata of a deposition in FakeNODO"""
-        updated_metadata = {"id": deposition_id, "title": title, "description": description}
-        logger.info(f"Edited metadata for deposition {deposition_id}: {updated_metadata}")
-        return updated_metadata
-
-    def upload_file(self, deposition_id: int, file_name: str) -> dict:
-        """Simulation of uploading a file to a deposition in FakeNODO"""
-        logger.info(f"Simulating file upload to deposition {deposition_id}...")
-        fake_doi = f"10.5078/{random.choices(string.ascii_lowercase + string.digits, k=8)}"
+    def create_new_deposition(self, dataset) -> dict:
+        """
+        Simulates the creation of a new deposition, returning a structure
+        similar to Zenodo's API response.
+        """
+        logger.info(f"Simulating new deposition for dataset: {dataset.ds_meta_data.title}")
+        deposition_id = random.randint(100000, 999999)
+        concept_rec_id = random.randint(100000, 999999)
 
         return {
-            "success": True,
-            "message": f"File '{file_name}' simulated as uploaded to deposition {deposition_id}",
-            "doi": fake_doi,
+            "conceptrecid": concept_rec_id,
+            "id": deposition_id,
+            "metadata": {"prereserve_doi": {"doi": f"10.5072/fakenodo.{concept_rec_id}"}},
+            "links": {"bucket": f"http://localhost/api/files/{deposition_id}"},
         }
+
+    def upload_file(self, dataset, deposition_id: int, feature_model) -> dict:
+        """Simulates uploading a file to a deposition."""
+        logger.info(f"Simulating upload of file '{feature_model}' to deposition '{deposition_id}'")
+
+        return {"status": "completed"}
 
     def publish_deposition(self, deposition_id: int) -> dict:
-        """Simulation of publishing a deposition in FakeNODO"""
-        logger.info(f"Simulating publishing deposition {deposition_id}...")
-        fake_doi = f"10.5078/{random.choices(string.ascii_lowercase + string.digits, k=8)}"
+        """Simulates publishing a deposition."""
+        logger.info(f"Simulating publishing of deposition '{deposition_id}'")
 
-        return {
-            "success": True,
-            "message": f"Deposition {deposition_id} simulated as published.",
-            "doi": fake_doi,
-        }
+        return {"state": "done", "submitted": True}
+
+    def get_doi(self, deposition_id: int) -> str:
+        """Simulates retrieving the final DOI for a deposition."""
+
+        doi = f"10.5281/fakenodo.{random.randint(1000000, 9999999)}"
+        logger.info(f"Simulating DOI retrieval for deposition '{deposition_id}': {doi}")
+        return doi

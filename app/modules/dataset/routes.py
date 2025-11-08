@@ -30,7 +30,7 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
-from app.modules.fakenodo.services import FakedoService
+from app.modules.fakenodo.services import FakenodoService
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +76,6 @@ def create_dataset():
         if data.get("conceptrecid"):
             deposition_id = data.get("id")
 
-            # update dataset with deposition id in Fakenodo
-            dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
-
             try:
                 # iterate for each feature model (one feature model = one request to Fakenodo)
                 for feature_model in dataset.feature_models:
@@ -89,7 +86,11 @@ def create_dataset():
 
                 # update DOI
                 deposition_doi = fakenodo_service.get_doi(deposition_id)
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                dataset_service.update_dsmetadata(
+                    dataset.ds_meta_data_id,
+                    deposition_id=deposition_id,
+                    dataset_doi=deposition_doi,
+                )
             except Exception as e:
                 msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
