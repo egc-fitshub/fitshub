@@ -34,8 +34,8 @@ class FMMetaData(db.Model):
 
 class FMMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    solver = db.Column(db.Text)
-    not_solver = db.Column(db.Text)
+    number_of_images = db.Column(db.Integer, nullable = False)
+    number_of_tables = db.Column(db.Integer, nullable = False)
 
     def __repr__(self):
-        return f"FMMetrics<solver={self.solver}, not_solver={self.not_solver}>"
+        return f"FMMetrics<number_of_images={self.number_of_images} number_of_tables={self.number_of_tables}>"

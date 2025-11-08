@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType
-from app.modules.fitsmodel.models import FeatureModel, FMMetaData
+from app.modules.fitsmodel.models import FitsModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 
@@ -24,7 +24,7 @@ class DataSetSeeder(BaseSeeder):
             raise Exception("Users not found. Please seed users first.")
 
         # Create DSMetrics instance
-        ds_metrics = DSMetrics(number_of_models="5", number_of_features="50")
+        ds_metrics = DSMetrics(number_of_models="5")
         seeded_ds_metrics = self.seed([ds_metrics])[0]
 
         # Create DSMetaData instances
@@ -66,12 +66,12 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
+        # Assume there are 12 UVL files, create corresponding FMMetaData and FITS Model
         fm_meta_data_list = [
             FMMetaData(
                 uvl_filename=f"file{i+1}.uvl",
-                title=f"Feature Model {i+1}",
-                description=f"Description for feature model {i+1}",
+                title=f"FITS Model {i+1}",
+                description=f"Description for FITS model {i+1}",
                 publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
                 publication_doi=f"10.1234/fm{i+1}",
                 tags="tag1, tag2",
@@ -93,20 +93,20 @@ class DataSetSeeder(BaseSeeder):
         ]
         self.seed(fm_authors)
 
-        feature_models = [
-            FeatureModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
+        fits_models = [
+            FitsModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
             for i in range(12)
         ]
-        seeded_feature_models = self.seed(feature_models)
+        seeded_fits_models = self.seed(fits_models)
 
-        # Create files, associate them with FeatureModels and copy files
+        # Create files, associate them with FITS Models and copy files
         load_dotenv()
         working_dir = os.getenv("WORKING_DIR", "")
         src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
         for i in range(12):
             file_name = f"file{i+1}.uvl"
-            feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
+            fits_model = seeded_fits_models[i]
+            dataset = next(ds for ds in seeded_datasets if ds.id == fits_model.data_set_id)
             user_id = dataset.user_id
 
             dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
@@ -119,6 +119,6 @@ class DataSetSeeder(BaseSeeder):
                 name=file_name,
                 checksum=f"checksum{i+1}",
                 size=os.path.getsize(file_path),
-                feature_model_id=feature_model.id,
+                fits_model_id=fits_model.id,
             )
             self.seed([uvl_file])

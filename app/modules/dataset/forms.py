@@ -22,7 +22,7 @@ class AuthorForm(FlaskForm):
         }
 
 
-class FeatureModelForm(FlaskForm):
+class FitsModelForm(FlaskForm):
     uvl_filename = StringField("UVL Filename", validators=[DataRequired()])
     title = StringField("Title", validators=[Optional()])
     desc = TextAreaField("Description", validators=[Optional()])
@@ -66,7 +66,7 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
+    fits_models = FieldList(FormField(FitsModelForm), min_entries=1)
 
     submit = SubmitField("Submit")
 
@@ -92,5 +92,5 @@ class DataSetForm(FlaskForm):
     def get_authors(self):
         return [author.get_author() for author in self.authors]
 
-    def get_feature_models(self):
-        return [fm.get_feature_model() for fm in self.feature_models]
+    def get_fits_models(self):
+        return [fm.get_fits_model() for fm in self.fits_models]

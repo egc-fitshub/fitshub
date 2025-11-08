@@ -1,8 +1,8 @@
 from flask import render_template
 
-from app.modules.fitsmodel import featuremodel_bp
+from app.modules.fitsmodel import fitsmodel_bp
 
 
-@featuremodel_bp.route("/featuremodel", methods=["GET"])
+@fitsmodel_bp.route("/fitsmodel", methods=["GET"])
 def index():
-    return render_template("featuremodel/index.html")
+    return render_template("fitsmodel/index.html")
