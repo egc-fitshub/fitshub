@@ -14,12 +14,24 @@ dataset_fields = {
     "files": "files",
 }
 
+dataset_stats_fields = {
+    "dataset_id": "id",
+    "download_counter": "get_download_counter",
+    "number_of_files": "get_files_count",
+    "publication_type": "get_cleaned_publication_type",
+    "total_size_in_bytes": "get_file_total_size",
+    "total_size_for_human": "get_file_total_size_for_human",
+}
+
 dataset_serializer = Serializer(dataset_fields, related_serializers={"files": file_serializer})
+dataset_stats_serializer = Serializer(dataset_stats_fields)
 
 DataSetResource = create_resource(DataSet, dataset_serializer)
+DataSetStatsResource = create_resource(DataSet, dataset_stats_serializer)
 
 
 def init_blueprint_api(api):
     """Function to register resources with the provided Flask-RESTful Api instance."""
     api.add_resource(DataSetResource, "/api/v1/datasets/", endpoint="datasets")
     api.add_resource(DataSetResource, "/api/v1/datasets/<int:id>", endpoint="dataset")
+    api.add_resource(DataSetStatsResource, "/api/v1/datasets/<int:id>/stats", endpoint="dataset_stats")
