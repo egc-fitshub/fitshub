@@ -49,6 +49,12 @@ class DataSetService(BaseService):
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
 
+    def update_download_counter(self, dataset_id):
+        dataset = self.repository.get_by_id(dataset_id)
+        if dataset:
+            updated_counter = dataset.download_counter + 1
+            self.repository.update(dataset_id, download_counter = updated_counter)
+
     def move_feature_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()

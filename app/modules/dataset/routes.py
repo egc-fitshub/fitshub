@@ -228,6 +228,8 @@ def download_dataset(dataset_id):
             download_date=datetime.now(timezone.utc),
             download_cookie=user_cookie,
         )
+        
+        DataSetService().update_download_counter(dataset_id=dataset_id)
 
     return resp
 
