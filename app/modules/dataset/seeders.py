@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType
-from app.modules.featuremodel.models import FeatureModel, FMMetaData
+from app.modules.fitsmodel.models import FeatureModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 

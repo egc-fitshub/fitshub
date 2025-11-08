@@ -7,7 +7,7 @@ from flask import Response, jsonify
 from flask_login import current_user
 
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
+from app.modules.fitsmodel.models import FeatureModel
 from app.modules.zenodo.repositories import ZenodoRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
