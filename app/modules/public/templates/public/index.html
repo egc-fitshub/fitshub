@@ -28,7 +28,13 @@
                                 <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
                             </div>
                         </div>
+                        <div class="d-flex justify-content-between mb-3">
                         <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <div class="d-flex justify-content-between">
+                            <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
+                            <p class="text-secondary">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
+                        </div>
+                    </div>
 
                         <div class="row mb-2">
 
