@@ -1,4 +1,5 @@
 from flask import render_template
+
 from app.modules.fakenodo import fakenodo_bp
 from app.modules.fakenodo.services import FakenodoService
 
