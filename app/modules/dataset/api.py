@@ -7,6 +7,7 @@ file_serializer = Serializer(file_fields)
 
 dataset_fields = {
     "dataset_id": "id",
+    "download_counter": "get_download_counter",
     "created": "created_at",
     "name": "name",
     "doi": "get_uvlhub_doi",

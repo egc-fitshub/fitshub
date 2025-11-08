@@ -79,6 +79,9 @@ class DataSet(db.Model):
     def name(self):
         return self.ds_meta_data.title
 
+    def get_download_counter(self):
+        return self.download_counter
+
     def files(self):
         return [file for fm in self.feature_models for file in fm.files]
 
@@ -127,6 +130,7 @@ class DataSet(db.Model):
             "files_count": self.get_files_count(),
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
+            "download_counter": self.download_counter,
         }
 
     def __repr__(self):
