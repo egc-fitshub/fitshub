@@ -9,6 +9,8 @@ from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
 
+from .models import RoleType
+
 
 class AuthenticationService(BaseService):
     def __init__(self):
@@ -76,3 +78,25 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def get_users_roles(self):
+        if current_user.role != RoleType.ADMINISTRATOR:
+            raise PermissionError("Se requiere rol de administrador para esta acción.")
+        return self.repository.get_roles()
+
+    def update_user_role(self, user_id, new_role):
+        if new_role not in ["administrator", "curator", "user"]:
+            raise ValueError(f"Invalid role '{new_role}'")
+
+        if new_role == "administrator":
+            role_to_set = RoleType.ADMINISTRATOR
+        elif new_role == "curator":
+            role_to_set = RoleType.CURATOR
+        else:
+            role_to_set = RoleType.USER
+
+        try:
+            self.update(user_id, role=role_to_set)
+        except Exception as e:
+            self.repository.session.rollback()
+            raise e

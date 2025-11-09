@@ -1,5 +1,5 @@
 from flask import redirect, render_template, request, url_for
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm
@@ -52,3 +52,34 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/admin_roles", methods=["GET"])
+@login_required
+def admin_roles():
+    if current_user.role.value != "administrator":
+        return redirect(url_for("public.index"))
+    roles = authentication_service.get_users_roles()
+    return render_template("auth/admin_roles.html", roles=roles)
+
+
+@auth_bp.route("/update_roles", methods=["POST"])
+@login_required
+def update_roles():
+    if current_user.role.value != "administrator":
+        return redirect(url_for("public.index"))
+
+    updates = []
+    for key, value in request.form.items():
+        if key.startswith("role_"):
+            user_id = key.split("_")[1]
+            new_role = value
+            updates.append((user_id, new_role))
+
+    for user_id, new_role in updates:
+        try:
+            authentication_service.update_user_role(user_id, new_role)
+        except Exception:
+            return redirect(url_for("public.index"))
+
+    return redirect(url_for("auth.admin_roles"))
