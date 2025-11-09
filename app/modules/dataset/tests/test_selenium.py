@@ -83,8 +83,8 @@ def test_upload_dataset():
         affiliation_field1.send_keys("Club1")
 
         # Obtén las rutas absolutas de los archivos
-        file1_path = os.path.abspath("app/modules/dataset/uvl_examples/file1.uvl")
-        file2_path = os.path.abspath("app/modules/dataset/uvl_examples/file2.uvl")
+        file1_path = os.path.abspath("app/modules/dataset/fits_examples/file1.fits")
+        file2_path = os.path.abspath("app/modules/dataset/fits_examples/file2.fits")
 
         # Subir el primer archivo
         dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
