@@ -19,7 +19,7 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <h2>
 
-                                <a href="{{ dataset.get_uvlhub_doi() }}">
+                                <a href="{{ dataset.get_fitshub_doi() }}">
                                     {{ dataset.ds_meta_data.title }}
                                 </a>
 
@@ -66,9 +66,9 @@
                         <div class="row mb-2">
 
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}">{{ dataset.get_uvlhub_doi() }}</a>
+                                <a href="{{ dataset.get_fitshub_doi() }}">{{ dataset.get_fitshub_doi() }}</a>
                                  <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
-                                {{ dataset.get_uvlhub_doi() }}
+                                {{ dataset.get_fitshub_doi() }}
                             </div>
 
                             <i data-feather="clipboard" class="center-button-icon"
@@ -92,7 +92,7 @@
 
                         <div class="row  mt-4">
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-outline-primary btn-sm"
+                                <a href="{{ dataset.get_fitshub_doi() }}" class="btn btn-outline-primary btn-sm"
                                    style="border-radius: 5px;">
                                     <i data-feather="eye" class="center-button-icon"></i>
                                     View dataset
@@ -213,7 +213,7 @@
 
                             <div class="card-body card-body-slim">
 
-                                What are you waiting for to upload your fantastic fits models in UVL format?
+                                What are you waiting for to upload your fantastic fits models?
 
                                 <div class="row mt-2">
 
@@ -249,13 +249,13 @@
                     <div class="card card-dark">
 
                         <h2 class="card-title card-title-light">
-                            What is <b>uvlhub.io</b>?
+                            What is <b>fitshub.io</b>?
                         </h2>
 
                         <div class="card-body card-body-slim">
 
-                            <strong>uvlhub.io</strong> is a repository of fits models in UVL format integrated with
-                            Zenodo and FlamaPy developed by DiversoLab
+                            <strong>fitshub.io</strong> is a repository of fits models for astronomy databases integrated with
+                            a Zenodo clone and AstroPy developed by "Grupo fitshub" para EGC
 
                         </div>
 
