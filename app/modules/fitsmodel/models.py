@@ -1,5 +1,6 @@
-from app import db
 from sqlalchemy import Enum as SQLAlchemyEnum
+
+from app import db
 from app.modules.dataset.models import Author, PublicationType
 
 
@@ -7,8 +8,12 @@ class FitsModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_set_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
     fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))
-    files = db.relationship("Hubfile", backref="fits_model", lazy=True, cascade="all, delete")
-    fm_meta_data = db.relationship("FMMetaData", uselist=False, backref="fits_model", cascade="all, delete")
+    files = db.relationship(
+        "Hubfile", backref="fits_model", lazy=True, cascade="all, delete"
+    )
+    fm_meta_data = db.relationship(
+        "FMMetaData", uselist=False, backref="fits_model", cascade="all, delete"
+    )
 
     def __repr__(self):
         return f"FitsModel<{self.id}>"
@@ -26,7 +31,11 @@ class FMMetaData(db.Model):
     fm_metrics_id = db.Column(db.Integer, db.ForeignKey("fm_metrics.id"))
     fm_metrics = db.relationship("FMMetrics", uselist=False, backref="fm_meta_data")
     authors = db.relationship(
-        "Author", backref="fm_metadata", lazy=True, cascade="all, delete", foreign_keys=[Author.fm_meta_data_id]
+        "Author",
+        backref="fm_metadata",
+        lazy=True,
+        cascade="all, delete",
+        foreign_keys=[Author.fm_meta_data_id],
     )
 
     def __repr__(self):
