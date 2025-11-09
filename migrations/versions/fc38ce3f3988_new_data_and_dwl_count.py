@@ -1,8 +1,8 @@
-"""first migration
+"""new_data_and_dwl_count
 
-Revision ID: 001
+Revision ID: fc38ce3f3988
 Revises: 
-Create Date: 2024-09-08 16:50:20.326640
+Create Date: 2025-11-09 22:49:07.156389
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '001'
+revision = 'fc38ce3f3988'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,13 +27,12 @@ def upgrade():
     op.create_table('ds_metrics',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('number_of_models', sa.String(length=120), nullable=True),
-    sa.Column('number_of_features', sa.String(length=120), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('fm_metrics',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('solver', sa.Text(), nullable=True),
-    sa.Column('not_solver', sa.Text(), nullable=True),
+    sa.Column('number_of_images', sa.Integer(), nullable=False),
+    sa.Column('number_of_tables', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
@@ -43,10 +42,6 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
-    )
-    op.create_table('webhook',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('zenodo',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -67,13 +62,13 @@ def upgrade():
     )
     op.create_table('fm_meta_data',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('uvl_filename', sa.String(length=120), nullable=False),
+    sa.Column('fits_filename', sa.String(length=120), nullable=False),
     sa.Column('title', sa.String(length=120), nullable=False),
     sa.Column('description', sa.Text(), nullable=False),
     sa.Column('publication_type', sa.Enum('NONE', 'ANNOTATION_COLLECTION', 'BOOK', 'BOOK_SECTION', 'CONFERENCE_PAPER', 'DATA_MANAGEMENT_PLAN', 'JOURNAL_ARTICLE', 'PATENT', 'PREPRINT', 'PROJECT_DELIVERABLE', 'PROJECT_MILESTONE', 'PROPOSAL', 'REPORT', 'SOFTWARE_DOCUMENTATION', 'TAXONOMIC_TREATMENT', 'TECHNICAL_NOTE', 'THESIS', 'WORKING_PAPER', 'OTHER', name='publicationtype'), nullable=False),
     sa.Column('publication_doi', sa.String(length=120), nullable=True),
     sa.Column('tags', sa.String(length=120), nullable=True),
-    sa.Column('uvl_version', sa.String(length=120), nullable=True),
+    sa.Column('fits_version', sa.String(length=120), nullable=True),
     sa.Column('fm_metrics_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['fm_metrics_id'], ['fm_metrics.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -105,6 +100,7 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('ds_meta_data_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('download_counter', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -129,7 +125,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('feature_model',
+    op.create_table('fits_model',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('data_set_id', sa.Integer(), nullable=False),
     sa.Column('fm_meta_data_id', sa.Integer(), nullable=True),
@@ -142,8 +138,8 @@ def upgrade():
     sa.Column('name', sa.String(length=120), nullable=False),
     sa.Column('checksum', sa.String(length=120), nullable=False),
     sa.Column('size', sa.Integer(), nullable=False),
-    sa.Column('feature_model_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['feature_model_id'], ['feature_model.id'], ),
+    sa.Column('fits_model_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['fits_model_id'], ['fits_model.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('file_download_record',
@@ -174,7 +170,7 @@ def downgrade():
     op.drop_table('file_view_record')
     op.drop_table('file_download_record')
     op.drop_table('file')
-    op.drop_table('feature_model')
+    op.drop_table('fits_model')
     op.drop_table('ds_view_record')
     op.drop_table('ds_download_record')
     op.drop_table('data_set')
@@ -183,7 +179,6 @@ def downgrade():
     op.drop_table('fm_meta_data')
     op.drop_table('ds_meta_data')
     op.drop_table('zenodo')
-    op.drop_table('webhook')
     op.drop_table('user')
     op.drop_table('fm_metrics')
     op.drop_table('ds_metrics')
