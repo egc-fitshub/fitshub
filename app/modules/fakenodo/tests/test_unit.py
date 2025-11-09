@@ -1,6 +1,9 @@
-import pytest
 import inspect
+
+import pytest
+
 from app.modules.fakenodo.services import FakenodoService
+
 
 @pytest.fixture(scope="module")
 def test_client(test_client):
@@ -18,6 +21,7 @@ def test_client(test_client):
 def test_module_importable():
     pytest.importorskip("app.modules.fakenodo.services")
 
+
 def make_dataset():
     class Meta:
         def __init__(self):
@@ -29,16 +33,16 @@ def make_dataset():
 
     return DummyDataset()
 
+
 def test_services_expose_callables():
     module = pytest.importorskip("app.modules.fakenodo.services")
     callables = [
-        name
-        for name, obj in inspect.getmembers(module)
-        if not name.startswith("_") and inspect.isroutine(obj)
+        name for name, obj in inspect.getmembers(module) if not name.startswith("_") and inspect.isroutine(obj)
     ]
     if not callables:
         pytest.skip("No se encontraron callables públicos en app.modules.fakenodo.services")
     assert len(callables) > 0, "Se espera al menos una función pública en services"
+
 
 def test_sample_assertion(test_client):
     """
@@ -49,12 +53,14 @@ def test_sample_assertion(test_client):
     greeting = "Hello, World!"
     assert greeting == "Hello, World!", "The greeting does not coincide with 'Hello, World!'"
 
+
 def test_test_full_connection():
     service = FakenodoService()
     response = service.test_full_connection()
     data = response.get_json()
     assert data["success"] is True
     assert data["message"] == "FakeNodo connection test successful."
+
 
 def test_create_new_deposition():
     service = FakenodoService()
@@ -64,6 +70,7 @@ def test_create_new_deposition():
     assert "id" in deposition
     assert "metadata" in deposition
     assert "links" in deposition
+
 
 def test_upload_file():
     service = FakenodoService()
@@ -80,9 +87,9 @@ def test_publish_deposition():
     assert res.get("state") == "done"
     assert res.get("submitted") is True
 
+
 def test_get_doi():
     service = FakenodoService()
     doi = service.get_doi(1234)
     assert isinstance(doi, str)
     assert doi.startswith("10.5281") or doi.startswith("10.5072")
-
