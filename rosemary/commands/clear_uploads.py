@@ -34,8 +34,6 @@ def clear_uploads():
                 )
             )
         except Exception as e:
-            click.echo(
-                click.style(f"Error clearing the 'uploads' directory: {e}", fg="red")
-            )
+            click.echo(click.style(f"Error clearing the 'uploads' directory: {e}", fg="red"))
     else:
         click.echo(click.style("The 'uploads' directory does not exist.", fg="yellow"))

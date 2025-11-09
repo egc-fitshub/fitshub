@@ -7,6 +7,7 @@ from core.selenium.common import close_driver, initialize_driver
 
 
 def test_hubfile_index():
+
     driver = initialize_driver()
 
     try:
@@ -19,12 +20,14 @@ def test_hubfile_index():
         time.sleep(4)
 
         try:
+
             pass
 
         except NoSuchElementException:
             raise AssertionError("Test failed!")
 
     finally:
+
         # Close the browser
         close_driver(driver)
 

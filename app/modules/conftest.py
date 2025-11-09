@@ -17,6 +17,7 @@ def test_app():
 
 @pytest.fixture(scope="module")
 def test_client(test_app):
+
     with test_app.test_client() as testing_client:
         with test_app.app_context():
             print("TESTING SUITE (2): Blueprints registrados:", test_app.blueprints)
@@ -63,9 +64,7 @@ def login(test_client, email, password):
     Returns:
         response: POST login request response.
     """
-    response = test_client.post(
-        "/login", data=dict(email=email, password=password), follow_redirects=True
-    )
+    response = test_client.post("/login", data=dict(email=email, password=password), follow_redirects=True)
     return response
 
 

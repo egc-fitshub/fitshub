@@ -12,11 +12,7 @@ def clear_log():
         try:
             # Deletes the log file
             os.remove(log_file_path)
-            click.echo(
-                click.style(
-                    "The 'app.log' file has been successfully cleared.", fg="green"
-                )
-            )
+            click.echo(click.style("The 'app.log' file has been successfully cleared.", fg="green"))
         except Exception as e:
             click.echo(click.style(f"Error clearing the 'app.log' file: {e}", fg="red"))
     else:

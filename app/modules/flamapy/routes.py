@@ -4,11 +4,7 @@ import tempfile
 
 from antlr4 import CommonTokenStream, FileStream
 from antlr4.error.ErrorListener import ErrorListener
-from flamapy.metamodels.fm_metamodel.transformations import (
-    GlencoeWriter,
-    SPLOTWriter,
-    UVLReader,
-)
+from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
 from flask import jsonify, send_file
 from uvl.UVLCustomLexer import UVLCustomLexer
@@ -29,15 +25,13 @@ def check_uvl(file_id):
         def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
             if "\\t" in msg:
                 warning_message = (
-                    f"The UVL has the following warning that prevents reading it: "
-                    f"Line {line}:{column} - {msg}"
+                    f"The UVL has the following warning that prevents reading it: " f"Line {line}:{column} - {msg}"
                 )
                 print(warning_message)
                 self.errors.append(warning_message)
             else:
                 error_message = (
-                    f"The UVL has the following error that prevents reading it: "
-                    f"Line {line}:{column} - {msg}"
+                    f"The UVL has the following error that prevents reading it: " f"Line {line}:{column} - {msg}"
                 )
                 self.errors.append(error_message)
 
@@ -85,11 +79,7 @@ def to_glencoe(file_id):
         GlencoeWriter(temp_file.name, fm).transform()
 
         # Return the file in the response
-        return send_file(
-            temp_file.name,
-            as_attachment=True,
-            download_name=f"{hubfile.name}_glencoe.txt",
-        )
+        return send_file(temp_file.name, as_attachment=True, download_name=f"{hubfile.name}_glencoe.txt")
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
@@ -104,11 +94,7 @@ def to_splot(file_id):
         SPLOTWriter(temp_file.name, fm).transform()
 
         # Return the file in the response
-        return send_file(
-            temp_file.name,
-            as_attachment=True,
-            download_name=f"{hubfile.name}_splot.txt",
-        )
+        return send_file(temp_file.name, as_attachment=True, download_name=f"{hubfile.name}_splot.txt")
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
@@ -124,9 +110,7 @@ def to_cnf(file_id):
         DimacsWriter(temp_file.name, sat).transform()
 
         # Return the file in the response
-        return send_file(
-            temp_file.name, as_attachment=True, download_name=f"{hubfile.name}_cnf.txt"
-        )
+        return send_file(temp_file.name, as_attachment=True, download_name=f"{hubfile.name}_cnf.txt")
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)

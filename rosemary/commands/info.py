@@ -5,11 +5,7 @@ import click
 try:
     from importlib.metadata import PackageNotFoundError, metadata, version
 except ImportError:
-    from importlib_metadata import (
-        PackageNotFoundError,
-        metadata,
-        version,
-    )  # fallback para Python <3.8
+    from importlib_metadata import PackageNotFoundError, metadata, version  # fallback para Python <3.8
 
 
 def get_metadata_value(meta, key, default="Unknown"):

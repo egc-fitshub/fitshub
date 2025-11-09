@@ -15,9 +15,7 @@ def load_locustfiles():
     module_dir = os.path.join(working_dir, "app", "modules")
     print(f"Module directory: {module_dir}")
 
-    locustfile_paths = glob.glob(
-        os.path.join(module_dir, "*", "tests", "locustfile.py")
-    )
+    locustfile_paths = glob.glob(os.path.join(module_dir, "*", "tests", "locustfile.py"))
     print(f"Found locustfiles: {locustfile_paths}")
 
     found_user_classes = []
@@ -31,11 +29,7 @@ def load_locustfiles():
 
         # Collect all classes that inherit from HttpUser
         for name, obj in vars(locustfile).items():
-            if (
-                inspect.isclass(obj)
-                and issubclass(obj, HttpUser)
-                and obj is not HttpUser
-            ):
+            if inspect.isclass(obj) and issubclass(obj, HttpUser) and obj is not HttpUser:
                 unique_name = f"{name}_{os.path.basename(path).split('.')[0]}"
                 globals()[unique_name] = obj  # Add to globals
                 found_user_classes.append((unique_name, obj))

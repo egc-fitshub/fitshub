@@ -59,29 +59,19 @@ class DSMetaData(db.Model):
     dataset_doi = db.Column(db.String(120))
     tags = db.Column(db.String(120))
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey("ds_metrics.id"))
-    ds_metrics = db.relationship(
-        "DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete"
-    )
-    authors = db.relationship(
-        "Author", backref="ds_meta_data", lazy=True, cascade="all, delete"
-    )
+    ds_metrics = db.relationship("DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete")
+    authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-    ds_meta_data_id = db.Column(
-        db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False
-    )
+    ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    ds_meta_data = db.relationship(
-        "DSMetaData", backref=db.backref("data_set", uselist=False)
-    )
-    fits_models = db.relationship(
-        "FitsModel", backref="data_set", lazy=True, cascade="all, delete"
-    )
+    ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
+    fits_models = db.relationship("FitsModel", backref="data_set", lazy=True, cascade="all, delete")
 
     def name(self):
         return self.ds_meta_data.title
@@ -97,11 +87,7 @@ class DataSet(db.Model):
         return self.ds_meta_data.publication_type.name.replace("_", " ").title()
 
     def get_zenodo_url(self):
-        return (
-            f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}"
-            if self.ds_meta_data.dataset_doi
-            else None
-        )
+        return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
 
     def get_files_count(self):
         return sum(len(fm.files) for fm in self.fits_models)
@@ -132,7 +118,7 @@ class DataSet(db.Model):
             "dataset_doi": self.ds_meta_data.dataset_doi,
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
             "url": self.get_uvlhub_doi(),
-            "download": f"{request.host_url.rstrip('/')}/dataset/download/{self.id}",
+            "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             "zenodo": self.get_zenodo_url(),
             "files": [file.to_dict() for fm in self.fits_models for file in fm.files],
             "files_count": self.get_files_count(),
