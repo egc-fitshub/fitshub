@@ -1,9 +1,17 @@
 from datetime import datetime, timezone
+from enum import Enum
 
 from flask_login import UserMixin
+from sqlalchemy import Enum as SQLAlchemyEnum
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
+
+
+class RoleType(Enum):
+    ADMINISTRATOR = "administrator"
+    CURATOR = "curator"
+    USER = "user"
 
 
 class User(db.Model, UserMixin):
@@ -12,6 +20,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    role = db.Column(SQLAlchemyEnum(RoleType), nullable=False, default=RoleType.USER)
 
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
