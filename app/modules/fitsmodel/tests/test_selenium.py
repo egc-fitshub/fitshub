@@ -6,7 +6,7 @@ from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
 
-def test_featuremodel_index():
+def test_fitsmodel_index():
 
     driver = initialize_driver()
 
@@ -14,7 +14,7 @@ def test_featuremodel_index():
         host = get_host_for_selenium_testing()
 
         # Open the index page
-        driver.get(f"{host}/featuremodel")
+        driver.get(f"{host}/fitsmodel")
 
         # Wait a little while to make sure the page has loaded completely
         time.sleep(4)
@@ -33,4 +33,4 @@ def test_featuremodel_index():
 
 
 # Call the test function
-test_featuremodel_index()
+test_fitsmodel_index()
