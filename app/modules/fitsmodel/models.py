@@ -2,6 +2,7 @@ from app import db
 from sqlalchemy import Enum as SQLAlchemyEnum
 from app.modules.dataset.models import Author, PublicationType
 
+
 class FitsModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_set_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
@@ -12,10 +13,10 @@ class FitsModel(db.Model):
     def __repr__(self):
         return f"FitsModel<{self.id}>"
 
+
 class FMMetaData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fits_filename = db.Column(db.String(120), nullable=False)
-    
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
     publication_type = db.Column(SQLAlchemyEnum(PublicationType), nullable=False)
@@ -34,8 +35,8 @@ class FMMetaData(db.Model):
 
 class FMMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    number_of_images = db.Column(db.Integer, nullable = False)
-    number_of_tables = db.Column(db.Integer, nullable = False)
+    number_of_images = db.Column(db.Integer, nullable=False)
+    number_of_tables = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"FMMetrics<number_of_images={self.number_of_images} number_of_tables={self.number_of_tables}>"

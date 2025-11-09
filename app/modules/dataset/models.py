@@ -44,7 +44,7 @@ class Author(db.Model):
 class DSMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     number_of_models = db.Column(db.String(120))
-    
+
     def __repr__(self):
         return f"DSMetrics<models={self.number_of_models}>"
 
