@@ -17,8 +17,8 @@ from app.modules.dataset.repositories import (
     DSMetaDataRepository,
     DSViewRecordRepository,
 )
-from app.modules.featuremodel.repositories import (
-    FeatureModelRepository,
+from app.modules.fitsmodel.repositories import (
+    FitsModelRepository,
     FMMetaDataRepository,
 )
 from app.modules.hubfile.repositories import (
@@ -42,7 +42,7 @@ def calculate_checksum_and_size(file_path):
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
-        self.feature_model_repository = FeatureModelRepository()
+        self.fits_model_repository = FitsModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
         self.fmmetadata_repository = FMMetaDataRepository()
@@ -58,7 +58,7 @@ class DataSetService(BaseService):
             updated_counter = dataset.download_counter + 1
             self.repository.update(dataset_id, download_counter=updated_counter)
 
-    def move_feature_models(self, dataset: DataSet):
+    def move_fits_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
 
@@ -67,9 +67,9 @@ class DataSetService(BaseService):
 
         os.makedirs(dest_dir, exist_ok=True)
 
-        for feature_model in dataset.feature_models:
-            uvl_filename = feature_model.fm_meta_data.uvl_filename
-            shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+        for fits_model in dataset.fits_models:
+            fits_filename = fits_model.fm_meta_data.fits_filename
+            shutil.move(os.path.join(source_dir, fits_filename), dest_dir)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -86,8 +86,8 @@ class DataSetService(BaseService):
     def count_synchronized_datasets(self):
         return self.repository.count_synchronized_datasets()
 
-    def count_feature_models(self):
-        return self.feature_model_service.count_feature_models()
+    def count_fits_models(self):
+        return self.fits_model_service.count_fits_models()
 
     def count_authors(self) -> int:
         return self.author_repository.count()
@@ -116,27 +116,27 @@ class DataSetService(BaseService):
 
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
-            for feature_model in form.feature_models:
-                uvl_filename = feature_model.uvl_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
+            for fits_model in form.fits_models:
+                fits_filename = fits_model.fits_filename.data
+                fmmetadata = self.fmmetadata_repository.create(commit=False, **fits_model.get_fmmetadata())
+                for author_data in fits_model.get_authors():
                     author = self.author_repository.create(commit=False, fm_meta_data_id=fmmetadata.id, **author_data)
                     fmmetadata.authors.append(author)
 
-                fm = self.feature_model_repository.create(
+                fm = self.fits_model_repository.create(
                     commit=False, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
                 )
 
-                # associated files in feature model
-                file_path = os.path.join(current_user.temp_folder(), uvl_filename)
+                # associated files in FITS model
+                file_path = os.path.join(current_user.temp_folder(), fits_filename)
                 checksum, size = calculate_checksum_and_size(file_path)
 
                 file = self.hubfilerepository.create(
                     commit=False,
-                    name=uvl_filename,
+                    name=fits_filename,
                     checksum=checksum,
                     size=size,
-                    feature_model_id=fm.id,
+                    fits_model_id=fm.id,
                 )
                 fm.files.append(file)
             self.repository.session.commit()
@@ -149,7 +149,7 @@ class DataSetService(BaseService):
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 
-    def get_uvlhub_doi(self, dataset: DataSet) -> str:
+    def get_fitshub_doi(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
 

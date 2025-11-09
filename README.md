@@ -4,7 +4,7 @@
 
 # uvlhub.io
 
-Repository of feature models in UVL format integrated with Zenodo and flamapy following Open Science principles - Developed by DiversoLab
+Repository of .fits files for astronomy databases integrated with a Zenodo clone and astropy following Open Science principles - Developed by "Grupo fitshub" for Evolución y Gestión de la Configuración in Universidad de Sevilla
 
 ## Official documentation
 
