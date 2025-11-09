@@ -4,9 +4,10 @@ import subprocess
 import click
 
 
-@click.command("linter", help="Runs flake8 linter on the 'app' and 'rosemary' directories.")
+@click.command(
+    "linter", help="Runs flake8 linter on the 'app' and 'rosemary' directories."
+)
 def linter():
-
     # Define the directories to be checked with flake8
     working_dir = os.getenv("WORKING_DIR", "")
     directories = [
@@ -24,7 +25,11 @@ def linter():
         if result.returncode != 0:
             click.echo(click.style(f"flake8 found issues in {directory}.", fg="red"))
         else:
-            click.echo(click.style(f"No issues found in {directory}. Congratulations!", fg="green"))
+            click.echo(
+                click.style(
+                    f"No issues found in {directory}. Congratulations!", fg="green"
+                )
+            )
 
 
 @click.command(

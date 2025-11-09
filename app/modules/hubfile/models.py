@@ -13,7 +13,9 @@ class Hubfile(db.Model):
     name = db.Column(db.String(120), nullable=False)
     checksum = db.Column(db.String(120), nullable=False)
     size = db.Column(db.Integer, nullable=False)
-    fits_model_id = db.Column(db.Integer, db.ForeignKey("fits_model.id"), nullable=False)
+    fits_model_id = db.Column(
+        db.Integer, db.ForeignKey("fits_model.id"), nullable=False
+    )
 
     def get_formatted_size(self):
         from app.modules.dataset.services import SizeService
@@ -42,7 +44,7 @@ class Hubfile(db.Model):
             "checksum": self.checksum,
             "size_in_bytes": self.size,
             "size_in_human_format": self.get_formatted_size(),
-            "url": f'{request.host_url.rstrip("/")}/file/download/{self.id}',
+            "url": f"{request.host_url.rstrip('/')}/file/download/{self.id}",
         }
 
     def __repr__(self):
@@ -66,7 +68,9 @@ class HubfileDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     file_id = db.Column(db.Integer, db.ForeignKey("file.id"))
-    download_date = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    download_date = db.Column(
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     download_cookie = db.Column(db.String(36), nullable=False)
 
     def __repr__(self):

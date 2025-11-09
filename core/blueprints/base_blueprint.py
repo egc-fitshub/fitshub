@@ -27,7 +27,9 @@ class BaseBlueprint(Blueprint):
             url_defaults=url_defaults,
             root_path=root_path,
         )
-        self.module_path = os.path.join(os.getenv("WORKING_DIR", ""), "app", "modules", name)
+        self.module_path = os.path.join(
+            os.getenv("WORKING_DIR", ""), "app", "modules", name
+        )
         self.add_script_route()
 
     def add_script_route(self):

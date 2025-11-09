@@ -14,11 +14,22 @@ class HubfileRepository(BaseRepository):
 
     def get_owner_user_by_hubfile(self, hubfile: Hubfile) -> User:
         return (
-            db.session.query(User).join(DataSet).join(FitsModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
+            db.session.query(User)
+            .join(DataSet)
+            .join(FitsModel)
+            .join(Hubfile)
+            .filter(Hubfile.id == hubfile.id)
+            .first()
         )
 
     def get_dataset_by_hubfile(self, hubfile: Hubfile) -> DataSet:
-        return db.session.query(DataSet).join(FitsModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
+        return (
+            db.session.query(DataSet)
+            .join(FitsModel)
+            .join(Hubfile)
+            .filter(Hubfile.id == hubfile.id)
+            .first()
+        )
 
 
 class HubfileViewRecordRepository(BaseRepository):

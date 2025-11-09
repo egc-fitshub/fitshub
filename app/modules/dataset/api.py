@@ -13,7 +13,9 @@ dataset_fields = {
     "files": "files",
 }
 
-dataset_serializer = Serializer(dataset_fields, related_serializers={"files": file_serializer})
+dataset_serializer = Serializer(
+    dataset_fields, related_serializers={"files": file_serializer}
+)
 
 DataSetResource = create_resource(DataSet, dataset_serializer)
 

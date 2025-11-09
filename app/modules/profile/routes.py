@@ -22,7 +22,12 @@ def edit_profile():
         service = UserProfileService()
         result, errors = service.update_profile(profile.id, form)
         return service.handle_service_response(
-            result, errors, "profile.edit_profile", "Profile updated successfully", "profile/edit.html", form
+            result,
+            errors,
+            "profile.edit_profile",
+            "Profile updated successfully",
+            "profile/edit.html",
+            form,
         )
 
     return render_template("profile/edit.html", form=form)
@@ -41,7 +46,9 @@ def my_profile():
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
-    total_datasets_count = db.session.query(DataSet).filter(DataSet.user_id == current_user.id).count()
+    total_datasets_count = (
+        db.session.query(DataSet).filter(DataSet.user_id == current_user.id).count()
+    )
 
     print(user_datasets_pagination.items)
 

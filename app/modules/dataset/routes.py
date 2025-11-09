@@ -48,7 +48,6 @@ ds_view_record_service = DSViewRecordService()
 def create_dataset():
     form = DataSetForm()
     if request.method == "POST":
-
         dataset = None
 
         if not form.validate_on_submit():
@@ -56,12 +55,16 @@ def create_dataset():
 
         try:
             logger.info("Creating dataset...")
-            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+            dataset = dataset_service.create_from_form(
+                form=form, current_user=current_user
+            )
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_fits_models(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
-            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+            return jsonify(
+                {"Exception while create dataset data in local: ": str(exc)}
+            ), 400
 
         # send dataset as deposition to Zenodo
         data = {}
@@ -78,7 +81,9 @@ def create_dataset():
             deposition_id = data.get("id")
 
             # update dataset with deposition id in Zenodo
-            dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+            dataset_service.update_dsmetadata(
+                dataset.ds_meta_data_id, deposition_id=deposition_id
+            )
 
             try:
                 # iterate for each FITS model (one FITS model = one request to Zenodo)
@@ -90,7 +95,9 @@ def create_dataset():
 
                 # update DOI
                 deposition_doi = zenodo_service.get_doi(deposition_id)
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                dataset_service.update_dsmetadata(
+                    dataset.ds_meta_data_id, dataset_doi=deposition_doi
+                )
             except Exception as e:
                 msg = f"it has not been possible upload FITS models in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
@@ -135,7 +142,9 @@ def upload():
         # Generate unique filename (by recursion)
         base_name, extension = os.path.splitext(file.filename)
         i = 1
-        while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
+        while os.path.exists(
+            os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+        ):
             i += 1
         new_filename = f"{base_name} ({i}){extension}"
         file_path = os.path.join(temp_folder, new_filename)
@@ -190,12 +199,16 @@ def download_dataset(dataset_id):
 
                 zipf.write(
                     full_path,
-                    arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path),
+                    arcname=os.path.join(
+                        os.path.basename(zip_path[:-4]), relative_path
+                    ),
                 )
 
     user_cookie = request.cookies.get("download_cookie")
     if not user_cookie:
-        user_cookie = str(uuid.uuid4())  # Generate a new unique identifier if it does not exist
+        user_cookie = str(
+            uuid.uuid4()
+        )  # Generate a new unique identifier if it does not exist
         # Save the cookie to the user's browser
         resp = make_response(
             send_from_directory(
@@ -235,7 +248,6 @@ def download_dataset(dataset_id):
 
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
-
     # Check if the DOI is an old DOI
     new_doi = doi_mapping_service.get_new_doi(doi)
     if new_doi:
@@ -262,7 +274,6 @@ def subdomain_index(doi):
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
 @login_required
 def get_unsynchronized_dataset(dataset_id):
-
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 

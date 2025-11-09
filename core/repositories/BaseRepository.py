@@ -24,7 +24,11 @@ class BaseRepository(Generic[T]):
         return instance
 
     def get_by_column(self, column_name: str, value) -> List[T]:
-        instances: List[T] = self.session.query(self.model).filter(getattr(self.model, column_name) == value).all()
+        instances: List[T] = (
+            self.session.query(self.model)
+            .filter(getattr(self.model, column_name) == value)
+            .all()
+        )
         return instances
 
     def get_or_404(self, id: int) -> Union[T, NoReturn]:

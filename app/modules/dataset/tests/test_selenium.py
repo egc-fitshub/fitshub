@@ -105,7 +105,9 @@ def test_upload_dataset():
 
         name_field = driver.find_element(By.NAME, "feature_models-0-authors-2-name")
         name_field.send_keys("Author3")
-        affiliation_field = driver.find_element(By.NAME, "feature_models-0-authors-2-affiliation")
+        affiliation_field = driver.find_element(
+            By.NAME, "feature_models-0-authors-2-affiliation"
+        )
         affiliation_field.send_keys("Club3")
 
         # Check I agree and send form
@@ -127,7 +129,6 @@ def test_upload_dataset():
         print("Test passed!")
 
     finally:
-
         # Close the browser
         close_driver(driver)
 

@@ -27,7 +27,9 @@ def download_file(file_id):
 
     # Check if the download record already exists for this cookie
     existing_record = HubfileDownloadRecord.query.filter_by(
-        user_id=current_user.id if current_user.is_authenticated else None, file_id=file_id, download_cookie=user_cookie
+        user_id=current_user.id if current_user.is_authenticated else None,
+        file_id=file_id,
+        download_cookie=user_cookie,
     ).first()
 
     if not existing_record:
@@ -40,7 +42,9 @@ def download_file(file_id):
         )
 
     # Save the cookie to the user's browser
-    resp = make_response(send_from_directory(directory=file_path, path=filename, as_attachment=True))
+    resp = make_response(
+        send_from_directory(directory=file_path, path=filename, as_attachment=True)
+    )
     resp.set_cookie("file_download_cookie", user_cookie)
 
     return resp
@@ -86,7 +90,9 @@ def view_file(file_id):
             response = jsonify({"success": True, "content": content})
             if not request.cookies.get("view_cookie"):
                 response = make_response(response)
-                response.set_cookie("view_cookie", user_cookie, max_age=60 * 60 * 24 * 365 * 2)
+                response.set_cookie(
+                    "view_cookie", user_cookie, max_age=60 * 60 * 24 * 365 * 2
+                )
 
             return response
         else:

@@ -5,14 +5,19 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from app.modules.auth.models import User
-from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType
+from app.modules.dataset.models import (
+    Author,
+    DataSet,
+    DSMetaData,
+    DSMetrics,
+    PublicationType,
+)
 from app.modules.fitsmodel.models import FitsModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 
 
 class DataSetSeeder(BaseSeeder):
-
     priority = 2  # Lower priority
 
     def run(self):
@@ -31,11 +36,11 @@ class DataSetSeeder(BaseSeeder):
         ds_meta_data_list = [
             DSMetaData(
                 deposition_id=1 + i,
-                title=f"Sample dataset {i+1}",
-                description=f"Description for dataset {i+1}",
+                title=f"Sample dataset {i + 1}",
+                description=f"Description for dataset {i + 1}",
                 publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
-                publication_doi=f"10.1234/dataset{i+1}",
-                dataset_doi=f"10.1234/dataset{i+1}",
+                publication_doi=f"10.1234/dataset{i + 1}",
+                dataset_doi=f"10.1234/dataset{i + 1}",
                 tags="tag1, tag2",
                 ds_metrics_id=seeded_ds_metrics.id,
             )
@@ -46,8 +51,8 @@ class DataSetSeeder(BaseSeeder):
         # Create Author instances and associate with DSMetaData
         authors = [
             Author(
-                name=f"Author {i+1}",
-                affiliation=f"Affiliation {i+1}",
+                name=f"Author {i + 1}",
+                affiliation=f"Affiliation {i + 1}",
                 orcid=f"0000-0000-0000-000{i}",
                 ds_meta_data_id=seeded_ds_meta_data[i % 4].id,
             )
@@ -69,11 +74,11 @@ class DataSetSeeder(BaseSeeder):
         # Assume there are 12 .fits files, create corresponding FMMetaData and FITS Model
         fm_meta_data_list = [
             FMMetaData(
-                fits_filename=f"file{i+1}.fits",
-                title=f"FITS Model {i+1}",
-                description=f"Description for FITS model {i+1}",
+                fits_filename=f"file{i + 1}.fits",
+                title=f"FITS Model {i + 1}",
+                description=f"Description for FITS model {i + 1}",
                 publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
-                publication_doi=f"10.1234/fm{i+1}",
+                publication_doi=f"10.1234/fm{i + 1}",
                 tags="tag1, tag2",
                 fits_version="1.0",
             )
@@ -84,9 +89,9 @@ class DataSetSeeder(BaseSeeder):
         # Create Author instances and associate with FMMetaData
         fm_authors = [
             Author(
-                name=f"Author {i+5}",
-                affiliation=f"Affiliation {i+5}",
-                orcid=f"0000-0000-0000-000{i+5}",
+                name=f"Author {i + 5}",
+                affiliation=f"Affiliation {i + 5}",
+                orcid=f"0000-0000-0000-000{i + 5}",
                 fm_meta_data_id=seeded_fm_meta_data[i].id,
             )
             for i in range(12)
@@ -94,7 +99,10 @@ class DataSetSeeder(BaseSeeder):
         self.seed(fm_authors)
 
         fits_models = [
-            FitsModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
+            FitsModel(
+                data_set_id=seeded_datasets[i // 3].id,
+                fm_meta_data_id=seeded_fm_meta_data[i].id,
+            )
             for i in range(12)
         ]
         seeded_fits_models = self.seed(fits_models)
@@ -102,14 +110,20 @@ class DataSetSeeder(BaseSeeder):
         # Create files, associate them with FITS Models and copy files
         load_dotenv()
         working_dir = os.getenv("WORKING_DIR", "")
-        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "fits_examples")
+        src_folder = os.path.join(
+            working_dir, "app", "modules", "dataset", "fits_examples"
+        )
         for i in range(12):
-            file_name = f"file{i+1}.fits"
+            file_name = f"file{i + 1}.fits"
             fits_model = seeded_fits_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == fits_model.data_set_id)
+            dataset = next(
+                ds for ds in seeded_datasets if ds.id == fits_model.data_set_id
+            )
             user_id = dataset.user_id
 
-            dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
+            dest_folder = os.path.join(
+                working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}"
+            )
             os.makedirs(dest_folder, exist_ok=True)
             shutil.copy(os.path.join(src_folder, file_name), dest_folder)
 
@@ -117,7 +131,7 @@ class DataSetSeeder(BaseSeeder):
 
             fits_file = Hubfile(
                 name=file_name,
-                checksum=f"checksum{i+1}",
+                checksum=f"checksum{i + 1}",
                 size=os.path.getsize(file_path),
                 fits_model_id=fits_model.id,
             )
