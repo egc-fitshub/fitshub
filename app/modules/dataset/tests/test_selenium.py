@@ -25,6 +25,16 @@ def count_datasets(driver, host):
         amount_datasets = 0
     return amount_datasets
 
+def count_home_datasets(driver, host):
+    driver.get(f"{host}/")
+    wait_for_page_to_load(driver)
+
+    try:
+        amount_datasets = len(driver.find_elements(By.ID, "dataset_card"))
+    except Exception:
+        amount_datasets = 0
+    return amount_datasets
+
 
 def test_upload_dataset():
     driver = initialize_driver()
@@ -150,7 +160,34 @@ def test_view_dataset():
     finally:
         close_driver(driver)
 
+def test_download_counter():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/")
+        download_counters = len(driver.find_elements(By.ID, "download_counter"))
+        datasets = count_home_datasets(driver, host)
+        assert download_counters == datasets
+        driver.get(f"{host}/login")
+        driver.set_window_size(1070, 1002)
+        driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
+        driver.find_element(By.ID, "email").send_keys("user1@example.com")
+        driver.find_element(By.ID, "password").send_keys("1234")
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "password").click()
+        driver.find_element(By.ID, "submit").click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(7) .align-middle:nth-child(2)").click()
+        driver.find_element(By.LINK_TEXT, "Sample dataset 3").click()
+        driver.find_element(By.ID, "download_counter").click()
+        assert driver.find_element(By.ID, "download_counter") is not None
+        assert driver.find_element(By.ID, "download_counter").text is not None
+    finally:
+        close_driver(driver)
 
 # Call the test function
+test_download_counter()
 test_view_dataset()
 test_upload_dataset()

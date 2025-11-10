@@ -14,7 +14,7 @@
         <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
 
             {% for dataset in datasets %}
-                <div class="card">
+                <div class="card" id="dataset_card">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between">
                             <h2>
@@ -32,7 +32,7 @@
                         <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                         <div class="d-flex justify-content-between">
                             <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
-                            <p class="text-secondary">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
+                            <p class="text-secondary" id="download_counter">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
                         </div>
                     </div>
 
