@@ -42,6 +42,6 @@ def test_generate_json_badge_data(test_client):
     assert data["schemaVersion"] == 1
     assert data["color"] == "blue"
 
-    assert data["label"] == "Mi Dataset de Prueba"
+    assert data["label"] == "10.1234/test-doi"
 
-    assert data["message"] == "10.1234/test-doi"
+    assert data["message"] == "0"
