@@ -163,7 +163,6 @@
 
             </div>
             
-            {% if dataset.ds_meta_data.dataset_doi %}
             <div class="card-body" style="padding-top: 0px">
 
                 {% set json_endpoint_url = url_for('dataset.generate_json_badge_data', dataset_id=dataset.id, _external=True) %}
@@ -213,7 +212,6 @@
                 </div>
                 
             </div>
-            {% endif %}
 
         </div> 
 
