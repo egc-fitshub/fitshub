@@ -25,6 +25,7 @@ def count_datasets(driver, host):
         amount_datasets = 0
     return amount_datasets
 
+
 def count_home_datasets(driver, host):
     driver.get(f"{host}/")
     wait_for_page_to_load(driver)
@@ -160,6 +161,7 @@ def test_view_dataset():
     finally:
         close_driver(driver)
 
+
 def test_download_counter():
     driver = initialize_driver()
 
@@ -186,6 +188,7 @@ def test_download_counter():
         assert driver.find_element(By.ID, "download_counter").text is not None
     finally:
         close_driver(driver)
+
 
 # Call the test function
 test_download_counter()
