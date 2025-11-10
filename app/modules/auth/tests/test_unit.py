@@ -4,17 +4,25 @@ from flask import url_for
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
+from app.modules.auth.models import RoleType, User
+from app.modules.profile.models import UserProfile
+from app.modules.conftest import login, logout
+from app import db
 
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_client(test_client):
-    """
-    Extends the test_client fixture to add additional specific data for module testing.
-    """
     with test_client.application.app_context():
-        # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
-        pass
+
+        db.session.query(UserProfile).delete()
+        db.session.query(User).delete()
+        db.session.commit()
+
+        user_test = User(email="test@example.com", password="test1234", role=RoleType.USER)
+        curator_test = User(email="curator@example.com", password="test1234", role=RoleType.CURATOR)
+        admin_test = User(email="admin@example.com", password="test1234", role=RoleType.ADMINISTRATOR)
+
+        db.session.add_all([user_test, curator_test, admin_test])
+        db.session.commit()
 
     yield test_client
 
@@ -74,6 +82,21 @@ def test_signup_user_successful(test_client):
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
 
+def test_admin_roles_success_as_admin(test_client):
+    login_response = test_client.post("/login", data=dict(email=email, password=password))
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    response = test_client.get("/admin_roles", follow_redirects=True)
+    assert response.status_code == 200
+
+    assert b"test@example.com" in response.data
+    assert b"curator@example.com" in response.data    
+    assert b"User" in response.data
+    assert b"Curator" in response.data
+    
+    assert b"admin@example.com" not in response.data
+
+    test_client.get("/logout", follow_redirects=True)
 
 def test_service_create_with_profie_success(clean_database):
     data = {"name": "Test", "surname": "Foo", "email": "service_test@example.com", "password": "test1234"}
