@@ -83,20 +83,22 @@ def test_signup_user_successful(test_client):
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
 
 def test_admin_roles_success_as_admin(test_client):
-    login_response = test_client.post("/login", data=dict(email=email, password=password))
-    assert login_response.status_code == 200, "Login was unsuccessful."
+    login(test_client, "admin@example.com", "test1234")
 
     response = test_client.get("/admin_roles", follow_redirects=True)
-    assert response.status_code == 200
-
+    
+    assert response.status_code == 200    
+    assert response.request.path == url_for("auth.admin_roles"), "Admin should access admin roles page"
+    
     assert b"test@example.com" in response.data
     assert b"curator@example.com" in response.data    
     assert b"User" in response.data
     assert b"Curator" in response.data
     
     assert b"admin@example.com" not in response.data
+    
+    logout(test_client)
 
-    test_client.get("/logout", follow_redirects=True)
 
 def test_service_create_with_profie_success(clean_database):
     data = {"name": "Test", "surname": "Foo", "email": "service_test@example.com", "password": "test1234"}
