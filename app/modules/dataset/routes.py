@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import shutil
 import tempfile
 import uuid
@@ -21,7 +22,7 @@ from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord
+from app.modules.dataset.models import DataSet, DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -41,6 +42,34 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/badge.json")
+def generate_json_badge_data(dataset_id):
+    """
+    Genera un endpoint JSON para ser usado por shields.io
+    con el formato 'endpoint'.
+    """
+    try:
+        dataset = DataSet.query.get_or_404(dataset_id)
+        meta = dataset.ds_meta_data
+        download_counter = str(dataset.download_counter)
+        doi_full_url = meta.dataset_doi or "N/A"
+
+        match = re.search(r"(10\.\d{4,9}/[-._;()/:A-Z0-9]+)", doi_full_url, re.IGNORECASE)
+
+        if match:
+            doi = match.group(1)
+        else:
+            doi = doi_full_url
+
+        badge_data = {"schemaVersion": 1, "label": doi, "message": download_counter, "color": "blue"}
+
+        return jsonify(badge_data)
+
+    except Exception as e:
+        print(f"Error generando JSON para badge: {e}")
+        return jsonify({"schemaVersion": 1, "label": "Error", "message": "Badge no disponible", "color": "red"}), 500
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])

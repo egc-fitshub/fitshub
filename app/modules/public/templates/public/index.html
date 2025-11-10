@@ -67,13 +67,13 @@
 
                             <div class="col-12">
                                 <a href="{{ dataset.get_fitshub_doi() }}">{{ dataset.get_fitshub_doi() }}</a>
-                                 <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
+                                 <div id="dataset_doi_fitshub_{{ dataset.id }}" style="display: none">
                                 {{ dataset.get_fitshub_doi() }}
                             </div>
 
                             <i data-feather="clipboard" class="center-button-icon"
                                style="cursor: pointer"
-                               onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                               onclick="copyText('dataset_doi_fitshub_{{ dataset.id }}')"></i>
                             </div>
 
 
@@ -253,10 +253,15 @@
                         </h2>
 
                         <div class="card-body card-body-slim">
-
-                            <strong>fitshub.io</strong> is a repository of fits models for astronomy databases integrated with
-                            a Zenodo clone and AstroPy developed by "Grupo fitshub" para EGC
-
+                            <p>
+                                <strong>fitshub.io</strong> is a repository of feature models in FITS (Flexible Image Transport System)
+                                format. FITS is the standard format for storing and processing astronomical data, supporting
+                                multi-dimensional arrays and detailed metadata.
+                            </p>
+                            <p style="margin-bottom: 0;">
+                                The platform integrates a Zenodo clone and AstroPy, and is developed by FitsHub lab groups 1
+                                and 2 as the practical project for the EGC course.
+                            </p>
                         </div>
 
                         <h2 class="card-title card-title-light">
@@ -265,12 +270,12 @@
 
                         <div class="card-body card-body-slim">
 
-                            Sure! You can make a fork of our official repository on GitHub,
-                            create fantastic fitss and then make a pull request to us.
+                             Sure! You can make a fork of our official repository on GitHub, create fantastic features and
+                             then make a pull request to us. 
 
                             <br><br>
 
-                            <a href="https://github.com/diverso-lab/uvlhub" target="_blank" class="btn btn-primary">
+                            <a href="https://github.com/egc-fitshub/fitshub" target="_blank" class="btn btn-primary">
                                 Go to GitHub</a>
 
                         </div>
