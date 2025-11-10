@@ -68,9 +68,9 @@ class DataSetSeeder(BaseSeeder):
         # Assume there are 12 .fits files, create corresponding FMMetaData and FITS Model
         fm_meta_data_list = [
             FMMetaData(
-                fits_filename=f"file{i+1}.fits",
-                title=f"FITS Model {i+1}",
-                description=f"Description for FITS model {i+1}",
+                fits_filename=f"file{i + 1}.fits",
+                title=f"FITS Model {i + 1}",
+                description=f"Description for FITS model {i + 1}",
                 publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
                 publication_doi=f"10.1234/fm{i + 1}",
                 tags="tag1, tag2",
@@ -103,7 +103,7 @@ class DataSetSeeder(BaseSeeder):
         working_dir = os.getenv("WORKING_DIR", "")
         src_folder = os.path.join(working_dir, "app", "modules", "dataset", "fits_examples")
         for i in range(12):
-            file_name = f"file{i+1}.fits"
+            file_name = f"file{i + 1}.fits"
             fits_model = seeded_fits_models[i]
             dataset = next(ds for ds in seeded_datasets if ds.id == fits_model.data_set_id)
             user_id = dataset.user_id

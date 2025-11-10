@@ -10,7 +10,7 @@ dataset_fields = {
     "download_counter": "get_download_counter",
     "created": "created_at",
     "name": "name",
-    "doi": "get_uvlhub_doi",
+    "doi": "get_fitshub_doi",
     "files": "files",
 }
 

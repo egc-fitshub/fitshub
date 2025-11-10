@@ -7,7 +7,6 @@ from core.selenium.common import close_driver, initialize_driver
 
 
 def test_fitsmodel_index():
-
     driver = initialize_driver()
 
     try:
