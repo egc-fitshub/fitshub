@@ -20,31 +20,28 @@ def test_client(test_client):
             title="Mi Dataset de Prueba",
             dataset_doi="http://localhost:5000/doi/10.1234/test-doi",
             description="Una descripción de prueba, requerida por el modelo.",
-            publication_type="other" 
+            publication_type="other",
         )
         db.session.add(meta_test)
         db.session.commit()
 
-        dataset_test = DataSet(
-            user_id=user_test.id,
-            ds_meta_data_id=meta_test.id
-        )
+        dataset_test = DataSet(user_id=user_test.id, ds_meta_data_id=meta_test.id)
         db.session.add(dataset_test)
         db.session.commit()
 
     yield test_client
 
-def test_generate_json_badge_data(test_client):
 
+def test_generate_json_badge_data(test_client):
     response = test_client.get("/dataset/1/badge.json")
 
     assert response.status_code == 200, "El endpoint /badge.json falló."
-    assert response.mimetype == 'application/json', "El endpoint no devolvió JSON."
+    assert response.mimetype == "application/json", "El endpoint no devolvió JSON."
     data = response.json
 
     assert data["schemaVersion"] == 1
     assert data["color"] == "blue"
-    
+
     assert data["label"] == "Mi Dataset de Prueba"
-    
+
     assert data["message"] == "10.1234/test-doi"

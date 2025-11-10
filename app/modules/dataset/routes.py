@@ -18,7 +18,7 @@ from flask import (
     send_from_directory,
     url_for,
     Response,
-    jsonify
+    jsonify,
 )
 from flask_login import current_user, login_required
 
@@ -45,6 +45,7 @@ zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 
+
 @dataset_bp.route("/dataset/<int:dataset_id>/badge.json")
 def generate_json_badge_data(dataset_id):
     """
@@ -55,33 +56,24 @@ def generate_json_badge_data(dataset_id):
         dataset = DataSet.query.get_or_404(dataset_id)
         meta = dataset.ds_meta_data
         download_counter = str(dataset.download_counter)
-        label = meta.title[:30] + '...' if len(meta.title) > 30 else meta.title
+        label = meta.title[:30] + "..." if len(meta.title) > 30 else meta.title
         doi_full_url = meta.dataset_doi or "N/A"
 
-        match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', doi_full_url, re.IGNORECASE)
-        
-        if match:
-            doi = match.group(1)  
-        else:
-            doi = doi_full_url    
+        match = re.search(r"(10\.\d{4,9}/[-._;()/:A-Z0-9]+)", doi_full_url, re.IGNORECASE)
 
-        badge_data = {
-            "schemaVersion": 1,
-            "label": doi,
-            "message": download_counter,  
-            "color": "blue"
-        }
+        if match:
+            doi = match.group(1)
+        else:
+            doi = doi_full_url
+
+        badge_data = {"schemaVersion": 1, "label": doi, "message": download_counter, "color": "blue"}
 
         return jsonify(badge_data)
 
     except Exception as e:
         print(f"Error generando JSON para badge: {e}")
-        return jsonify({
-            "schemaVersion": 1,
-            "label": "Error",
-            "message": "Badge no disponible",
-            "color": "red"
-        }), 500
+        return jsonify({"schemaVersion": 1, "label": "Error", "message": "Badge no disponible", "color": "red"}), 500
+
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
