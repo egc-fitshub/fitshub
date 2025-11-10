@@ -1,5 +1,7 @@
 import pytest
 
+from app.modules.hubfile.routes import parse_fits_headers
+
 
 @pytest.fixture(scope="module")
 def test_client(test_client):
@@ -22,3 +24,12 @@ def test_sample_assertion(test_client):
     """
     greeting = "Hello, World!"
     assert greeting == "Hello, World!", "The greeting does not coincide with 'Hello, World!'"
+
+
+def test_parse_fits_headers(test_client):
+    text = parse_fits_headers("app/modules/dataset/fits_examples/file1.fits")
+
+    assert "SIMPLE" in text
+    assert text.count("XTENSION") == 4
+    assert text.count("IMAGE") == 3
+    assert text.count("BINTABLE") == 1
