@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+from astropy.io import fits
 from flask import current_app, jsonify, make_response, request, send_from_directory
 from flask_login import current_user
 
@@ -16,7 +17,7 @@ def download_file(file_id):
     file = HubfileService().get_or_404(file_id)
     filename = file.name
 
-    directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+    directory_path = f"uploads/user_{file.fits_model.data_set.user_id}/dataset_{file.fits_model.data_set_id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
 
@@ -46,19 +47,30 @@ def download_file(file_id):
     return resp
 
 
+def parse_fits_headers(path):
+    hdus = fits.open(path)
+    out = ""
+
+    for hdu in hdus:
+        out += hdu.header.tostring(sep="\n")
+        out += "\n\n"
+
+    hdus.close()
+    return out
+
+
 @hubfile_bp.route("/file/view/<int:file_id>", methods=["GET"])
 def view_file(file_id):
     file = HubfileService().get_or_404(file_id)
     filename = file.name
 
-    directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+    directory_path = f"uploads/user_{file.fits_model.data_set.user_id}/dataset_{file.fits_model.data_set_id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path, filename)
 
     try:
         if os.path.exists(file_path):
-            with open(file_path, "r") as f:
-                content = f.read()
+            content = parse_fits_headers(file_path)
 
             user_cookie = request.cookies.get("view_cookie")
             if not user_cookie:
