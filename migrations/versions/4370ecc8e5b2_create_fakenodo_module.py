@@ -1,7 +1,7 @@
 """create fakenodo module
 
 Revision ID: 4370ecc8e5b2
-Revises: 001
+Revises: fc38ce3f3988
 Create Date: 2025-11-08 14:03:38.418003
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision = '4370ecc8e5b2'
-down_revision = '001'
+down_revision = 'fc38ce3f3988'
 branch_labels = None
 depends_on = None
 
@@ -22,7 +22,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.drop_table('webhook')
     # ### end Alembic commands ###
 
 
