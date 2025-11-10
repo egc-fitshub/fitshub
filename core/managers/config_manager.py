@@ -33,6 +33,15 @@ class Config:
     TIMEZONE = "Europe/Madrid"
     TEMPLATES_AUTO_RELOAD = True
     UPLOAD_FOLDER = "uploads"
+    # Mail settings
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "127.0.0.1")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", "25")) if os.getenv("MAIL_PORT") else 25
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "False") in ("True", "true", "1")
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") in ("True", "true", "1")
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", None)
+    MAIL_DEBUG = os.getenv("MAIL_DEBUG", "False") in ("True", "true", "1")
 
 
 class DevelopmentConfig(Config):

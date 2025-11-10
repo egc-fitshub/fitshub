@@ -33,6 +33,12 @@ def create_app(config_name="development"):
     migrate.init_app(app, db)
     mail.init_app(app)
 
+    # Initialize Flask-Mail
+    mail.init_app(app)
+
+    # Initialize Flask-Mail
+    mail.init_app(app)
+
     # Register modules
     module_manager = ModuleManager(app)
     module_manager.register_modules()
