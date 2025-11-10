@@ -46,16 +46,18 @@ def download_file(file_id):
 
     return resp
 
+
 def parse_fits_headers(path):
     hdus = fits.open(path)
-    out = ''
+    out = ""
 
     for hdu in hdus:
-        out += hdu.header.tostring(sep = '\n')
-        out += '\n\n'
+        out += hdu.header.tostring(sep="\n")
+        out += "\n\n"
 
     hdus.close()
     return out
+
 
 @hubfile_bp.route("/file/view/<int:file_id>", methods=["GET"])
 def view_file(file_id):
