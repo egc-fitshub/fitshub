@@ -46,6 +46,16 @@ def download_file(file_id):
 
     return resp
 
+def parse_fits_headers(path):
+    hdus = fits.open(path)
+    out = ''
+
+    for hdu in hdus:
+        out += hdu.header.tostring(sep = '\n')
+        out += '\n\n'
+
+    hdus.close()
+    return out
 
 @hubfile_bp.route("/file/view/<int:file_id>", methods=["GET"])
 def view_file(file_id):
@@ -58,8 +68,7 @@ def view_file(file_id):
 
     try:
         if os.path.exists(file_path):
-            with open(file_path, "r") as f:
-                content = "Sample FITS view"
+            content = parse_fits_headers(file_path)
 
             user_cookie = request.cookies.get("view_cookie")
             if not user_cookie:
