@@ -75,7 +75,7 @@ def test_create_new_deposition():
 def test_upload_file():
     service = FakenodoService()
     ds = make_dataset()
-    result = service.upload_file(ds, deposition_id=1234, feature_model="feature_model.obj")
+    result = service.upload_file(ds, deposition_id=1234, fits_model="fits_model.fits")
     assert isinstance(result, dict)
     assert result["status"] == "completed"
 

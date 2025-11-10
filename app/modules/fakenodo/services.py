@@ -35,9 +35,9 @@ class FakenodoService(BaseService):
             "links": {"bucket": f"http://localhost/api/files/{deposition_id}"},
         }
 
-    def upload_file(self, dataset, deposition_id: int, feature_model) -> dict:
+    def upload_file(self, dataset, deposition_id: int, fits_model) -> dict:
         """Simulates uploading a file to a deposition."""
-        logger.info(f"Simulating upload of file '{feature_model}' to deposition '{deposition_id}'")
+        logger.info(f"Simulating upload of file '{fits_model}' to deposition '{deposition_id}'")
 
         return {"status": "completed"}
 

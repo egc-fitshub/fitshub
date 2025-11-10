@@ -9,9 +9,11 @@ name: Pytest
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: 
+      - main
+      - integration-trunk
+      - trunk-g1
+      - trunk-g2
 
 jobs:
   pytest:
@@ -19,12 +21,12 @@ jobs:
 
     # Global environment variables shared across services and steps
     env:
-      MARIADB_ROOT_PASSWORD: uvlhub_root_password
-      MARIADB_DATABASE: uvlhubdb_test
-      MARIADB_TEST_DATABASE: uvlhubdb_test
-      MARIADB_USER: uvlhub_user
-      MARIADB_PASSWORD: uvlhub_password
-      MARIADB_HOSTNAME: 127.0.0.1
+      MARIADB_ROOT_PASSWORD: fitshubdb_root_password
+      MARIADB_DATABASE: fitshubdb
+      MARIADB_TEST_DATABASE: fitshubdb_test
+      MARIADB_USER: fitshubdb_user
+      MARIADB_PASSWORD: fitshubdb_password
+      MARIADB_HOSTNAME: localhost
       MARIADB_PORT: 3306
       FLASK_ENV: testing
 
@@ -33,10 +35,10 @@ jobs:
       mariadb:
         image: mariadb:12.0.2
         env:
-          MARIADB_ROOT_PASSWORD: ${{ env.MARIADB_ROOT_PASSWORD }}
-          MARIADB_DATABASE: ${{ env.MARIADB_DATABASE }}
-          MARIADB_USER: ${{ env.MARIADB_USER }}
-          MARIADB_PASSWORD: ${{ env.MARIADB_PASSWORD }}
+          MARIADB_ROOT_PASSWORD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
+          MARIADB_DATABASE: ${{ secrets.MARIADB_TEST_DATABASE }}
+          MARIADB_USER: ${{ secrets.MARIADB_USER }}
+          MARIADB_PASSWORD: ${{ secrets.MARIADB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
@@ -46,27 +48,31 @@ jobs:
           --health-retries=3
 
     steps:
+
+      # Step 1: Show which branch you are working in
+      - name: Print Branch Name
+        run: echo "Workflow running on branch ${{ github.ref_name }}"
       
-      # Step 1: Checkout the repository code
+      # Step 2: Checkout the repository code
       - name: Checkout
         uses: actions/checkout@v5
 
-      # Step 2: Set up Python environment (version 3.12)
+      # Step 3: Set up Python environment (version 3.12)
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      # Step 3: Remove local editable mode for rosemary dependency (not CI-friendly)
+      # Step 4: Remove local editable mode for rosemary dependency (not CI-friendly)
       - name: Delete rosemary editable mode
         run: sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
 
-      # Step 4: Install Python dependencies
+      # Step 5: Install Python dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 5: Run the pytest test suite (ignoring Selenium tests)
+      # Step 6: Run the pytest test suite (ignoring Selenium tests)
       - name: Run Tests
         run: pytest app/modules/ --ignore-glob='*selenium*'

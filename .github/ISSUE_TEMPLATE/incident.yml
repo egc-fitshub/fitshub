@@ -1,0 +1,68 @@
+name: Incident
+description: Report a bug or incident
+labels: ["tipo: Incidencia"]
+projects: [egc-fitshub/2]
+assignees: ["mquirosq", "javiarellanoo"]
+body:
+  - type: input
+    id: description
+    attributes:
+      label: "Description"
+      description: "Briefly describe the incident"
+      placeholder: "Example: Clicking the submit button crashes the app"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "List the steps to reproduce the issue"
+      placeholder: "1. Open the app\n2. Click submit\n3. Observe the crash"
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: "Expected Behaviour"
+      description: "What should have happened?"
+      placeholder: "The form should submit successfully"
+    validations:
+      required: true
+
+  - type: input
+    id: actual
+    attributes:
+      label: "Actual Behaviour"
+      description: "What actually happened?"
+      placeholder: "The app crashes and shows an error message"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: "Version of the Software"
+      description: "Specify the version of the software"
+      placeholder: "Example: v2.3.1"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: "Browser / Environment"
+      description: "Browser name and version or environment where the bug occurs"
+      placeholder: "Example: Chrome 118.0, Windows 11, Docker container, Render environment"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "Additional Details / Screenshots"
+      description: "Any additional information, logs, or screenshots"
+      placeholder: "Attach screenshots or logs here"
+    validations:
+      required: false
