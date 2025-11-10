@@ -1,11 +1,14 @@
 <div style="text-align: center;">
-  <img src="https://www.uvlhub.io/static/img/logos/logo.png" alt="Logo">
+  <img src="/app/static/img/logos/logo.png" alt="Logo" width="200">
 </div>
 
-# uvlhub.io
+# fitshub<span>.io</span>
 
-Repository of .fits files for astronomy databases integrated with a Zenodo clone and astropy following Open Science principles - Developed by "Grupo fitshub" for Evolución y Gestión de la Configuración in Universidad de Sevilla
+**fitshub<span>.io</span>** is a collaborative platform and repository of FITS (Flexible Image Transport System) models designed for astronomical databases.  
+FITS is the standard format for storing, transmitting, and processing astronomical data, supporting multi-dimensional arrays and rich metadata such as photometric, spatial, and calibration information.
 
-## Official documentation
+fitshub<span>.io</span> is a **fork of [uvlhub.io](https://uvlhub.io/)**, enhancing the original platform with new FITS models and additional functionality.  
+The platform integrates a **Zenodo clone** for dataset management and the **AstroPy** library for data handling and analysis, promoting interoperability and reproducibility in astronomical research.  
+By following **Open Science** principles, fitshub<span>.io</span> aims to provide a structured and accessible environment for sharing scientific data and models within the astronomy community.
 
-You can consult the official documentation of the project at [docs.uvlhub.io](https://docs.uvlhub.io/)
+This project is developed by the **FitsHub Project Teams 1 and 2** as the practical component of the **Evolución y Gestión de la Configuración (EGC)** course at the **University of Seville**.
