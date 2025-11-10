@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+from astropy.io import fits
 from flask import current_app, jsonify, make_response, request, send_from_directory
 from flask_login import current_user
 
@@ -58,7 +59,7 @@ def view_file(file_id):
     try:
         if os.path.exists(file_path):
             with open(file_path, "r") as f:
-                content = f.read()
+                content = "Sample FITS view"
 
             user_cookie = request.cookies.get("view_cookie")
             if not user_cookie:
