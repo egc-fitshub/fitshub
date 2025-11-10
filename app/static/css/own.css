@@ -185,3 +185,29 @@
     padding: 5px;
     border-radius: 3px;
 }
+
+.doi-badge-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.doi-container {
+}
+
+.badge-actions-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.badge-actions-buttons {
+    display: flex;
+    gap: 0.5rem; 
+}
+
+.badge-actions-buttons .btn {
+    border-radius: 5px; 
+}

@@ -19,7 +19,7 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <h2>
 
-                                <a href="{{ dataset.get_uvlhub_doi() }}">
+                                <a href="{{ dataset.get_fitshub_doi() }}">
                                     {{ dataset.ds_meta_data.title }}
                                 </a>
 
@@ -28,7 +28,13 @@
                                 <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
                             </div>
                         </div>
+                        <div class="d-flex justify-content-between mb-3">
                         <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <div class="d-flex justify-content-between">
+                            <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
+                            <p class="text-secondary">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
+                        </div>
+                    </div>
 
                         <div class="row mb-2">
 
@@ -60,14 +66,14 @@
                         <div class="row mb-2">
 
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}">{{ dataset.get_uvlhub_doi() }}</a>
-                                 <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
-                                {{ dataset.get_uvlhub_doi() }}
+                                <a href="{{ dataset.get_fitshub_doi() }}">{{ dataset.get_fitshub_doi() }}</a>
+                                 <div id="dataset_doi_fitshub_{{ dataset.id }}" style="display: none">
+                                {{ dataset.get_fitshub_doi() }}
                             </div>
 
                             <i data-feather="clipboard" class="center-button-icon"
                                style="cursor: pointer"
-                               onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                               onclick="copyText('dataset_doi_fitshub_{{ dataset.id }}')"></i>
                             </div>
 
 
@@ -86,7 +92,7 @@
 
                         <div class="row  mt-4">
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-outline-primary btn-sm"
+                                <a href="{{ dataset.get_fitshub_doi() }}" class="btn btn-outline-primary btn-sm"
                                    style="border-radius: 5px;">
                                     <i data-feather="eye" class="center-button-icon"></i>
                                     View dataset
@@ -131,7 +137,7 @@
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;{{ feature_models_counter }} feature models
+                                <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;{{ fits_models_counter }} fits models
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
@@ -139,7 +145,7 @@
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_views }} feature models viewed
+                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_fits_model_views }} fits models viewed
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
@@ -147,7 +153,7 @@
                             </h4>
                     
                             <h4 class="h4" class="stats-color">
-                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_downloads }} feature models downloaded
+                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_fits_model_downloads }} fits models downloaded
                             </h4>
                     
                         </h1>
@@ -168,7 +174,7 @@
                             <h2> <b>Related publication</b> </h2>
                             
                             David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides. 
-                            <i>UVLHub: A feature model data repository using UVL and open science principles</i>,
+                            <i>UVLHub: A fits model data repository using UVL and open science principles</i>,
                             Journal of Systems and Software,
                             2024,
                             112150,
@@ -207,7 +213,7 @@
 
                             <div class="card-body card-body-slim">
 
-                                What are you waiting for to upload your fantastic feature models in UVL format?
+                                What are you waiting for to upload your fantastic fits models?
 
                                 <div class="row mt-2">
 
@@ -243,14 +249,19 @@
                     <div class="card card-dark">
 
                         <h2 class="card-title card-title-light">
-                            What is <b>uvlhub.io</b>?
+                            What is <b>fitshub.io</b>?
                         </h2>
 
                         <div class="card-body card-body-slim">
-
-                            <strong>uvlhub.io</strong> is a repository of feature models in UVL format integrated with
-                            Zenodo and FlamaPy developed by DiversoLab
-
+                            <p>
+                                <strong>fitshub.io</strong> is a repository of feature models in FITS (Flexible Image Transport System)
+                                format. FITS is the standard format for storing and processing astronomical data, supporting
+                                multi-dimensional arrays and detailed metadata.
+                            </p>
+                            <p style="margin-bottom: 0;">
+                                The platform integrates a Zenodo clone and AstroPy, and is developed by FitsHub lab groups 1
+                                and 2 as the practical project for the EGC course.
+                            </p>
                         </div>
 
                         <h2 class="card-title card-title-light">
@@ -259,12 +270,12 @@
 
                         <div class="card-body card-body-slim">
 
-                            Sure! You can make a fork of our official repository on GitHub,
-                            create fantastic features and then make a pull request to us.
+                             Sure! You can make a fork of our official repository on GitHub, create fantastic features and
+                             then make a pull request to us. 
 
                             <br><br>
 
-                            <a href="https://github.com/diverso-lab/uvlhub" target="_blank" class="btn btn-primary">
+                            <a href="https://github.com/egc-fitshub/fitshub" target="_blank" class="btn btn-primary">
                                 Go to GitHub</a>
 
                         </div>

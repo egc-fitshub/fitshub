@@ -90,13 +90,13 @@ var currentId = 0;
 
 
         document.addEventListener('click', function (event) {
-            if (event.target && event.target.classList.contains('add_author_to_uvl')) {
+            if (event.target && event.target.classList.contains('add_author_to_fits')) {
 
                 let authorsButtonId = event.target.id;
                 let authorsId = authorsButtonId.replace("_button", "");
                 let authors = document.getElementById(authorsId);
                 let id = authorsId.replace("_form_authors", "")
-                let newAuthor = createAuthorBlock(amount_authors, `feature_models-${id}-`);
+                let newAuthor = createAuthorBlock(amount_authors, `fits_models-${id}-`);
                 authors.appendChild(newAuthor);
 
             }
