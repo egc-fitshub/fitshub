@@ -1,7 +1,12 @@
 import os
+import secrets
+from datetime import datetime, timedelta
 
+from flask import url_for
 from flask_login import current_user, login_user
+from flask_mail import Message
 
+from app import db, mail
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
@@ -76,3 +81,26 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def send_password_reset_email(self, user):
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.token_expiration = datetime.utcnow() + timedelta(hours=1)
+        db.session.commit()
+
+        reset_url = url_for("auth.reset_password_view", token=token, _external=True)
+
+        msg = Message(
+            subject="Recuperación de contraseña - Fitshub",
+            recipients=[user.email],
+            body=(
+                f"Hola,\n\n"
+                f"Has solicitado restablecer tu contraseña en Fitshub.\n\n"
+                f"Para hacerlo, haz clic en el siguiente enlace:\n{reset_url}\n\n"
+                f"Este enlace expirará en 1 hora.\n\n"
+                "Si no solicitaste este cambio, puedes ignorar este mensaje.\n\n"
+                "-- Equipo Fitshub"
+            ),
+        )
+
+        mail.send(msg)
