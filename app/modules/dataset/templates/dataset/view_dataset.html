@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-between mb-3">
-                    <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                     <div class="d-flex">
                         <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
                         <p class="text-secondary">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
@@ -162,32 +162,60 @@
                 
 
             </div>
-
+            
             {% if dataset.ds_meta_data.dataset_doi %}
             <div class="card-body" style="padding-top: 0px">
 
-                <div id="dataset_doi_fitshub" style="display: none">
-                    {{ dataset.get_fitshub_doi() }}
+                {% set json_endpoint_url = url_for('dataset.generate_json_badge_data', dataset_id=dataset.id, _external=True) %}
+                {% set shields_io_url = 'https://img.shields.io/endpoint?url=' ~ (json_endpoint_url | urlencode) %}
+                <div class="doi-badge-container">
+                    
+                    <div class="doi-container">
+                        <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
+                            <span class="button_doi_id">
+                                <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
+                                <b>DOI</b>
+                            </span>
+                            <span class="doi_text">
+                                {{ dataset.get_fitshub_doi() }}
+                            </span>
+                        </button>
+
+                        <div id="dataset_doi_uvlhub" style="display: none">
+                            {{ dataset.get_fitshub_doi() }}
+                        </div>
+                    </div>
+
+                    <div class="badge-actions-block">
+                        
+                        <a href="{{ dataset.get_fitshub_doi() }}">
+                            <img src="{{ shields_io_url }}" alt="Vista Previa del Badge">
+                        </a>
+
+                        <div class="badge-actions-buttons">
+                            <button type="button" class="btn btn-secondary btn-sm d-inline-flex align-items-center" onclick="copyInputToClipboard('markdown-input', this)" title="Copiar Markdown">
+                                <i data-feather="clipboard" class="center-button-icon" style="margin-right: 5px; width: 40px; height: 30px;"></i>
+                                MARKDOWN
+                            </button>
+
+                            <button type="button" class="btn btn-secondary btn-sm d-inline-flex align-items-center" onclick="copyInputToClipboard('html-input', this)" title="Copiar HTML">
+                                <i data-feather="code" class="center-button-icon" style="margin-right: 5px; width: 40px; height: 30px;"></i>
+                                HTML
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
 
-                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_fitshub')">
-                    <span class="button_doi_id">
-                        <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
-                        <b>DOI</b>
-                    </span>
-                    <span class="doi_text">
-                        {{ dataset.get_fitshub_doi() }}
-                    </span>
-                </button>
-                
-                <div id="dataset_doi_fitshub" style="display: none">
-                    {{ dataset.get_fitshub_doi() }}
+                <div class="d-none">
+                    <input type="text" value="[![{{ dataset.ds_meta_data.title }}]({{ shields_io_url }})]({{ dataset.get_fitshub_doi() }})" readonly id="markdown-input">
+                    <input type="text" value='<a href="{{ dataset.get_fitshub_doi() }}"><img src="{{ shields_io_url }}" alt="{{ dataset.ds_meta_data.title }} Badge"></a>' readonly id="html-input">
                 </div>
                 
             </div>
             {% endif %}
 
-        </div>
+        </div> 
 
         <div class="card">
 
@@ -233,7 +261,7 @@
 
 
     </div>
-
+    
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
 
         <div class="list-group">
@@ -326,6 +354,39 @@
 
 
 <script>
+// Para los botones de Markdown y HTML
+function copyInputToClipboard(elementId, buttonElement) {
+    var inputElement = document.getElementById(elementId);
+    
+    if (!inputElement) {
+        console.error("Error: Elemento no encontrado", elementId);
+        return;
+    }
+    
+    navigator.clipboard.writeText(inputElement.value).then(function() {
+        console.log('¡Código copiado!');
+        
+        var originalHTML = buttonElement.innerHTML; 
+        var icon = buttonElement.querySelector('i'); 
+        var iconStyle = icon ? icon.style.cssText : "margin-right: 5px; width: 40px; height: 30px;"; 
+        var buttonText = buttonElement.innerText; 
+
+        buttonElement.innerHTML = `<i data-feather="check" style="${iconStyle} color: green;"></i> ${buttonText}`;
+        feather.replace();
+        buttonElement.disabled = true;
+        
+        setTimeout(function() {
+            buttonElement.innerHTML = originalHTML; 
+            feather.replace();
+            buttonElement.disabled = false;
+        }, 2000); 
+
+    }, function(err) {
+        console.error('Failed to copy text: ', err);
+    });
+}
+
+
     document.addEventListener('DOMContentLoaded', function () {
         feather.replace();
     });
