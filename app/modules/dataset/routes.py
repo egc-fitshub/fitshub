@@ -1,13 +1,13 @@
 import json
 import logging
 import os
+import re
 import shutil
 import tempfile
 import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
-import pybadges
-import re
+
 from flask import (
     abort,
     jsonify,
@@ -17,14 +17,12 @@ from flask import (
     request,
     send_from_directory,
     url_for,
-    Response,
-    jsonify,
 )
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord, DataSet
+from app.modules.dataset.models import DataSet, DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -56,7 +54,6 @@ def generate_json_badge_data(dataset_id):
         dataset = DataSet.query.get_or_404(dataset_id)
         meta = dataset.ds_meta_data
         download_counter = str(dataset.download_counter)
-        label = meta.title[:30] + "..." if len(meta.title) > 30 else meta.title
         doi_full_url = meta.dataset_doi or "N/A"
 
         match = re.search(r"(10\.\d{4,9}/[-._;()/:A-Z0-9]+)", doi_full_url, re.IGNORECASE)
