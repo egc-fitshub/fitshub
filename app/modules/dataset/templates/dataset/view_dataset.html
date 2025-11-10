@@ -166,11 +166,11 @@
             {% if dataset.ds_meta_data.dataset_doi %}
             <div class="card-body" style="padding-top: 0px">
 
-                <div id="dataset_doi_uvlhub" style="display: none">
+                <div id="dataset_doi_fitshub" style="display: none">
                     {{ dataset.get_fitshub_doi() }}
                 </div>
 
-                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
+                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_fitshub')">
                     <span class="button_doi_id">
                         <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
                         <b>DOI</b>
@@ -180,7 +180,7 @@
                     </span>
                 </button>
                 
-                <div id="dataset_doi_uvlhub" style="display: none">
+                <div id="dataset_doi_fitshub" style="display: none">
                     {{ dataset.get_fitshub_doi() }}
                 </div>
                 
@@ -242,7 +242,7 @@
 
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h4 style="margin-bottom: 0px">UVL models</h4>
+                        <h4 style="margin-bottom: 0px">FITS models</h4>
                         <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
                     </div>
                 </div>

@@ -55,7 +55,7 @@ def test_upload_dataset():
         driver.get(f"{host}/dataset/upload")
         wait_for_page_to_load(driver)
 
-        # Find basic info and UVL model and fill values
+        # Find basic info and FITS model and fill values
         title_field = driver.find_element(By.NAME, "title")
         title_field.send_keys("Title")
         desc_field = driver.find_element(By.NAME, "desc")
@@ -96,16 +96,16 @@ def test_upload_dataset():
         dropzone.send_keys(file2_path)
         wait_for_page_to_load(driver)
 
-        # Add authors in UVL models
+        # Add authors in FITS models
         show_button = driver.find_element(By.ID, "0_button")
         show_button.send_keys(Keys.RETURN)
-        add_author_uvl_button = driver.find_element(By.ID, "0_form_authors_button")
-        add_author_uvl_button.send_keys(Keys.RETURN)
+        add_author_fits_button = driver.find_element(By.ID, "0_form_authors_button")
+        add_author_fits_button.send_keys(Keys.RETURN)
         wait_for_page_to_load(driver)
 
-        name_field = driver.find_element(By.NAME, "feature_models-0-authors-2-name")
+        name_field = driver.find_element(By.NAME, "fits_models-0-authors-2-name")
         name_field.send_keys("Author3")
-        affiliation_field = driver.find_element(By.NAME, "feature_models-0-authors-2-affiliation")
+        affiliation_field = driver.find_element(By.NAME, "fits_models-0-authors-2-affiliation")
         affiliation_field.send_keys("Club3")
 
         # Check I agree and send form
