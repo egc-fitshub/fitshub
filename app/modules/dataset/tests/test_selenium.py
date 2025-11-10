@@ -131,5 +131,26 @@ def test_upload_dataset():
         close_driver(driver)
 
 
+def test_view_dataset():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the login page
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+
+        driver.find_element(By.ID, "email").send_keys("user1@example.com")
+        driver.find_element(By.ID, "password").send_keys("1234")
+        driver.find_element(By.ID, "submit").click()
+        driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
+
+    finally:
+        close_driver(driver)
+
+
 # Call the test function
+test_view_dataset()
 test_upload_dataset()
