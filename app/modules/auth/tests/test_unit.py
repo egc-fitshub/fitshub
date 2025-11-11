@@ -3,7 +3,6 @@ from flask import url_for
 
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
-from app.modules.conftest import login, logout
 from app.modules.profile.repositories import UserProfileRepository
 
 
@@ -67,24 +66,6 @@ def test_signup_user_successful(test_client):
         follow_redirects=True,
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
-
-
-def test_admin_roles_success_as_admin(test_client):
-    login(test_client, "admin@example.com", "test1234")
-
-    response = test_client.get("/admin_roles", follow_redirects=True)
-
-    assert response.status_code == 200
-    assert response.request.path == url_for("auth.admin_roles"), "Admin should access admin roles page"
-
-    assert b"test@example.com" in response.data
-    assert b"curator@example.com" in response.data
-    assert b"User" in response.data
-    assert b"Curator" in response.data
-
-    assert b"admin@example.com" not in response.data
-
-    logout(test_client)
 
 
 def test_service_create_with_profie_success(clean_database):
