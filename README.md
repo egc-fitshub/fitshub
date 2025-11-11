@@ -11,4 +11,4 @@ fitshub<span>.io</span> is a **fork of [uvlhub.io](https://uvlhub.io/)**, enhanc
 The platform integrates a **Zenodo clone** for dataset management and the **AstroPy** library for data handling and analysis, promoting interoperability and reproducibility in astronomical research.  
 By following **Open Science** principles, fitshub<span>.io</span> aims to provide a structured and accessible environment for sharing scientific data and models within the astronomy community.
 
-This project is developed by the **FitsHub Project Teams 1 and 2** as the practical component of the **Evolución y Gestión de la Configuración (EGC)** course at the **University of Seville**.
+This project is developed by the **FitsHub Project Teams 1 and 2** as the practical component of the **Evolución y Gestión de la Configuración (EGC)** course at the **University of Seville.**
