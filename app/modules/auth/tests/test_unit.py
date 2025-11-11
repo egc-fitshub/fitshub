@@ -8,25 +8,14 @@ from app.modules.auth.services import AuthenticationService
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from datetime import datetime, timedelta
+from app.modules.conftest import login, logout
 
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_client(test_client):
-    """
-    Extends the test_client fixture to add additional specific data for module testing.
-    """
     with test_client.application.app_context():
-        # Crear usuario administrador para las pruebas
-        admin_user = User(email="admin@test.com", password="test1234", role=RoleType.ADMINISTRATOR)
-        db.session.add(admin_user)
-        db.session.flush()  # Flush to get the ID before creating profile
-
-        # Crear perfil para el admin
-        admin_profile = UserProfile(
-            user_id=admin_user.id, name="Admin", surname="Test", affiliation="Test University", orcid=""
-        )
-        db.session.add(admin_profile)
-        db.session.commit()
+        # Add HERE new elements to the database that you want to exist in the test context.
+        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+        pass
 
     yield test_client
 
@@ -81,6 +70,23 @@ def test_signup_user_successful(test_client):
         follow_redirects=True,
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
+
+def test_admin_roles_success_as_admin(test_client):
+    login(test_client, "admin@example.com", "test1234")
+
+    response = test_client.get("/admin_roles", follow_redirects=True)
+    
+    assert response.status_code == 200    
+    assert response.request.path == url_for("auth.admin_roles"), "Admin should access admin roles page"
+    
+    assert b"test@example.com" in response.data
+    assert b"curator@example.com" in response.data    
+    assert b"User" in response.data
+    assert b"Curator" in response.data
+    
+    assert b"admin@example.com" not in response.data
+    
+    logout(test_client)
 
 
 def test_service_create_with_profie_success(clean_database):

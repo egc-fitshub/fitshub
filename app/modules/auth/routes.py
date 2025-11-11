@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import redirect, render_template, request, url_for
-from flask_login import current_user, login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_required, login_user, logout_user
 from werkzeug.security import generate_password_hash
 
 from app import db
@@ -59,6 +59,37 @@ def logout():
     return redirect(url_for("public.index"))
 
 
+@auth_bp.route("/admin_roles", methods=["GET"])
+@login_required
+def admin_roles():
+    if current_user.role.value != "administrator":
+        return redirect(url_for("public.index"))
+    roles = authentication_service.get_users_roles()
+    return render_template("auth/admin_roles.html", roles=roles)
+
+
+@auth_bp.route("/update_roles", methods=["POST"])
+@login_required
+def update_roles():
+    if current_user.role.value != "administrator":
+        return redirect(url_for("public.index"))
+
+    updates = []
+    for key, value in request.form.items():
+        if key.startswith("role_"):
+            user_id = key.split("_")[1]
+            new_role = value
+            updates.append((user_id, new_role))
+
+    for user_id, new_role in updates:
+        try:
+            authentication_service.update_user_role(user_id, new_role)
+        except Exception:
+            return redirect(url_for("public.index"))
+
+    return redirect(url_for("auth.admin_roles"))
+
+
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password_view():
     form = ForgotPasswordForm()
@@ -89,33 +120,3 @@ def reset_password_view(token):
 
     return render_template("auth/reset_password.html", form=form)
 
-
-@auth_bp.route("/admin_roles", methods=["GET"])
-@login_required
-def admin_roles():
-    if current_user.role != RoleType.ADMINISTRATOR:
-        return redirect(url_for("public.index"))
-    roles = authentication_service.get_users_roles()
-    return render_template("auth/admin_roles.html", roles=roles)
-
-
-@auth_bp.route("/update_roles", methods=["POST"])
-@login_required
-def update_roles():
-    if current_user.role.value != "administrator":
-        return redirect(url_for("public.index"))
-
-    updates = []
-    for key, value in request.form.items():
-        if key.startswith("role_"):
-            user_id = key.split("_")[1]
-            new_role = value
-            updates.append((user_id, new_role))
-
-    for user_id, new_role in updates:
-        try:
-            authentication_service.update_user_role(user_id, new_role)
-        except Exception:
-            return redirect(url_for("public.index"))
-
-    return redirect(url_for("auth.admin_roles"))
