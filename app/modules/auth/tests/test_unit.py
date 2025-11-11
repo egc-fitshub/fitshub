@@ -4,8 +4,6 @@ from flask import url_for
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
-from app.modules.auth.models import User
-from datetime import datetime, timedelta
 
 
 @pytest.fixture(scope="module")
@@ -104,8 +102,8 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
-    
-    
+
+
 def test_forgot_password_get(test_client):
     response = test_client.get("/forgot-password")
     assert response.status_code == 200
@@ -113,19 +111,11 @@ def test_forgot_password_get(test_client):
 
 
 def test_forgot_password_post_user_not_found(test_client):
-    response = test_client.post(
-        "/forgot-password",
-        data=dict(email="nonexistent@example.com"),
-        follow_redirects=True
-    )
+    response = test_client.post("/forgot-password", data=dict(email="nonexistent@example.com"), follow_redirects=True)
     assert response.status_code == 200
     assert b"Correo no registrado" in response.data
 
 
 def test_forgot_password_post_success(test_client):
-    response = test_client.post(
-        "/forgot-password",
-        data=dict(email="test@example.com"),
-        follow_redirects=True
-    )
+    response = test_client.post("/forgot-password", data=dict(email="test@example.com"), follow_redirects=True)
     assert response.status_code == 200
