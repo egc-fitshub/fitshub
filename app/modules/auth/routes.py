@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash
 from app import db
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignupForm
-from app.modules.auth.models import User
+from app.modules.auth.models import User, RoleType
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 
@@ -93,7 +93,7 @@ def reset_password_view(token):
 @auth_bp.route("/admin_roles", methods=["GET"])
 @login_required
 def admin_roles():
-    if current_user.role.value != "administrator":
+    if current_user.role != RoleType.ADMINISTRATOR:
         return redirect(url_for("public.index"))
     roles = authentication_service.get_users_roles()
     return render_template("auth/admin_roles.html", roles=roles)
