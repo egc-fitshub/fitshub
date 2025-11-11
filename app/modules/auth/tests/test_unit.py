@@ -1,14 +1,11 @@
 import pytest
 from flask import url_for
 
-from app import db
-from app.modules.auth.models import RoleType, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
-from app.modules.profile.models import UserProfile
-from app.modules.profile.repositories import UserProfileRepository
-from datetime import datetime, timedelta
 from app.modules.conftest import login, logout
+from app.modules.profile.repositories import UserProfileRepository
+
 
 @pytest.fixture(scope="function")
 def test_client(test_client):
@@ -71,21 +68,22 @@ def test_signup_user_successful(test_client):
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
 
+
 def test_admin_roles_success_as_admin(test_client):
     login(test_client, "admin@example.com", "test1234")
 
     response = test_client.get("/admin_roles", follow_redirects=True)
-    
-    assert response.status_code == 200    
+
+    assert response.status_code == 200
     assert response.request.path == url_for("auth.admin_roles"), "Admin should access admin roles page"
-    
+
     assert b"test@example.com" in response.data
-    assert b"curator@example.com" in response.data    
+    assert b"curator@example.com" in response.data
     assert b"User" in response.data
     assert b"Curator" in response.data
-    
+
     assert b"admin@example.com" not in response.data
-    
+
     logout(test_client)
 
 
@@ -116,8 +114,8 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
-    
-    
+
+
 def test_forgot_password_get(test_client):
     response = test_client.get("/forgot-password")
     assert response.status_code == 200
@@ -125,21 +123,13 @@ def test_forgot_password_get(test_client):
 
 
 def test_forgot_password_post_user_not_found(test_client):
-    response = test_client.post(
-        "/forgot-password",
-        data=dict(email="nonexistent@example.com"),
-        follow_redirects=True
-    )
+    response = test_client.post("/forgot-password", data=dict(email="nonexistent@example.com"), follow_redirects=True)
     assert response.status_code == 200
     assert b"Correo no registrado" in response.data
 
 
 def test_forgot_password_post_success(test_client):
-    response = test_client.post(
-        "/forgot-password",
-        data=dict(email="test@example.com"),
-        follow_redirects=True
-    )
+    response = test_client.post("/forgot-password", data=dict(email="test@example.com"), follow_redirects=True)
     assert response.status_code == 200
 
 

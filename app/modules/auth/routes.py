@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from flask import redirect, render_template, request, url_for
-from flask_login import current_user, login_required, login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import generate_password_hash
 
 from app import db
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignupForm
-from app.modules.auth.models import User, RoleType
+from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 
@@ -119,4 +119,3 @@ def reset_password_view(token):
         return redirect(url_for("auth.login"))
 
     return render_template("auth/reset_password.html", form=form)
-
