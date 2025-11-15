@@ -179,7 +179,7 @@ def test_badge():
 
         assert markdown_value.startswith("[![Sample dataset 4]"), "Markdown value is incorrect"
         assert "shields.io" in markdown_value, "Markdown value is incorrect"
-        
+
         assert html_value.startswith("<a href="), "HTML value is incorrect"
         assert "doi/10.1234/dataset4" in html_value, "HTML value is incorrect"
 
