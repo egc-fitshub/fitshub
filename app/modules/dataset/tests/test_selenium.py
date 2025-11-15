@@ -149,6 +149,8 @@ def test_view_dataset():
 
     finally:
         close_driver(driver)
+
+
 def test_badge():
     driver = initialize_driver()
 
