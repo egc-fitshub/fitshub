@@ -190,7 +190,46 @@ def test_download_counter():
         close_driver(driver)
 
 
+def test_badge():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the login page
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+
+        driver.find_element(By.ID, "email").send_keys("user1@example.com")
+        driver.find_element(By.ID, "password").send_keys("1234")
+        driver.find_element(By.ID, "submit").click()
+        driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
+
+        badge_image = driver.find_element(By.CSS_SELECTOR, ".badge-actions-block img")
+        assert badge_image.is_displayed(), "Badge image is not visible"
+        badge_src = badge_image.get_attribute("src")
+        assert "img.shields.io" in badge_src, "Badge image src is not from shields.io"
+        assert "dataset/4/badge.json" in badge_src
+
+        markdown_input = driver.find_element(By.ID, "markdown-input")
+        html_input = driver.find_element(By.ID, "html-input")
+
+        markdown_value = markdown_input.get_attribute("value")
+        html_value = html_input.get_attribute("value")
+
+        assert markdown_value.startswith("[![Sample dataset 4]"), "Markdown value is incorrect"
+        assert "shields.io" in markdown_value, "Markdown value is incorrect"
+
+        assert html_value.startswith("<a href="), "HTML value is incorrect"
+        assert "doi/10.1234/dataset4" in html_value, "HTML value is incorrect"
+
+    finally:
+        close_driver(driver)
+
+
 # Call the test function
 test_download_counter()
 test_view_dataset()
 test_upload_dataset()
+test_badge()
