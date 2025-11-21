@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from flask_login import current_user
@@ -96,6 +96,21 @@ class DataSetRepository(BaseRepository):
             .filter(DSMetaData.dataset_doi.isnot(None))
             .order_by(desc(self.model.id))
             .limit(5)
+            .all()
+        )
+
+    def trending_datasets(self, period_days=7, limit=10):
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=period_days)
+
+        return (
+            self.session.query(DataSet, func.count(DSDownloadRecord.id).label("download_count"))
+            .join(DSDownloadRecord, DataSet.id == DSDownloadRecord.dataset_id)
+            .join(DSMetaData, DataSet.ds_meta_data_id == DSMetaData.id)
+            .filter(DSDownloadRecord.download_date >= cutoff_date)
+            .filter(DSMetaData.dataset_doi.isnot(None))
+            .group_by(DataSet.id)
+            .order_by(func.count(DSDownloadRecord.id).desc())
+            .limit(limit)
             .all()
         )
 
