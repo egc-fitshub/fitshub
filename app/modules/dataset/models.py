@@ -74,6 +74,13 @@ class DataSet(db.Model):
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
     fits_models = db.relationship("FitsModel", backref="data_set", lazy=True, cascade="all, delete")
+    
+    community_associations = db.relationship(
+        "CommunityDataSet", 
+        back_populates="dataset", 
+        lazy="dynamic", 
+        cascade="all, delete-orphan"
+    )
 
     def name(self):
         return self.ds_meta_data.title
@@ -109,6 +116,13 @@ class DataSet(db.Model):
         from app.modules.dataset.services import DataSetService
 
         return DataSetService().get_fitshub_doi(self)
+    
+    def communities(self):
+        from app.modules.community.models import Community, CommunityDataSet
+        
+        return Community.query.join(CommunityDataSet).filter(
+            CommunityDataSet.dataset_id == self.id
+        )
 
     def to_dict(self):
         return {
@@ -130,6 +144,7 @@ class DataSet(db.Model):
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
             "download_counter": self.download_counter,
+            "communities": self.communities
         }
 
     def __repr__(self):
