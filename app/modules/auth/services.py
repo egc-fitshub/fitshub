@@ -112,6 +112,9 @@ class AuthenticationService(BaseService):
             raise PermissionError("Se requiere rol de administrador para esta acción.")
         return self.repository.get_roles()
 
+    def get_curators(self):
+        return self.repository.get_curators()
+
     def update_user_role(self, user_id, new_role):
         if new_role not in ["administrator", "curator", "user"]:
             raise ValueError(f"Invalid role '{new_role}'")
