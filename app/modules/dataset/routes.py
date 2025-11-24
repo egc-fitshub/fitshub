@@ -159,14 +159,11 @@ def generate_temp_filename(filename):
     else:
         new_filename = filename
 
-    return file_path, new_filename
+    return (file_path, new_filename)
 
 
 def save_file_to_temp(file):
     temp_folder = current_user.temp_folder()
-
-    if not file or not file.filename.endswith(".fits"):
-        return jsonify({"message": "No valid file"}), 400
 
     # create temp folder
     if not os.path.exists(temp_folder):
@@ -174,7 +171,7 @@ def save_file_to_temp(file):
 
     file_path, new_filename = generate_temp_filename(file.filename)
     file.save(file_path)
-    return file_path, new_filename
+    return (file_path, new_filename)
 
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
