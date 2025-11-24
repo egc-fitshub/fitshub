@@ -144,10 +144,25 @@ def list_dataset():
     )
 
 
-@dataset_bp.route("/dataset/file/upload", methods=["POST"])
-@login_required
-def upload():
-    file = request.files["file"]
+def generate_temp_filename(filename):
+    temp_folder = current_user.temp_folder()
+    file_path = os.path.join(temp_folder, filename)
+
+    if os.path.exists(file_path):
+        # Generate unique filename (by recursion)
+        base_name, extension = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
+            i += 1
+        new_filename = f"{base_name} ({i}){extension}"
+        file_path = os.path.join(temp_folder, new_filename)
+    else:
+        new_filename = filename
+
+    return file_path, new_filename
+
+
+def save_file_to_temp(file):
     temp_folder = current_user.temp_folder()
 
     if not file or not file.filename.endswith(".fits"):
@@ -157,21 +172,21 @@ def upload():
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)
 
-    file_path = os.path.join(temp_folder, file.filename)
+    file_path, new_filename = generate_temp_filename(file.filename)
+    file.save(file_path)
+    return new_filename
 
-    if os.path.exists(file_path):
-        # Generate unique filename (by recursion)
-        base_name, extension = os.path.splitext(file.filename)
-        i = 1
-        while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
-            i += 1
-        new_filename = f"{base_name} ({i}){extension}"
-        file_path = os.path.join(temp_folder, new_filename)
-    else:
-        new_filename = file.filename
+
+@dataset_bp.route("/dataset/file/upload", methods=["POST"])
+@login_required
+def upload():
+    file = request.files["file"]
+
+    if not file or not file.filename.endswith(".fits"):
+        return jsonify({"message": "No valid file"}), 400
 
     try:
-        file.save(file_path)
+        new_filename = save_file_to_temp(file)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
@@ -180,6 +195,43 @@ def upload():
             {
                 "message": "FITS uploaded and validated successfully",
                 "filename": new_filename,
+            }
+        ),
+        200,
+    )
+
+
+@dataset_bp.route("/dataset/file/upload/zip", methods=["POST"])
+@login_required
+def upload_zip():
+    file = request.files["file"]
+    new_fits_names = []
+
+    if not file or not file.filename.endswith(".zip"):
+        return jsonify({"message": "No valid file"}), 400
+
+    try:
+        new_filename = save_file_to_temp(file)
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+    with ZipFile(new_filename) as zip:
+        names = zip.namelist()
+        fits_names = [name for name in names if name.endswith(".fits")]
+
+        for fits_name in fits_names:
+            fits_path, fits_filename = generate_temp_filename(fits_name)
+            new_fits_names.append(fits_filename)
+
+            with zip.open(fits_name, mode="r") as fits:
+                with open(fits_path, mode="wb") as out:
+                    out.write(fits.read())
+
+    return (
+        jsonify(
+            {
+                "message": "ZIP uploaded successfully",
+                "filenames": fits_names,
             }
         ),
         200,
