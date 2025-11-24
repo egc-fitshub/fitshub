@@ -174,7 +174,7 @@ def save_file_to_temp(file):
 
     file_path, new_filename = generate_temp_filename(file.filename)
     file.save(file_path)
-    return new_filename
+    return file_path, new_filename
 
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
@@ -186,7 +186,7 @@ def upload():
         return jsonify({"message": "No valid file"}), 400
 
     try:
-        new_filename = save_file_to_temp(file)
+        file_path, new_filename = save_file_to_temp(file)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
@@ -211,11 +211,11 @@ def upload_zip():
         return jsonify({"message": "No valid file"}), 400
 
     try:
-        new_filename = save_file_to_temp(file)
+        file_path, new_filename = save_file_to_temp(file)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-    with ZipFile(new_filename) as zip:
+    with ZipFile(file_path) as zip:
         names = zip.namelist()
         fits_names = [name for name in names if name.endswith(".fits")]
 
@@ -226,6 +226,8 @@ def upload_zip():
             with zip.open(fits_name, mode="r") as fits:
                 with open(fits_path, mode="wb") as out:
                     out.write(fits.read())
+
+    os.remove(file_path)
 
     return (
         jsonify(
