@@ -36,6 +36,15 @@ def count_home_datasets(driver, host):
         amount_datasets = 0
     return amount_datasets
 
+def count_trending_datasets(driver, host):
+    driver.get(f"{host}/")
+    wait_for_page_to_load(driver)
+
+    try:
+        amount_datasets = len(driver.find_elements(By.ID, "trending_dataset"))
+    except Exception:
+        amount_datasets = 0
+    return amount_datasets
 
 def test_upload_dataset():
     driver = initialize_driver()
@@ -135,7 +144,7 @@ def test_upload_dataset():
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets + 1, "Test failed!"
 
-        print("Test passed!")
+        print("Test upload dataset passed!")
 
     finally:
         # Close the browser
@@ -157,6 +166,7 @@ def test_view_dataset():
         driver.find_element(By.ID, "submit").click()
         driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
+        print("View dataset test passed!")
 
     finally:
         close_driver(driver)
@@ -186,6 +196,24 @@ def test_download_counter():
         driver.find_element(By.ID, "download_counter").click()
         assert driver.find_element(By.ID, "download_counter") is not None
         assert driver.find_element(By.ID, "download_counter").text is not None
+        print("Download counter test passed!")
+    finally:
+        close_driver(driver)
+
+def test_trending_dataset():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/")
+        trending_datasets = count_trending_datasets(driver, host)
+        trending_download_counters = len(driver.find_elements(By.ID, "trending_download_counter"))
+        titles = len(driver.find_elements(By.ID, "trending_title"))
+        authors = len(driver.find_elements(By.ID, "trending_authors"))
+        fire_icon = driver.find_element(By.ID, "fire_icon")
+        assert fire_icon is not None
+        assert trending_datasets == trending_download_counters == titles == authors
+        print("Trending datasets test passed!")
     finally:
         close_driver(driver)
 
@@ -223,12 +251,14 @@ def test_badge():
 
         assert html_value.startswith("<a href="), "HTML value is incorrect"
         assert "doi/10.1234/dataset4" in html_value, "HTML value is incorrect"
+        print("Badge test passed!")
 
     finally:
         close_driver(driver)
 
 
 # Call the test function
+test_trending_dataset()
 test_download_counter()
 test_view_dataset()
 test_upload_dataset()
