@@ -109,6 +109,21 @@
                         </a>
                     </li>
 
+                    {% if current_user.role.value == "administrator" %}
+
+                        <li class="sidebar-header">
+                            Administration
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.admin_roles' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('auth.admin_roles') }}">
+                                <i class="align-middle" data-feather="users"></i> <span
+                                    class="align-middle">Users</span>
+                            </a>
+                        </li>
+
+                    {% endif %}
+
                     <li class="sidebar-header">
                         Options
                     </li>

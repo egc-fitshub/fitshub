@@ -6,11 +6,8 @@ from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_client(test_client):
-    """
-    Extends the test_client fixture to add additional specific data for module testing.
-    """
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
         # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
@@ -23,9 +20,7 @@ def test_login_success(test_client):
     response = test_client.post(
         "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
     )
-
     assert response.request.path != url_for("auth.login"), "Login was unsuccessful"
-
     test_client.get("/logout", follow_redirects=True)
 
 
@@ -33,7 +28,6 @@ def test_login_unsuccessful_bad_email(test_client):
     response = test_client.post(
         "/login", data=dict(email="bademail@example.com", password="test1234"), follow_redirects=True
     )
-
     assert response.request.path == url_for("auth.login"), "Login was unsuccessful"
 
     test_client.get("/logout", follow_redirects=True)
@@ -43,7 +37,6 @@ def test_login_unsuccessful_bad_password(test_client):
     response = test_client.post(
         "/login", data=dict(email="test@example.com", password="basspassword"), follow_redirects=True
     )
-
     assert response.request.path == url_for("auth.login"), "Login was unsuccessful"
 
     test_client.get("/logout", follow_redirects=True)
@@ -102,3 +95,60 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def test_forgot_password_get(test_client):
+    response = test_client.get("/forgot-password")
+    assert response.status_code == 200
+    assert b"forgot_password" in response.data or b"email" in response.data
+
+
+def test_forgot_password_post_user_not_found(test_client):
+    response = test_client.post("/forgot-password", data=dict(email="nonexistent@example.com"), follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Correo no registrado" in response.data
+
+
+def test_forgot_password_post_success(test_client):
+    response = test_client.post("/forgot-password", data=dict(email="test@example.com"), follow_redirects=True)
+    assert response.status_code == 200
+
+
+def test_admin_roles_unauthorized_access(test_client):
+    test_client.post("/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True)
+    response = test_client.get("/admin_roles", follow_redirects=True)
+    assert response.request.path == url_for("public.index"), "Non-admin should be redirected"
+    test_client.get("/logout", follow_redirects=True)
+
+
+def test_admin_roles_without_login(test_client):
+    response = test_client.get("/admin_roles", follow_redirects=True)
+    assert response.request.path != url_for("auth.admin_roles"), "Unauthenticated user should not access admin_roles"
+
+
+def test_update_roles_unauthorized(test_client):
+    test_client.post("/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True)
+    response = test_client.post("/update_roles", data={"role_1": "administrator"}, follow_redirects=True)
+    assert response.request.path != url_for("auth.admin_roles"), "Non-admin should be redirected"
+    test_client.get("/logout", follow_redirects=True)
+
+
+"""
+def test_admin_roles_success_as_admin(test_client):
+    login_response = test_client.post(
+        "/login",
+        data=dict(email="admin@test.com", password="test1234"),
+        follow_redirects=True
+    )
+
+    assert login_response.request.path == url_for("public.index"), "El login del admin falló"
+
+    response = test_client.get("/admin_roles", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert response.request.path == url_for("auth.admin_roles"), "El admin debería poder acceder a la página de roles"
+
+    assert b"test@example.com" in response.data
+
+    test_client.get("/logout", follow_redirects=True)
+"""

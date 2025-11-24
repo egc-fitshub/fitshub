@@ -31,6 +31,7 @@ def create_app(config_name="development"):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
 
     # Initialize Flask-Mail
     mail.init_app(app)
