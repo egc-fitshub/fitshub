@@ -1,0 +1,171 @@
+{% extends "base_template.html" %}
+
+{% block title %}Create Community{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+    <form method="POST" enctype="multipart/form-data">
+        <h1 class="h2 mb-3"><b>Create</b> community</h1>
+
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="row gx-5">
+
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+                <div id="basic_info_form" class="p-3 m-0">
+
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+
+                        <div class="col-12">
+
+                            <h1 class="h3 mb-3">Basic info</h1>
+
+                            <div class="row px-3">
+
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        {{ form.name.label(class="form-label") }} *
+                                        {{ form.name(class="form-control") }}
+                                        {% for error in form.name.errors %}
+                                            <span style="color: red;">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        {{ form.description.label(class="form-label") }} *
+                                        {{ form.description(rows=4, class="form-control") }}
+                                        {% for error in form.description.errors %}
+                                            <span style="color: red;">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                        
+                            </div>
+
+                            <h1 class="h3 mb-3 mt-4">Curators</h1>
+
+                            <div>
+                                <label for="curator-select" class="form-label">Add curators</label>
+                                <select id="curator-select" class="form-control">
+                                    <option value="">Select curators</option>
+                                    {% for id, email in form.curator_ids.choices %}
+                                        <option value="{{ id }}" data-email="{{ email }}">{{ email }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div id="selected-curators-container" class="d-flex flex-wrap gap-2 mb-4 mt-3"></div>
+
+                            {% for error in form.curator_ids.errors %}
+                                <span style="color: red;">{{ error }}</span>
+                            {% endfor %}
+                    
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+                <div class="p-3 m-0">
+                    <h1 class="h3 mb-3 mt-2">Upload logo</h1>
+
+                    <div>
+                        {{ form.logo_file.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ form.logo_file(class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2") }}
+                        <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG. Máx. 5MB.</p>
+                        {% for error in form.logo_file.errors %}
+                            <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="mt-4 mb-4">
+        
+        <div class="row">
+            <div class="col-12 text-center">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </div>
+
+    </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectElement = document.getElementById('curator-select');
+        const container = document.getElementById('selected-curators-container');
+        
+        function renderCuratorTag(id, email) {
+            
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = '{{ form.curator_ids.name }}';
+            hiddenInput.value = id;
+            hiddenInput.id = `curator-input-${id}`;
+            container.appendChild(hiddenInput);
+
+            const tag = document.createElement('span');
+            tag.className = 'badge bg-secondary me-2 p-2';
+            tag.dataset.id = id;
+            tag.innerHTML = `
+                ${email} 
+                <button type="button" class="btn-close" aria-label="Close" data-id="${id}" style="font-size: 0.5rem; margin-left: 5px;"></button>
+            `;
+            container.appendChild(tag);
+
+            tag.querySelector('.btn-close').addEventListener('click', function() {
+                removeCuratorTag(id, email);
+            });
+        }
+
+        function removeCuratorTag(id, email) {
+            
+            const tagElement = container.querySelector(`span[data-id="${id}"]`);
+            if (tagElement) {
+                tagElement.remove();
+            }
+
+            const inputElement = document.getElementById(`curator-input-${id}`);
+            if (inputElement) {
+                inputElement.remove();
+            }
+
+            const option = selectElement.querySelector(`option[value="${id}"]`);
+            if (option) {
+                option.disabled = false;
+            }
+        }
+
+        selectElement.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const id = selectedOption.value;
+            const email = selectedOption.dataset.email;
+
+            const existingInput = document.getElementById(`curator-input-${id}`);
+
+            if (id && !existingInput) {
+                renderCuratorTag(id, email);
+                selectedOption.disabled = true;
+            }
+            
+            this.value = '';
+        });
+        
+        updateHiddenInput();
+    });
+</script>
+{% endblock %}

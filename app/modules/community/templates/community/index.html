@@ -20,6 +20,14 @@
         </div>
     {% endif %}
 
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     {% if communities %}
         <div class="col-12">
             <div class="card">
