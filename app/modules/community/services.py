@@ -14,6 +14,7 @@ from flask_login import current_user
 from flask import current_app
 from app.services.upload_service import UploadService
 from app.modules.dataset.services import DataSetService
+from app.modules.auth.services import AuthenticationService
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class CommunityService(BaseService):
     def get_all_communities(self):
         return self.repository.get_all_communities()
 
-    def create(self, form_data, logo_file):
+    def create_from_form(self, form_data, logo_file):
         try:
             logo_url = self.upload_service.save_file(logo_file, 'communities') if logo_file else None
             
@@ -55,7 +56,7 @@ class CommunityService(BaseService):
             self.repository.session.rollback()
             current_app.logger.error(f"FALLO AL CREAR LA COMUNIDAD: {e}", exc_info=True)
             return {'error': str(e)}
-        
+     
 class CommunityDataSetService(BaseService):
     def __init__(self):
         super().__init__(CommunityDataSetRepository())
@@ -104,9 +105,13 @@ class CommunityDataSetService(BaseService):
             
             if not association:
                 return {'error': 'Association not found.'}
-            
-            if new_status not in [CommunityDataSetStatus.ACCEPTED, CommunityDataSetStatus.REJECTED]:
-                 return {'error': 'Invalid status provided.'}
+             
+            if new_status == "accepted":
+                new_status = CommunityDataSetStatus.ACCEPTED
+            elif new_status == "rejected":
+                new_status = CommunityDataSetStatus.REJECTED
+            else:
+                return {'error': 'Invalid status provided.'}
             
             association.status = new_status
             self.repository.session.commit()

@@ -70,6 +70,17 @@
                     </a>
                 </li>
 
+                <li class="sidebar-header">
+                            Communities
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.index' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('community.index') }}">
+                                <i class="align-middle" data-feather="list"></i> <span
+                                    class="align-middle">Communities</span>
+                            </a>
+                        </li>
+
                 {% if current_user.is_anonymous %}
 
                     <li class="sidebar-header">
@@ -108,6 +119,28 @@
                                 class="align-middle">My datasets</span>
                         </a>
                     </li>
+
+                    {% if current_user.role.value == "administrator" or current_user.role.value == "curator" %}
+
+                        <li class="sidebar-header">
+                            Communities
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.get_communities_user' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('community.get_communities_user') }}">
+                                <i class="align-middle" data-feather="list"></i> <span
+                                    class="align-middle">My communities</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.create_community' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('community.create_community') }}">
+                                <i class="align-middle" data-feather="upload"></i> <span
+                                    class="align-middle">Create a community</span>
+                            </a>
+                        </li>
+                    
+                    {% endif %}
 
                     {% if current_user.role.value == "administrator" %}
 
