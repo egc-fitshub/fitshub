@@ -74,7 +74,7 @@ def create_community():
 '''
 DELETE COMMUNITY
 '''
-@community_bp.route('/community/<int:community_id>/delete', methods=['GET', 'POST'])
+@community_bp.route('/community/<int:community_id>/delete', methods=['POST'])
 @login_required
 @role_required(roles=[RoleType.ADMINISTRATOR])
 def delete_community(community_id):
@@ -85,7 +85,41 @@ def delete_community(community_id):
         flash('Community deleted successfully!', 'success')
 
     return redirect('community/index.html')
+
+'''
+UPDATE COMMUNITY
+'''
+@community_bp.route('/community/<int:community_id>/update', methods=['GET', 'POST'])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def update_community(community_id):
+    community = community_service.get_or_404(community_id)
+    if not community:
+        flash('Community not found.', 'danger')
+        return redirect('community.index')
     
+    form = CommunityForm(obj=community)
+    
+    form.submit.label.text = 'Update Community' 
+    
+    if form.validate_on_submit():
+        
+        result = community_service.update_from_form(
+            community_id=community_id, 
+            form_data=form, 
+            logo_file=form.logo_file.data
+        )
+        
+        return community_service.handle_service_response(
+            result=result,
+            errors=form.errors,
+            success_url_redirect='community.get_communities_user',
+            success_msg='Community updated successfully!',
+            error_template='community/create_community.html', 
+            form=form,
+        )
+
+    return render_template('community/create_community.html', form=form, community=community)
 
 '''
 PROPOSE DATASET

@@ -1,11 +1,26 @@
 {% extends "base_template.html" %}
 
-{% block title %}Create Community{% endblock %}
+{% block title %}
+    {% if community %}
+        Update Community: {{ community.name }}
+    {% else %}
+        Create Community
+    {% endif %}
+{% endblock %}
 
 {% block content %}
     <div class="container py-4">
     <form method="POST" enctype="multipart/form-data">
-        <h1 class="h2 mb-3"><b>Create</b> community</h1>
+        <h1 class="h2 mb-3">
+            <b>
+            {% if community %}
+                Update
+            {% else %}
+                Create
+            {% endif %}
+            </b> community
+            {% if community %}: {{ community.name }}{% endif %}
+        </h1>
 
         {% if messages %}
             <ul>
@@ -33,7 +48,7 @@
                                 <div class="col-12">
                                     <div class="mb-3">
                                         {{ form.name.label(class="form-label") }} *
-                                        {{ form.name(class="form-control") }}
+                                        {{ form.name(class="form-control", value=(community.name if community else form.name.data)) }}
                                         {% for error in form.name.errors %}
                                             <span style="color: red;">{{ error }}</span>
                                         {% endfor %}
@@ -43,7 +58,7 @@
                                 <div class="col-12">
                                     <div class="mb-3">
                                         {{ form.description.label(class="form-label") }} *
-                                        {{ form.description(rows=4, class="form-control") }}
+                                        <textarea id="{{ form.description.id }}" name="{{ form.description.name }}" rows="4" class="form-control">{% if community %}{{ community.description }}{% endif %}</textarea>
                                         {% for error in form.description.errors %}
                                             <span style="color: red;">{{ error }}</span>
                                         {% endfor %}
@@ -52,23 +67,25 @@
                         
                             </div>
 
-                            <h1 class="h3 mb-3 mt-4">Curators</h1>
+                            {% if not community %}
+                                <h1 class="h3 mb-3 mt-4">Curators</h1>
 
-                            <div>
-                                <label for="curator-select" class="form-label">Add curators</label>
-                                <select id="curator-select" class="form-control">
-                                    <option value="">Select curators</option>
-                                    {% for id, email in form.curator_ids.choices %}
-                                        <option value="{{ id }}" data-email="{{ email }}">{{ email }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                                <div>
+                                    <label for="curator-select" class="form-label">Add curators</label>
+                                    <select id="curator-select" class="form-control">
+                                        <option value="">Select curators</option>
+                                        {% for id, email in form.curator_ids.choices %}
+                                            <option value="{{ id }}" data-email="{{ email }}">{{ email }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
 
-                            <div id="selected-curators-container" class="d-flex flex-wrap gap-2 mb-4 mt-3"></div>
+                                <div id="selected-curators-container" class="d-flex flex-wrap gap-2 mb-4 mt-3"></div>
 
-                            {% for error in form.curator_ids.errors %}
-                                <span style="color: red;">{{ error }}</span>
-                            {% endfor %}
+                                {% for error in form.curator_ids.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
                     
                         </div>
                     </div>
@@ -87,6 +104,12 @@
                             <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
                         {% endfor %}
                     </div>
+
+                    {% if community and community.logo_url %}
+                        <h5 class="mt-4 mb-2">Current Logo</h5>
+                        <img src="{{ community.logo_url }}" alt="Current community logo" style="max-width: 150px; border: 1px solid #ccc;">
+                        <p class="text-xs text-muted mt-1">Leave the file field empty to keep the current logo.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -95,7 +118,7 @@
         
         <div class="row">
             <div class="col-12 text-center">
-                {{ form.submit(class="btn btn-primary btn-lg") }}
+                {{ form.submit(class="btn btn-primary btn-lg", value=("Update Community" if community else "Create Community")) }}
             </div>
         </div>
 

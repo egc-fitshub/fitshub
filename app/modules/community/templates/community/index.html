@@ -47,7 +47,7 @@
                         {% for community in communities %}
                             <tr>
                                 <td>
-                                    <a href="#">
+                                    <a href="{{ url_for('community.get_community', community_id=community.id) }}">
                                         {{ community.name }}
                                     </a>
                                 </td>
@@ -59,7 +59,7 @@
                                     {{ community.datasets().count() }}
                                 </td>
                                 <td>
-                                    <a href="#" title="See">
+                                    <a href="{{ url_for('community.get_community', community_id=community.id) }}" title="See">
                                         <i data-feather="eye"></i>
                                     </a>
                                 </td>

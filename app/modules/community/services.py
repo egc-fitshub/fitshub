@@ -56,6 +56,27 @@ class CommunityService(BaseService):
             self.repository.session.rollback()
             current_app.logger.error(f"FALLO AL CREAR LA COMUNIDAD: {e}", exc_info=True)
             return {'error': str(e)}
+        
+    def update_from_form(self, community_id, form_data, logo_file):
+        try:
+            update_data = {}
+            
+            if logo_file:
+                logo_url = self.upload_service.save_file(logo_file, 'communities')
+                update_data['logo_url'] = logo_url
+            
+            update_data['name'] = form_data.name.data
+            update_data['description'] = form_data.description.data
+            updated_community = self.repository.update(community_id, **update_data)
+            
+            self.repository.session.commit()
+
+            return updated_community
+        
+        except Exception as e:
+            self.repository.session.rollback()
+            current_app.logger.error(f"FALLO AL ACTUALIZAR LA COMUNIDAD: {e}", exc_info=True)
+            return {'error': str(e)}
      
 class CommunityDataSetService(BaseService):
     def __init__(self):
