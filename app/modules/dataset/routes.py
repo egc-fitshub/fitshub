@@ -218,7 +218,7 @@ def upload_zip():
         fits_names = [name for name in names if name.endswith(".fits")]
 
         for fits_name in fits_names:
-            fits_path, fits_filename = generate_temp_filename(fits_name)
+            fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
             new_fits_names.append(fits_filename)
 
             with zip.open(fits_name, mode="r") as fits:
@@ -231,7 +231,7 @@ def upload_zip():
         jsonify(
             {
                 "message": "ZIP uploaded successfully",
-                "filenames": fits_names,
+                "filenames": new_fits_names,
             }
         ),
         200,
