@@ -36,6 +36,7 @@ def count_home_datasets(driver, host):
         amount_datasets = 0
     return amount_datasets
 
+
 def count_trending_datasets(driver, host):
     driver.get(f"{host}/")
     wait_for_page_to_load(driver)
@@ -45,6 +46,7 @@ def count_trending_datasets(driver, host):
     except Exception:
         amount_datasets = 0
     return amount_datasets
+
 
 def test_upload_dataset():
     driver = initialize_driver()
@@ -199,6 +201,7 @@ def test_download_counter():
         print("Download counter test passed!")
     finally:
         close_driver(driver)
+
 
 def test_trending_dataset():
     driver = initialize_driver()
