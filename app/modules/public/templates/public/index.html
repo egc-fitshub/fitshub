@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1 class="h2 mb-3 d-flex">
-        <img src="{{ url_for('static', filename='img/icons/fire.png') }}"
+        <img id="fire_icon" src="{{ url_for('static', filename='img/icons/fire.png') }}"
      alt="fire icon"
      style="width:20px; height:auto; margin-right:8px;">
         <b>Trending</b> &nbsp;datasets
@@ -13,24 +13,24 @@
       <div class="row">
         <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
         {% for dataset, download_count in trending_datasets %}
-          <div class="card mb-2" id="dataset_card">
+          <div class="card mb-2" id="trending_dataset">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
                     <h2 class="m-0">
-                        <a href="{{ dataset.get_fitshub_doi() }}">
+                        <a href="{{ dataset.get_fitshub_doi() }}" id="trending_title">
                             {{ dataset.ds_meta_data.title }}
                         </a>
                     </h2>
                     <div class="d-flex align-items-center">
                         <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
-                        <p class="text-secondary mb-0 ms-1">
+                        <p class="text-secondary mb-0 ms-1" id="trending_download_counter">
                             {{ dataset.get_download_counter() }}
                             {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}
                         </p>
                     </div>
                 </div>
                 <div class="mt-2">
-                    <p class="p-0 m-0 text-secondary">
+                    <p class="p-0 m-0 text-secondary" id="trending_authors">
                         {% for author in dataset.ds_meta_data.authors %}
                             {{ author.name }}{% if not loop.last %}, {% endif %}
                         {% endfor %}
