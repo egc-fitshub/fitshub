@@ -530,10 +530,24 @@
                         function updateUploadUI() {
                             const val = uploadSource.value;
 
+                            // clear any previous alerts when switching upload source
+                            const alertsEl = document.getElementById('alerts');
+                            if (alertsEl) {
+                                alertsEl.innerHTML = '';
+                                alertsEl.style.display = 'none';
+                            }
+                            const uploadErrorEl = document.getElementById('upload_error');
+                            if (uploadErrorEl) {
+                                uploadErrorEl.innerHTML = '';
+                                uploadErrorEl.style.display = 'none';
+                            }
+
+                            // Change displayed options
                             fitsOptions.style.display = (val === 'fits') ? '' : 'none';
                             githubOptions.style.display = (val === 'github') ? '' : 'none';
                             zipOptions.style.display = (val === 'zip') ? '' : 'none';
 
+                            // Show/hide uploaded models form
                             if (val === 'github') {
                                 if (uploadedModelsForm) uploadedModelsForm.style.display = 'none';
                             } else {
