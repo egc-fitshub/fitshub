@@ -90,6 +90,34 @@
 
                 </div>
 
+                <!-- Sección de 2FA -->
+                <div class="row form-group mt-4">
+                    <div class="col-12">
+                        <hr>
+                        <h5>Security Settings</h5>
+                    </div>
+                </div>
+
+                <div class="row form-group mt-3">
+                    <div class="col-12">
+                        <div class="form-check">
+                            {% set two_factor_value = form.enabled_two_factor.data if request.method == 'POST' else current_user.profile.enabled_two_factor %}
+                            {{ form.enabled_two_factor(class="form-check-input", checked=two_factor_value) }}
+                            {{ form.enabled_two_factor.label(class="form-check-label") }}
+                            {% if current_user.profile.enabled_two_factor %}
+                            <span class="badge bg-success">Currently enabled</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Currently disabled</span>
+                            {% endif %}
+                        </div>
+                        <small class="form-text text-muted">
+                            Add an extra layer of security. 
+                            You will need to scan a QR code on your next login.
+                            
+                        </small>
+                    </div>
+                </div>
+
                 <div class="row form-group">
 
                     <div class="col-12 mt-3">
