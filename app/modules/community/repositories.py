@@ -18,3 +18,6 @@ class CommunityDataSetRepository(BaseRepository):
         
     def get_existing_association(self, community_id, dataset_id):
         return CommunityDataSet.query.get((community_id, dataset_id))
+    
+    def get_communities_associated_to_dataset(self, dataset_id):
+        return CommunityDataSet.query.filter_by(dataset_id=dataset_id).all()

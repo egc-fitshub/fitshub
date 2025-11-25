@@ -151,6 +151,9 @@ class CommunityDataSetService(BaseService):
         self.community_service = CommunityService()
         self.community_repository = CommunityRepository()
     
+    def get_communities_associated_to_dataset(self, dataset_id):
+        return self.repository.get_communities_associated_to_dataset(dataset_id)
+    
     def propose_dataset(self, community_id, dataset_id):
         try: 
             community = self.community_service.get_or_404(community_id)

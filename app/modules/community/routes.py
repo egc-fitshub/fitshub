@@ -235,20 +235,48 @@ def add_curator_to_community(community_id):
     return redirect(url_for('community.view_curators', community_id=community_id))
 
 '''
+SELECT COMMUNITY FOR PROPOSAL
+'''
+def get_available_communities(dataset_id):
+    associated_community_ids = [
+        assoc.community_id for assoc in community_dataset_service.get_communities_associated_to_dataset(dataset_id)
+    ]
+    
+    all_communities = community_service.get_all_communities()
+    
+    available_communities = [
+        comm for comm in all_communities 
+        if comm.id not in associated_community_ids
+    ]
+    
+    return available_communities
+
+@community_bp.route('/dataset/<int:dataset_id>/propose_to', methods=['GET'])
+def select_community_for_proposal(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+    if not dataset:
+        flash('Dataset not found.', 'danger')
+        return redirect(url_for("static")) 
+        
+    available_communities = get_available_communities(dataset_id)
+    
+    return render_template('community/proposals.html', dataset=dataset, communities=available_communities)
+
+'''
 PROPOSE DATASET
 '''
 @community_bp.route('/community/<int:community_id>/propose/<int:dataset_id>', methods=['POST'])
-@login_required
 def propose_dataset(community_id, dataset_id):
-    result = community_service.propose_dataset(community_id, dataset_id)
+    result = community_dataset_service.propose_dataset(community_id, dataset_id)
     community = community_service.get_or_404(community_id)
     
-    if 'error' in result:
+    if isinstance(result, dict) and 'error' in result:
         flash(result['error'], 'danger')
+        return redirect(url_for('community.select_community_for_proposal', dataset_id=dataset_id))
     else:
         flash('Dataset proposed successfully! It is now pending review by the curators.', 'success')
 
-    return redirect('community/details.html', community=community)
+    return redirect(url_for('community.get_community', community_id=community_id))
 
 def check_if_dataset_curator(community_id):
     community = community_service.get_or_404(community_id)
@@ -287,7 +315,7 @@ def approve_dataset(community_id, dataset_id):
         flash('You have no permission to curate this community')
         return redirect('community/details.html', community=community)
         
-    result = community_service.update_dataset_status(
+    result = community_dataset_service.update_dataset_status(
         community_id, 
         dataset_id, 
         "accepted"
@@ -312,7 +340,7 @@ def reject_dataset(community_id, dataset_id):
         flash('You have no permission to curate this community')
         return redirect('community/details.html', community=community)
         
-    result = community_service.update_dataset_status(
+    result = community_dataset_service.update_dataset_status(
         community_id, 
         dataset_id, 
         "accepted"
