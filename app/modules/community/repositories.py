@@ -20,4 +20,7 @@ class CommunityDataSetRepository(BaseRepository):
         return CommunityDataSet.query.get((community_id, dataset_id))
     
     def get_communities_associated_to_dataset(self, dataset_id):
-        return CommunityDataSet.query.filter_by(dataset_id=dataset_id).all()
+        return CommunityDataSet.query.filter(
+            CommunityDataSet.dataset_id == dataset_id,
+            CommunityDataSet.status != CommunityDataSetStatus.REJECTED
+        ).all()

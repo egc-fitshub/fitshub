@@ -295,13 +295,13 @@ def review_pending_datasets(community_id):
     has_permission, community = check_if_dataset_curator(community_id)
     if not has_permission:
         flash('You have no permission to curate this community')
-        return redirect('community/details.html', community=community)
+        return redirect(url_for('community.get_community', community_id=community_id))
 
     pending_associations = community_dataset_service.get_pending_datasets(community_id)
     
     pending_datasets = [assoc.dataset for assoc in pending_associations]
 
-    return render_template('community/review.html', community=community, pending_datasets=pending_datasets)
+    return render_template('community/review_datasets.html', community=community, pending_datasets=pending_datasets)
 
 '''
 APPROVE DATASET
@@ -321,12 +321,12 @@ def approve_dataset(community_id, dataset_id):
         "accepted"
     )
 
-    if 'error' in result:
+    if isinstance(result, dict) and 'error' in result:
         flash(result['error'], 'danger')
     else:
         flash('Dataset approved and added to the community!', 'success')
     
-    return redirect('community/details.html', community=community)
+    return redirect(url_for('community.get_community', community_id=community_id))
 
 '''
 REJECT DATASET
@@ -343,12 +343,12 @@ def reject_dataset(community_id, dataset_id):
     result = community_dataset_service.update_dataset_status(
         community_id, 
         dataset_id, 
-        "accepted"
+        "rejected"
     )
 
-    if 'error' in result:
+    if isinstance(result, dict) and 'error' in result:
         flash(result['error'], 'danger')
     else:
         flash('Dataset rejected from the community.', 'warning')
         
-    return redirect('community/details.html', community=community)
+    return redirect(url_for('community.get_community', community_id=community_id))
