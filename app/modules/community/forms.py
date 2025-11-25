@@ -21,4 +21,13 @@ class CommunityForm(FlaskForm):
     
     submit = SubmitField('Create Community')
 
+class AddCuratorsForm(FlaskForm):
+    curator_ids = SelectMultipleField(
+        'Select users to add as curators',
+        coerce=str,
+        choices=[],
+        validators=[Optional()]
+    )
+    submit = SubmitField('Add Selected Curators')
+
 

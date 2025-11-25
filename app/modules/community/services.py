@@ -108,6 +108,40 @@ class CommunityService(BaseService):
             self.repository.session.rollback()
             current_app.logger.error(f"FALLO AL ABANDONAR LA COMUNIDAD: {e}", exc_info=True)
             return {'error': 'An unexpected error occurred while processing the request.'}
+    
+    def add_curator(self, community_id, user_ids_to_add_str):
+        try:
+            community = self.repository.get_or_404(community_id)
+            
+            if not community:
+                return {'error': 'Community not found.'}
+            
+            user_ids_to_add = [int(i) for i in user_ids_to_add_str if i]
+            new_curators = User.query.filter(User.id.in_(user_ids_to_add)).all()
+            
+            if not user_ids_to_add:
+                 return {'error': 'No users were selected.'}
+            
+            users_already_curators = [u.id for u in community.curators.all()]
+            
+            users_to_add = [
+                user for user in new_curators 
+                if user.id not in users_already_curators
+            ]
+            
+            if not users_to_add:
+                return {'error': 'All selected users are already curators of this community.'}
+                
+            community.curators.extend(users_to_add)
+            self.repository.session.commit()
+            
+            count = len(users_to_add)
+            return {'success': f'{count} new curator(s) added successfully to {community.name}.'}
+
+        except Exception as e:
+            self.repository.session.rollback()
+            current_app.logger.error(f"FALLO AL AÑADIR CURADORES: {e}", exc_info=True)
+            return {'error': str(e)}
         
      
 class CommunityDataSetService(BaseService):

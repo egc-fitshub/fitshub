@@ -100,6 +100,20 @@
                             <h4 class="text-primary">Management Options</h4>
                         </div>
                     </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-3 col-12">
+                            <span class="text-secondary">
+                                Curators
+                            </span>
+                        </div>
+                        <div class="col-md-9 col-12">
+                            <a href="{{ url_for('community.view_curators', community_id=community.id) }}" 
+                               class="btn btn-warning btn-sm">
+                                Curators {{community.curators.count()}}
+                            </a>
+                        </div>
+                    </div>
                     
                     {% set pending_datasets_count = community.dataset_associations.filter_by(status='pending').count() %}
                     <div class="row mb-2">
@@ -162,10 +176,6 @@
 
             <a href="#" class="list-group-item list-group-item-action option-button btn btn-outline-success">
                 <i data-feather="upload-cloud"></i> Submit a Dataset
-            </a>
-            
-            <a href="#" class="list-group-item list-group-item-action option-button btn btn-outline-secondary">
-                <i data-feather="users"></i> View Curators
             </a>
 
             {% if current_user.is_authenticated and current_user.id in community.curators.all()|map(attribute='id')|list and community.curators.count() > 1 %}

@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, flash, url_for
 from flask_login import login_required, current_user
 from app.modules.community import community_bp
-from app.modules.community.forms import CommunityForm
+from app.modules.community.forms import CommunityForm, AddCuratorsForm
 from app.modules.community.services import CommunityService, CommunityDataSetService
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.services import DataSetService
@@ -142,6 +142,97 @@ def leave_community(community_id):
         flash(result['success'], 'success')
         
     return redirect(url_for('community.index'))
+
+'''
+KICK CURATOR FROM COMMUNITY
+'''
+@community_bp.route('/community/<int:community_id>/kick/<int:user_id>', methods=['POST'])
+@login_required
+@role_required(roles=[RoleType.ADMINISTRATOR])
+def kick_from_community(community_id, user_id):
+    community = community_service.get_or_404(community_id) 
+    
+    if not community:
+        flash('Community not found.', 'danger')
+        return redirect(url_for('community.index'))
+
+    result = community_service.leave_community(community_id, user_id)
+
+    if 'error' in result:
+        flash(result['error'], 'danger')
+        return redirect(url_for('community.view_curators', community_id=community_id))
+    else:
+        flash(result['success'], 'success')
+        
+    return redirect(url_for('community.view_curators', community_id=community_id))
+
+'''
+VIEW CURATORS
+'''
+def get_available_curators_choices(community_id):
+    community = community_service.get_or_404(community_id)
+    existing_curator_ids = [u.id for u in community.curators.all()]
+    avilable_curators = user_service.get_curators()
+    
+    available_users = [
+        u for u in avilable_curators 
+        if u.id not in existing_curator_ids
+    ]
+    
+    return [(str(u.id), u.email) for u in available_users]
+
+@community_bp.route('/community/<int:community_id>/curators', methods=['GET'])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def view_curators(community_id):
+    _, community = check_if_dataset_curator(community_id) 
+
+    if not community:
+        flash('Community not found.', 'danger')
+        return redirect(url_for('community.index'))
+    
+    curator_form = AddCuratorsForm()
+    curator_form.curator_ids.choices = get_available_curators_choices(community_id)
+        
+    return render_template('community/community_curators.html', community=community, curator_form=curator_form)
+
+'''
+ADD CURATORS
+'''
+@community_bp.route('/community/<int:community_id>/add_curators', methods=['POST'])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def add_curator_to_community(community_id):
+    
+    has_permission, community = check_if_dataset_curator(community_id)
+    
+    if not community:
+        flash('Community not found.', 'danger')
+        return redirect(url_for('community.index'))
+    
+    if not has_permission:
+        flash('You have no permissions on this community.', 'danger')
+        return redirect(url_for('community.index'))
+
+    form = AddCuratorsForm()
+    form.curator_ids.choices = get_available_curators_choices(community_id)
+    
+    if form.validate_on_submit():
+        user_ids_to_add = form.curator_ids.data
+        
+        result = community_service.add_curator(community_id, user_ids_to_add)
+        
+        if 'error' in result:
+            flash(result['error'], 'danger')
+        else:
+            flash(result['success'], 'success')
+            
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Validation error: {error}", 'danger')
+        
+    return redirect(url_for('community.view_curators', community_id=community_id))
 
 '''
 PROPOSE DATASET
