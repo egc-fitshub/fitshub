@@ -131,7 +131,7 @@ class AuthenticationService(BaseService):
         except Exception as e:
             self.repository.session.rollback()
             raise e
-        
+
     def get_curated_communities_by_id(self, user_id):
         user = self.repository.get_or_404(user_id)
         if user.curated_communities:

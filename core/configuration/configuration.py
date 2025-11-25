@@ -6,11 +6,13 @@ load_dotenv()
 
 BASE_DIR = os.getenv("WORKING_DIR", os.getcwd())
 
+
 def uploads_folder_name():
     return os.getenv("UPLOADS_DIR", "uploads")
 
+
 def photo_upload_folder_name():
-    return os.path.join(BASE_DIR, 'app', 'static', 'img', 'photos')
+    return os.path.join(BASE_DIR, "app", "static", "img", "photos")
 
 
 def get_app_version():
