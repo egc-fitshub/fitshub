@@ -29,6 +29,12 @@ class CommunityService(BaseService):
 
     def create_from_form(self, form_data, logo_file):
         try:
+            existing_community = self.repository.get_existing_comunnity_with_name(form_data.name.data)
+            
+            if existing_community:
+                form_data.name.errors.append(f'A community with the name "{form_data.name.data}" already exists.')
+                return None
+            
             logo_url = self.upload_service.save_file(logo_file, 'communities') if logo_file else None
             
             community = {

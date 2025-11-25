@@ -9,6 +9,9 @@ class CommunityRepository(BaseRepository):
     def get_all_communities(self):
         return Community.query.order_by(Community.name.asc()).all()
     
+    def get_existing_comunnity_with_name(self, community_name):
+        return Community.query.filter_by(name=community_name).first()
+    
 class CommunityDataSetRepository(BaseRepository):
     def __init__(self):
         super().__init__(CommunityDataSet)

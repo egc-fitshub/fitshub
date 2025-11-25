@@ -48,7 +48,7 @@
                                 <div class="col-12">
                                     <div class="mb-3">
                                         {{ form.name.label(class="form-label") }} *
-                                        {{ form.name(class="form-control", value=(community.name if community else form.name.data)) }}
+                                        {{ form.name(class="form-control", value=(community.name if community else '')) }}
                                         {% for error in form.name.errors %}
                                             <span style="color: red;">{{ error }}</span>
                                         {% endfor %}
