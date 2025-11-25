@@ -22,6 +22,7 @@ class CommunityService(BaseService):
     def __init__(self):
         super().__init__(CommunityRepository())
         self.upload_service = UploadService()
+        self.user_service = AuthenticationService()
         
     def get_all_communities(self):
         return self.repository.get_all_communities()
@@ -77,6 +78,31 @@ class CommunityService(BaseService):
             self.repository.session.rollback()
             current_app.logger.error(f"FALLO AL ACTUALIZAR LA COMUNIDAD: {e}", exc_info=True)
             return {'error': str(e)}
+    
+    def leave_community(self, community_id, user_id):
+        community = self.repository.get_or_404(community_id)
+        user = self.user_service.get_or_404(user_id)
+        
+        if not user or not community:
+                return {'error':'User or community not found'}
+        
+        if user not in community.curators.all():
+            return {'error': f'User {user_id} is not a curator of community {community_id}.'}
+        
+        try:
+            if community.curators.count() <= 1:
+                return {'error': 'The community must have at least one curator. Cannot leave if you are the only one.'}
+            
+            community.curators.remove(user)
+            self.repository.session.commit()
+            
+            return {'success': f'User {user.email} successfully left community {community.name}.'}
+            
+        except Exception as e:
+            self.repository.session.rollback()
+            current_app.logger.error(f"FALLO AL ABANDONAR LA COMUNIDAD: {e}", exc_info=True)
+            return {'error': 'An unexpected error occurred while processing the request.'}
+        
      
 class CommunityDataSetService(BaseService):
     def __init__(self):

@@ -169,9 +169,23 @@
             </a>
 
             {% if current_user.is_authenticated and current_user.id in community.curators.all()|map(attribute='id')|list and community.curators.count() > 1 %}
-                <a href="#" class="list-group-item list-group-item-action option-button btn btn-outline-danger">
-                    <i data-feather="log-out"></i> Leave Community
-                </a>
+                <form method="POST" action="{{ url_for('community.leave_community', community_id=community.id) }}">
+                    <button type="submit" 
+                            class="list-group-item list-group-item-action option-button btn btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to leave this community?');">
+                        <i data-feather="log-out"></i> Leave Community
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if current_user.is_authenticated and (current_user.is_administrator or current_user.id in community.curators.all()|map(attribute='id')|list) %}
+                <form method="POST" action="{{ url_for('community.delete_community', community_id=community.id) }}">
+                    <button type="submit" 
+                            class="list-group-item list-group-item-action option-button btn btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to delete this community? This action cannot be undone.');">
+                        <i data-feather="trash"></i> Erase Community
+                    </button>
+                </form>
             {% endif %}
 
         </div>

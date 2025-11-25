@@ -79,12 +79,12 @@ DELETE COMMUNITY
 @role_required(roles=[RoleType.ADMINISTRATOR])
 def delete_community(community_id):
     result = community_service.delete(community_id)
-    if 'error' in result:
-        flash(result['error'], 'danger')
+    if result == False:
+        flash('Something went wrong', 'danger')
     else:
         flash('Community deleted successfully!', 'success')
 
-    return redirect('community/index.html')
+    return redirect(url_for('community.index'))
 
 '''
 UPDATE COMMUNITY
@@ -96,7 +96,7 @@ def update_community(community_id):
     community = community_service.get_or_404(community_id)
     if not community:
         flash('Community not found.', 'danger')
-        return redirect('community.index')
+        return redirect(url_for('community.index'))
     
     form = CommunityForm(obj=community)
     
@@ -122,6 +122,28 @@ def update_community(community_id):
     return render_template('community/create_community.html', form=form, community=community)
 
 '''
+LEAVE COMMUNITY
+'''
+@community_bp.route('/community/<int:community_id>/leave/', methods=['POST'])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def leave_community(community_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+    if not has_permission:
+        flash('You have no permission to curate this community')
+        return redirect(url_for('community.get_community', community_id=community_id))
+    
+    result = community_service.leave_community(community_id, current_user.id)
+
+    if 'error' in result:
+        flash(result['error'], 'danger')
+        return redirect(url_for('community.get_community', community_id=community_id))
+    else:
+        flash(result['success'], 'success')
+        
+    return redirect(url_for('community.index'))
+
+'''
 PROPOSE DATASET
 '''
 @community_bp.route('/community/<int:community_id>/propose/<int:dataset_id>', methods=['POST'])
@@ -139,7 +161,7 @@ def propose_dataset(community_id, dataset_id):
 
 def check_if_dataset_curator(community_id):
     community = community_service.get_or_404(community_id)
-    if current_user in community.curators() or current_user.role.value == "administrator":
+    if current_user in community.curators.all() or current_user.role.value == "administrator":
         return True, community
     
     return False, community
