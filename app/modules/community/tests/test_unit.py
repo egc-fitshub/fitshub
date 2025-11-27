@@ -539,7 +539,7 @@ def test_approve_dataset_success(test_client):
     assert response.status_code == 200, f"Should approve successfully, got {response.status_code}"
 
     with test_client.application.app_context():
-        db.session.expire_all()  
+        db.session.expire_all()
         association = CommunityDataSet.query.get((community_id, dataset_id))
         assert association is not None, "Association should exist after approval"
         assert association.status == CommunityDataSetStatus.ACCEPTED, (
@@ -571,6 +571,8 @@ def test_reject_dataset_success(test_client):
 
         community_id = community.id
         dataset_id = dataset.id
+
+        db.session.close()
 
     response = test_client.post(f"/community/{community_id}/reject/{dataset_id}", follow_redirects=True)
     assert response.status_code == 200, f"Should reject successfully, got {response.status_code}"
