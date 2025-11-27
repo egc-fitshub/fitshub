@@ -538,7 +538,6 @@ def test_approve_dataset_success(test_client):
     response = test_client.post(f"/community/{community_id}/approve/{dataset_id}", follow_redirects=True)
     assert response.status_code == 200, f"Should approve successfully, got {response.status_code}"
 
-
     logout(test_client)
 
 
