@@ -23,6 +23,8 @@ class User(db.Model, UserMixin):
 
     role = db.Column(SQLAlchemyEnum(RoleType), nullable=False, default=RoleType.USER)
 
+    token = db.Column(db.String(255), unique=True, nullable=True)
+
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
