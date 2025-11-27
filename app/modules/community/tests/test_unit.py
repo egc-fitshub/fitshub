@@ -540,8 +540,7 @@ def test_approve_dataset_success(test_client):
 
     with test_client.application.app_context():
         db.session.expire_all()
-        association = CommunityDataSet.query.get((community_id, dataset_id))
-        assert association is not None, "Association should exist after approval"
+        association = CommunityDataSet.query.filter_by(community_id=community_id, dataset_id=dataset_id).first()
         assert association.status == CommunityDataSetStatus.ACCEPTED, (
             f"Dataset should be accepted, got {association.status}"
         )

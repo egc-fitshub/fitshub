@@ -192,7 +192,6 @@ class CommunityDataSetService(BaseService):
 
             association.status = new_status
             self.repository.session.commit()
-            self.repository.session.save(association)
             return association
 
         except Exception as e:
