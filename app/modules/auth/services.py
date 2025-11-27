@@ -114,6 +114,9 @@ class AuthenticationService(BaseService):
             raise PermissionError("Se requiere rol de administrador para esta acción.")
         return self.repository.get_roles()
 
+    def get_curators(self):
+        return self.repository.get_curators()
+
     def update_user_role(self, user_id, new_role):
         if new_role not in ["administrator", "curator", "user"]:
             raise ValueError(f"Invalid role '{new_role}'")
@@ -130,6 +133,20 @@ class AuthenticationService(BaseService):
         except Exception as e:
             self.repository.session.rollback()
             raise e
+
+    def get_curated_communities_by_id(self, user_id):
+        user = self.repository.get_or_404(user_id)
+        if user.curated_communities:
+            return user.curated_communities
+        else:
+            return None
+
+    def get_curated_communities_by_id(self, user_id):
+        user = self.repository.get_or_404(user_id)
+        if user.curated_communities:
+            return user.curated_communities
+        else:
+            return None
 
     def set_user_token(self, user: User, token: str, code: str) -> None:
         totp = pyotp.TOTP(token)
