@@ -1,0 +1,86 @@
+{% extends "base_template.html" %}
+
+{% block title %}Propose Dataset: {{ dataset.ds_meta_data.title }}{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('dataset.subdomain_index', doi=dataset.ds_meta_data.publication_doi) }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+            <i data-feather="arrow-left" class="center-button-icon"></i>
+            Back to Dataset
+        </a>
+    </div>
+</div>
+
+<h1 class="h2 mb-4">
+    Propose Dataset: <b>{{ dataset.ds_meta_data.title }}</b>
+</h1>
+
+<p class="lead">Select a community below to submit this dataset for review by their curators.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="row">
+      <div class="col-12">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% if communities %}
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Available Communities</h4>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Community Name</th>
+                        <th>Description</th>
+                        <th>Curators</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for community in communities %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('community.get_community', community_id=community.id) }}">
+                                    {{ community.name }}
+                                </a>
+                            </td>
+                            <td>{{ community.description | truncate(100) }}</td>
+                            <td>{{ community.curators.count() }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('community.propose_dataset', community_id=community.id, dataset_id=dataset.id) }}" class="d-inline">
+                                    <button type="submit" 
+                                            class="btn btn-success btn-sm"
+                                            onclick="return confirm('Do you want to propose this dataset to {{ community.name }}?');">
+                                        <i data-feather="send" style="width: 14px; height: 14px;"></i> Propose
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <p class="mb-0">This dataset has already been proposed to all available communities, or there are no communities accepting new proposals.</p>
+    </div>
+{% endif %}
+
+
+</div>
+
+{% endblock %}

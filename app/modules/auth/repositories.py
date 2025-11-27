@@ -28,3 +28,6 @@ class UserRepository(BaseRepository):
             .filter(self.model.role != RoleType.ADMINISTRATOR)
             .all()
         )
+
+    def get_curators(self):
+        return User.query.filter(User.role.in_([RoleType.CURATOR, RoleType.ADMINISTRATOR])).all()
