@@ -341,7 +341,6 @@ def test_kick_last_curator(test_client):
 
     with test_client.application.app_context():
         curator1 = User.query.filter_by(email="curator1@example.com").first()
-        curator2 = User.query.filter_by(email="curator2@example.com").first()
 
         single_curator_community = None
         for comm in Community.query.all():
