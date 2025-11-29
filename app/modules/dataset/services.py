@@ -155,12 +155,7 @@ class DataSetService(BaseService):
         new_doi = updated.dataset_doi if updated else None
         dataset = updated.data_set if updated else None
 
-        should_index = (
-            updated
-            and dataset
-            and new_doi
-            and new_doi != previous_doi
-        )
+        should_index = updated and dataset and new_doi and new_doi != previous_doi
 
         if should_index:
             try:
@@ -190,6 +185,7 @@ class DataSetService(BaseService):
 
         try:
             from elasticsearch import ConnectionError as ESConnectionError
+
             from app.modules.elasticsearch.utils import (
                 index_dataset,
                 index_hubfile,

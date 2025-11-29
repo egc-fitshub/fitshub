@@ -240,6 +240,7 @@ class ElasticsearchService(BaseService):
                                 "title^4",
                                 "description^3",
                                 "authors.name^2",
+                                "filename^2",
                             ],
                             "fuzziness": "AUTO",
                         }

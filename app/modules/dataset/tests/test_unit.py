@@ -8,7 +8,7 @@ from app.modules.dataset.models import (
     PublicationType,
 )
 from app.modules.dataset.services import DataSetService
-from app.modules.fitsmodel.models import FMMetaData, FitsModel
+from app.modules.fitsmodel.models import FitsModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 
 
@@ -46,9 +46,7 @@ def test_generate_json_badge_data(test_client):
     response = test_client.get("/dataset/1/badge.json")
 
     assert response.status_code == 200, "El endpoint /badge.json falló."
-    assert response.mimetype == "application/json", (
-        "El endpoint no devolvió JSON."
-    )
+    assert response.mimetype == "application/json", "El endpoint no devolvió JSON."
     data = response.json
 
     assert data["schemaVersion"] == 1
