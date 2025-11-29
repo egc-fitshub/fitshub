@@ -1,55 +1,53 @@
-from app.modules.elasticsearch.repositories import ElasticsearchRepository
-from core.services.BaseService import BaseService
-from app.modules.elasticsearch.repositories import ElasticsearchRepository
-
-from elasticsearch import ApiError, BadRequestError, ConnectionError, NotFoundError, Elasticsearch
 import time
 from datetime import datetime
 
+from elasticsearch import ApiError, BadRequestError, ConnectionError, Elasticsearch, NotFoundError
+
+from app.modules.elasticsearch.repositories import ElasticsearchRepository
+from core.services.BaseService import BaseService
+
+
 class ElasticsearchService(BaseService):
     def __init__(self, host="http://elasticsearch:9200", index_name="search_index"):
-        
         if not isinstance(index_name, str):
             raise ValueError("El nombre del índice debe ser una cadena de texto.")
-        
+
         if not index_name:
             raise ValueError("El nombre del índice no puede estar vacío.")
-        
+
         if any(c in index_name for c in r" #?/\*\"<>|,"):
             raise ValueError("El nombre del índice contiene caracteres no permitidos.")
-        
+
         if not index_name.islower():
             raise ValueError("El nombre del índice debe estar en minúsculas.")
-        
+
         if index_name.startswith(("-", "_", "+")):
             raise ValueError("El nombre del índice no puede comenzar con '-', '_' o '+'.")
-        
+
         super().__init__(ElasticsearchRepository())
         self.es = Elasticsearch(hosts=[host])
         self.index_name = index_name
-        
+
         if not self.wait_for_elasticsearch():
             print("Error: No se pudo conectar a Elasticsearch en el host proporcionado.")
-                 
+
     def wait_for_elasticsearch(self, retries=5, delay=2):
         for attempt in range(retries):
             try:
                 if self.es.ping():
-                    
                     return True
             except ConnectionError:
                 pass
             time.sleep(delay)
         return False
-    
+
     def create_index_if_not_exists(self):
         print(f"Verificando si el índice '{self.index_name}' existe...")
         try:
             existe_index = self.es.indices.exists(index=self.index_name)
-            
+
             if not existe_index:
-            
-                               self.es.indices.create(
+                self.es.indices.create(
                     index=self.index_name,
                     body={
                         "settings": {
@@ -116,10 +114,10 @@ class ElasticsearchService(BaseService):
                         },
                     },
                 )
-            
+
             else:
                 print(f"El índice '{self.index_name}' ya existe.")
-        
+
         except BadRequestError as e:
             print(f"Error al crear el índice '{self.index_name}': {e.info}")
             raise
@@ -136,7 +134,7 @@ class ElasticsearchService(BaseService):
         except Exception as e:
             print(f"Error al indexar el documento con ID '{doc_id}': {str(e)}")
             raise
-    
+
     def delete_document(self, doc_id: str):
         try:
             self.es.delete(index=self.index_name, id=doc_id)
@@ -146,9 +144,133 @@ class ElasticsearchService(BaseService):
             print(f"Error al eliminar el documento con ID '{doc_id}': {str(e)}")
             raise
 
-    def search(self, query: str, publication_type=None, sorting="newest", tags=None, date_from=None, date_to=None, page=1, size=10):
-        pass
-    
-    
-    
-    
+    def search(
+        self,
+        query: str,
+        publication_type=None,
+        sorting="newest",
+        tags=None,
+        date_from=None,
+        date_to=None,
+        page=1,
+        size=10,
+    ):
+        try:
+            print(
+                f"[DEBUG] Buscando en '{self.index_name}' "
+                f"con query: '{query}', "
+                f"tipo: {publication_type}, "
+                f"tags: {tags}, "
+                f"orden: {sorting}, "
+                f"página: {page}, tamaño: {size}"
+            )
+
+            must_clauses = []
+            filter_clauses = []
+
+            # Texto libre
+            if query:
+                must_clauses.append(
+                    {
+                        "multi_match": {
+                            "query": query,
+                            "fields": [
+                                "title^3",
+                                "authors.name",
+                                "authors.affiliation",
+                                "filename^2",
+                                "content",
+                                "tags",
+                            ],
+                            "fuzziness": "AUTO",
+                        }
+                    }
+                )
+
+            # Filtro por tipo de publicación
+            if publication_type:
+                filter_clauses.append({"term": {"publication_type.keyword": publication_type}})
+
+            # Filtro por tags
+            if tags:
+                filter_clauses.append({"terms": {"tags.keyword": tags}})
+
+            # Filtro por fechas
+            if date_from or date_to:
+                try:
+                    range_query = {"range": {"created_at": {}}}
+
+                    if date_from:
+                        # Normalizar y validar formato
+                        dt_from = datetime.strptime(date_from, "%Y-%m-%d")
+                        range_query["range"]["created_at"]["gte"] = dt_from.strftime("%Y-%m-%dT00:00:00Z")
+
+                    if date_to:
+                        dt_to = datetime.strptime(date_to, "%Y-%m-%d")
+                        range_query["range"]["created_at"]["lte"] = dt_to.strftime("%Y-%m-%dT23:59:59Z")
+
+                    if "gte" in range_query["range"]["created_at"] or "lte" in range_query["range"]["created_at"]:
+                        filter_clauses.append(range_query)
+
+                except ValueError as e:
+                    print(f"[WARN] Formato de fecha inválido recibido: from={date_from}, to={date_to}. Error: {e}")
+
+            # Ordenación
+            sort_clause = [
+                {"created_at": {"order": "desc"}} if sorting == "newest" else {"created_at": {"order": "asc"}}
+            ]
+
+            # Calcular offset
+            from_ = (page - 1) * size
+
+            body = {
+                "query": {
+                    "bool": {
+                        "must": must_clauses if must_clauses else [{"match_all": {}}],
+                        "filter": filter_clauses,
+                    }
+                },
+                "sort": sort_clause,
+            }
+
+            result = self.es.search(index=self.index_name, body=body, from_=from_, size=size)
+            hits = result["hits"]["hits"]
+            total = result["hits"]["total"]["value"]
+
+            print(f"[SUCCESS] Búsqueda completada. Página {page}, resultados: {len(hits)}, total: {total}")
+
+            return [self._format_hit(hit) for hit in hits], total
+
+        except Exception as e:
+            print(f"[ERROR] Fallo en la búsqueda: {e}")
+            raise
+
+    def _format_hit(self, hit):
+        from datetime import datetime
+
+        source = hit["_source"]
+
+        # Formato de fecha
+        if "created_at" in source:
+            try:
+                dt = datetime.fromisoformat(source["created_at"])
+                source["created_at"] = dt.strftime("%d %b %Y, %H:%M")
+            except Exception:
+                pass
+
+        # Tamaño legible
+        if "total_size_in_bytes" in source:
+            source["total_size_in_human_format"] = self._human_readable_size(source["total_size_in_bytes"])
+
+        return source
+
+    def _human_readable_size(self, size_bytes):
+        if size_bytes is None:
+            return ""
+        if size_bytes == 0:
+            return "0 B"
+        size_name = ("B", "KB", "MB", "GB", "TB")
+        i = int(min(len(size_name) - 1, max(0, (size_bytes.bit_length() - 1) // 10)))
+        p = 1 << (i * 10)
+        s = round(size_bytes / p, 2)
+        return f"{s} {size_name[i]}"
