@@ -12,3 +12,28 @@ The platform integrates a **Zenodo clone** for dataset management and the **Astr
 By following **Open Science** principles, fitshub<span>.io</span> aims to provide a structured and accessible environment for sharing scientific data and models within the astronomy community.
 
 This project is developed by the **FitsHub Project Teams 1 and 2** as the practical component of the **Evolución y Gestión de la Configuración (EGC)** course at the **University of Seville**.
+
+## Development environment
+
+### Docker Compose (recommended)
+
+Spin up the full stack, including the new Elasticsearch node used for search:
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d
+```
+
+The `web` container reads the following environment variables (sourced from `.env`):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ELASTICSEARCH_HOST` | `http://elasticsearch:9200` | URL used by the API to reach the Elasticsearch container |
+| `ELASTICSEARCH_INDEX` | `search_index` | Default index for search documents |
+
+Once the containers are running you can check Elasticsearch health from your host machine:
+
+```bash
+curl http://localhost:9200/_cluster/health
+```
+
+A response with `status` set to `green` or `yellow` means the search cluster is ready. The explore UI will show real search results when this service is available, and a friendly message if it is down.

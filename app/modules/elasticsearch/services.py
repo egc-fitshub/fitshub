@@ -1,14 +1,41 @@
+# flake8: noqa
+
+"""Elasticsearch services layer."""
+
 import time
 from datetime import datetime
 
-from elasticsearch import ApiError, BadRequestError, ConnectionError, Elasticsearch, NotFoundError
+from flask import current_app
+
+from elasticsearch import (
+    ApiError,
+    BadRequestError,
+    ConnectionError,
+    Elasticsearch,
+    NotFoundError,
+)
 
 from app.modules.elasticsearch.repositories import ElasticsearchRepository
 from core.services.BaseService import BaseService
 
 
 class ElasticsearchService(BaseService):
-    def __init__(self, host="http://elasticsearch:9200", index_name="search_index"):
+    def __init__(self, host=None, index_name=None):
+        config = {}
+        try:
+            config = current_app.config
+        except RuntimeError:
+            # No application context available (e.g., running from CLI)
+            config = {}
+
+        host = host or config.get(
+            "ELASTICSEARCH_HOST",
+            "http://elasticsearch:9200",
+        )
+        index_name = index_name or config.get("ELASTICSEARCH_INDEX", "search_index")
+        retry_attempts = int(config.get("ELASTICSEARCH_RETRY_ATTEMPTS", 5))
+        retry_delay = int(config.get("ELASTICSEARCH_RETRY_DELAY", 2))
+
         if not isinstance(index_name, str):
             raise ValueError("El nombre del índice debe ser una cadena de texto.")
 
@@ -27,9 +54,21 @@ class ElasticsearchService(BaseService):
         super().__init__(ElasticsearchRepository())
         self.es = Elasticsearch(hosts=[host])
         self.index_name = index_name
+        self.host = host
+        self.retry_attempts = retry_attempts
+        self.retry_delay = retry_delay
 
-        if not self.wait_for_elasticsearch():
-            print("Error: No se pudo conectar a Elasticsearch en el host proporcionado.")
+        if not self.wait_for_elasticsearch(retries=self.retry_attempts, delay=self.retry_delay):
+            raise ConnectionError(f"No se pudo conectar a Elasticsearch en el host proporcionado: {host}")
+
+        try:
+            self.create_index_if_not_exists()
+        except Exception:
+            # Si la creación falla, permitimos que continúe; las búsquedas gestionarán el error.
+            try:
+                current_app.logger.exception("No se pudo asegurar la existencia del índice de Elasticsearch")
+            except RuntimeError:
+                print("[WARN] No se pudo asegurar la existencia del índice de Elasticsearch")
 
     def wait_for_elasticsearch(self, retries=5, delay=2):
         for attempt in range(retries):
@@ -80,9 +119,23 @@ class ElasticsearchService(BaseService):
                                     "type": "text",
                                     "analyzer": "custom_text_analyzer",
                                 },
+                                "description": {
+                                    "type": "text",
+                                    "analyzer": "custom_text_analyzer",
+                                },
                                 "filename": {
                                     "type": "text",
                                     "analyzer": "custom_filename_analyzer",
+                                },
+                                "tags": {
+                                    "type": "text",
+                                    "analyzer": "custom_text_analyzer",
+                                    "fields": {"keyword": {"type": "keyword"}},
+                                },
+                                "publication_type": {"type": "keyword"},
+                                "publication_type_label": {
+                                    "type": "text",
+                                    "analyzer": "custom_text_analyzer",
                                 },
                                 "created_at": {"type": "date"},
                                 "doi": {"type": "keyword"},
@@ -104,9 +157,18 @@ class ElasticsearchService(BaseService):
                                     "type": "text",
                                     "analyzer": "custom_text_analyzer",
                                 },
+                                "url": {"type": "keyword"},
                                 "dataset_id": {"type": "integer"},
                                 "fits_model_id": {"type": "integer"},
                                 "dataset_title": {
+                                    "type": "text",
+                                    "analyzer": "custom_text_analyzer",
+                                },
+                                "checksum": {"type": "keyword"},
+                                "total_size_in_bytes": {"type": "long"},
+                                "files_count": {"type": "integer"},
+                                "size_in_bytes": {"type": "long"},
+                                "size_in_human_format": {
                                     "type": "text",
                                     "analyzer": "custom_text_analyzer",
                                 },
@@ -175,21 +237,22 @@ class ElasticsearchService(BaseService):
                         "multi_match": {
                             "query": query,
                             "fields": [
-                                "title^3",
-                                "authors.name",
-                                "authors.affiliation",
-                                "filename^2",
-                                "content",
-                                "tags",
+                                "title^4",
+                                "description^3",
+                                "authors.name^2",
                             ],
                             "fuzziness": "AUTO",
                         }
                     }
                 )
 
-            # Filtro por tipo de publicación
-            if publication_type:
-                filter_clauses.append({"term": {"publication_type.keyword": publication_type}})
+            # Filtro por tipo de publicación (ignorar valores sentinela como "any"/"all")
+            normalized_publication_type = (publication_type or "").strip()
+            if normalized_publication_type:
+                normalized_publication_type = normalized_publication_type.lower()
+
+            if normalized_publication_type not in ("", "any", "all"):
+                filter_clauses.append({"term": {"publication_type": normalized_publication_type}})
 
             # Filtro por tags
             if tags:
@@ -233,7 +296,17 @@ class ElasticsearchService(BaseService):
                 "sort": sort_clause,
             }
 
-            result = self.es.search(index=self.index_name, body=body, from_=from_, size=size)
+            try:
+                result = self.es.search(
+                    index=self.index_name,
+                    body=body,
+                    from_=from_,
+                    size=size,
+                )
+            except NotFoundError:
+                self.create_index_if_not_exists()
+                return [], 0
+
             hits = result["hits"]["hits"]
             total = result["hits"]["total"]["value"]
 
@@ -274,3 +347,29 @@ class ElasticsearchService(BaseService):
         p = 1 << (i * 10)
         s = round(size_bytes / p, 2)
         return f"{s} {size_name[i]}"
+
+
+class IndexingService:
+    """
+    Encapsula la lógica de indexación en Elasticsearch.
+    """
+
+    def __init__(self, index_dataset_fn, index_hubfile_fn, logger):
+        self.index_dataset = index_dataset_fn
+        self.index_hubfile = index_hubfile_fn
+        self.logger = logger
+
+    def index_dataset_and_hubfiles(self, dataset, created_fms):
+        try:
+            # Re-obtener dataset actualizado
+            self.index_dataset(dataset)
+            self.logger.info(f"[INDEX] Dataset {dataset.id} indexed")
+
+            for fm in created_fms:
+                for hubfile in fm.hubfiles:
+                    self.index_hubfile(hubfile)
+                    self.logger.info(f"[INDEX] Hubfile {hubfile.id} indexed")
+
+        except Exception as exc:
+            self.logger.exception(f"[INDEX ERROR] Failed to index dataset {dataset.id}: {exc}")
+            raise
