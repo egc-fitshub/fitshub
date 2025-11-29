@@ -366,7 +366,11 @@ class IndexingService:
             self.logger.info(f"[INDEX] Dataset {dataset.id} indexed")
 
             for fm in created_fms:
-                for hubfile in fm.hubfiles:
+                hubfiles = getattr(fm, "hubfiles", None)
+                if hubfiles is None:
+                    hubfiles = getattr(fm, "files", [])
+
+                for hubfile in hubfiles:
                     self.index_hubfile(hubfile)
                     self.logger.info(f"[INDEX] Hubfile {hubfile.id} indexed")
 
