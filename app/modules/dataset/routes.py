@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+import requests
 from flask import (
     abort,
     jsonify,
@@ -32,7 +33,6 @@ from app.modules.dataset.services import (
     DSViewRecordService,
 )
 from app.modules.fakenodo.services import FakenodoService
-import requests
 
 logger = logging.getLogger(__name__)
 
