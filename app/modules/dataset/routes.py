@@ -238,28 +238,29 @@ def upload_zip():
         200,
     )
 
-@dataset_bp.route('/dataset/github/fetch', methods=['POST'])
+
+@dataset_bp.route("/dataset/github/fetch", methods=["POST"])
 def github_fetch():
-    user = request.args.get('user')
-    repo = request.args.get('repo')
+    user = request.args.get("user")
+    repo = request.args.get("repo")
 
     if not user or not repo:
-        return jsonify({'error': 'User or repo not specified'}), 400
+        return jsonify({"error": "User or repo not specified"}), 400
 
     # 1. List repository files
-    list_url = f'https://api.github.com/repos/{user}/{repo}/contents/'
+    list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
     try:
         r = requests.get(list_url)
         r.raise_for_status()
         files = r.json()
     except Exception as e:
-        return jsonify({'error': f'Error listing repo contents: {e}'}), 500
+        return jsonify({"error": f"Error listing repo contents: {e}"}), 500
 
     # Get list of .fits files
-    fits_files = [f['name'] for f in files if f['name'].lower().endswith('.fits')]
+    fits_files = [f["name"] for f in files if f["name"].lower().endswith(".fits")]
 
     if not fits_files:
-        return jsonify({'filenames': []}), 200
+        return jsonify({"filenames": []}), 200
 
     new_fits_names = []
 
@@ -269,7 +270,7 @@ def github_fetch():
         os.makedirs(temp_folder)
 
     for fits_name in fits_files:
-        file_url = f'https://api.github.com/repos/{user}/{repo}/contents/{fits_name}'
+        file_url = f"https://api.github.com/repos/{user}/{repo}/contents/{fits_name}"
         try:
             fr = requests.get(file_url)
             fr.raise_for_status()
@@ -277,7 +278,7 @@ def github_fetch():
 
             download_url = file_info.get("download_url")
             if not download_url:
-                return jsonify({'error': f'No download URL for {fits_name}'}), 500
+                return jsonify({"error": f"No download URL for {fits_name}"}), 500
 
             rfile = requests.get(download_url, stream=True)
             rfile.raise_for_status()
@@ -289,7 +290,7 @@ def github_fetch():
                 out.write(rfile.content)
 
         except Exception as e:
-            return jsonify({'error': f'Error downloading {fits_name}: {e}'}), 500
+            return jsonify({"error": f"Error downloading {fits_name}: {e}"}), 500
 
     return (
         jsonify(
@@ -300,6 +301,7 @@ def github_fetch():
         ),
         200,
     )
+
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
 def delete():
