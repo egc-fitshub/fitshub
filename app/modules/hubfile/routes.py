@@ -1,11 +1,11 @@
+import base64
+import io
 import os
 import uuid
 from datetime import datetime, timezone
 
-from astropy.io import fits
 import matplotlib.pyplot as plt
-import io
-import base64
+from astropy.io import fits
 from flask import current_app, jsonify, make_response, request, send_from_directory
 from flask_login import current_user
 
@@ -72,14 +72,15 @@ def get_image_from_fits_headers(path):
 
     # Save plot
     buffer = io.BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches='tight')
+    plt.savefig(buffer, format="png", bbox_inches="tight")
     plt.close()
 
     # Encode plotv to base64
     buffer.seek(0)
-    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    image_base64 = base64.b64encode(buffer.read()).decode("utf-8")
 
     return image_base64
+
 
 @hubfile_bp.route("/file/view/<int:file_id>", methods=["GET"])
 def view_file(file_id):
@@ -118,11 +119,7 @@ def view_file(file_id):
                 db.session.commit()
 
             # Prepare response with image
-            response = jsonify({
-                "success": True,
-                "content": content,
-                "image": f"data:image/png;base64,{image_base64}"
-            })
+            response = jsonify({"success": True, "content": content, "image": f"data:image/png;base64,{image_base64}"})
 
             if not request.cookies.get("view_cookie"):
                 response = make_response(response)
