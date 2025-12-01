@@ -424,7 +424,8 @@ def test_upload_from_github():
 
         # Select GitHub as source and trigger UI update
         driver.execute_script(
-            "const e = document.getElementById('upload-source'); e.value = 'github'; e.dispatchEvent(new Event('change'));"
+            "const e = document.getElementById('upload-source'); e.value = 'github';"
+            + "e.dispatchEvent(new Event('change'));"
         )
         wait_for_page_to_load(driver)
         time.sleep(0.5)
