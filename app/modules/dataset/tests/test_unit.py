@@ -183,6 +183,24 @@ def test_zip_upload_fits_in_folder_repeated_name(test_client):
     logout(test_client)
 
 
+def test_zip_upload_non_zip_file(test_client):
+    filename = "file1.fits"
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/fits_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 400
+
+    json = response.json
+    assert json["message"] == "No valid file"
+
+    logout(test_client)
+
+
 def test_generate_json_badge_data(test_client):
     response = test_client.get("/dataset/1/badge.json")
 
