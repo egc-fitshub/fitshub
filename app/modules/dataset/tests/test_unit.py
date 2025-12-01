@@ -1,7 +1,13 @@
+import os
+import shutil
+from io import BytesIO
+
 import pytest
+from flask_login import current_user
 
 from app import db
 from app.modules.auth.models import User
+from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
 from app.modules.dataset.models import DataSet, DSMetaData, PublicationType
 
@@ -22,6 +28,7 @@ def test_client(test_client):
             dataset_doi="http://localhost:5000/doi/10.1234/test-doi",
             description="Una descripción de prueba, requerida por el modelo.",
             publication_type="other",
+            tags="test",
         )
         db.session.add(meta_test)
         db.session.commit()
@@ -31,6 +38,211 @@ def test_client(test_client):
         db.session.commit()
 
     yield test_client
+
+
+def test_zip_upload_single_fits(test_client):
+    filename = "one_fits.zip"
+    fits_names = ["file1.fits"]
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_multiple_fits(test_client):
+    filename = "multiple_fits.zip"
+    fits_names = ["file1.fits", "file2.fits"]
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_no_fits(test_client):
+    filename = "not_fits.zip"
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert len(json["filenames"]) == 0
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    assert len(os.listdir(file_path)) == 0
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_fits_in_folder(test_client):
+    filename = "fits_in_folder.zip"
+    fits_names = ["file1.fits", "file2.fits"]
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_fits_in_folder_repeated_name(test_client):
+    filename = "fits_in_folder_repeated_name.zip"
+    fits_names = ["file1.fits", "file2.fits", "file1 (1).fits"]
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_multiple_files_repeated_name(test_client):
+    filename_1 = "one_fits.zip"
+    filename_2 = "multiple_fits.zip"
+
+    fits_names_1 = ["file1.fits"]
+    fits_names_2 = ["file1 (1).fits", "file2.fits"]
+
+    fits_names = fits_names_1 + fits_names_2
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename_1), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename_1))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names_1])
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename_2), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename_2))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names_2])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_zip_upload_non_zip_file(test_client):
+    filename = "file1.fits"
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/fits_examples", filename), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 400
+
+    json = response.json
+    assert json["message"] == "No valid file"
+
+    logout(test_client)
 
 
 def test_generate_json_badge_data(test_client):
@@ -59,6 +271,7 @@ def sample_metadata(test_client):
         )
         db.session.add(ds_test_meta)
         db.session.commit()
+
         yield ds_test_meta
 
 
