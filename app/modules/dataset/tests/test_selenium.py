@@ -151,7 +151,250 @@ def test_upload_dataset():
     finally:
         # Close the browser
         close_driver(driver)
+        
+def test_upload_one_zip_dataset():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
 
+        # Login
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
+        driver.find_element(By.NAME, "password").send_keys("1234")
+        driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+        time.sleep(3)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("Zip Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("Zip upload description")
+        driver.find_element(By.NAME, "tags").send_keys("zip,test")
+
+        # Switch upload source to ZIP
+        driver.execute_script(
+            "const e = document.getElementById('upload-source'); e.value = 'zip'; e.dispatchEvent(new Event('change'));"
+        )
+        time.sleep(1)
+        wait_for_page_to_load(driver)
+
+        # Upload the zip using the hidden dropzone input
+        zip_path = os.path.abspath("app/modules/dataset/zip_examples/one_fits.zip")
+
+        dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
+        dropzone.send_keys(zip_path)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Agree and submit
+        check = driver.find_element(By.ID, "agreeCheckbox")
+        check.send_keys(Keys.SPACE)
+        wait_for_page_to_load(driver)
+        upload_btn = driver.find_element(By.ID, "upload_button")
+        upload_btn.send_keys(Keys.RETURN)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Verify redirect and dataset count increment
+        assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
+
+        print("Upload one ZIP dataset test passed!")
+
+    finally:
+        close_driver(driver)
+
+def test_upload_multiple_zip_dataset():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Login
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
+        driver.find_element(By.NAME, "password").send_keys("1234")
+        driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+        time.sleep(3)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("Zip Multiple Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("Zip multiple upload description")
+        driver.find_element(By.NAME, "tags").send_keys("zip,test")
+
+        # Switch upload source to ZIP
+        driver.execute_script(
+            "const e = document.getElementById('upload-source'); e.value = 'zip'; e.dispatchEvent(new Event('change'));"
+        )
+        time.sleep(1)
+        wait_for_page_to_load(driver)
+
+        # Upload the zip using the hidden dropzone input
+        zip_path = os.path.abspath("app/modules/dataset/zip_examples/multiple_fits.zip")
+
+        dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
+        dropzone.send_keys(zip_path)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Agree and submit
+        check = driver.find_element(By.ID, "agreeCheckbox")
+        check.send_keys(Keys.SPACE)
+        wait_for_page_to_load(driver)
+        upload_btn = driver.find_element(By.ID, "upload_button")
+        upload_btn.send_keys(Keys.RETURN)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Verify redirect and dataset count increment
+        assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
+        
+        driver.find_element(By.LINK_TEXT, "Zip Multiple Upload Title").click()
+        wait_for_page_to_load(driver)
+        
+        file_items = driver.find_elements(
+            By.XPATH,
+            "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
+        )
+        assert len(file_items) == 2, f"Expected 2 files in dataset, found {len(file_items)}"
+
+        print("Upload multiple ZIP datasets test passed!")
+
+    finally:
+        close_driver(driver)
+        
+def test_upload_folder_zip_dataset():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Login
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
+        driver.find_element(By.NAME, "password").send_keys("1234")
+        driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+        time.sleep(3)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("Zip Folder Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("Zip folder upload description")
+        driver.find_element(By.NAME, "tags").send_keys("zip,test")
+
+        # Switch upload source to ZIP
+        driver.execute_script(
+            "const e = document.getElementById('upload-source'); e.value = 'zip'; e.dispatchEvent(new Event('change'));"
+        )
+        time.sleep(1)
+        wait_for_page_to_load(driver)
+
+        # Upload the zip using the hidden dropzone input
+        zip_path = os.path.abspath("app/modules/dataset/zip_examples/fits_in_folder.zip")
+
+        dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
+        dropzone.send_keys(zip_path)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Agree and submit
+        check = driver.find_element(By.ID, "agreeCheckbox")
+        check.send_keys(Keys.SPACE)
+        wait_for_page_to_load(driver)
+        upload_btn = driver.find_element(By.ID, "upload_button")
+        upload_btn.send_keys(Keys.RETURN)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Verify redirect and dataset count increment
+        assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
+
+        driver.find_element(By.LINK_TEXT, "Zip Folder Upload Title").click()
+        wait_for_page_to_load(driver)
+        
+        file_items = driver.find_elements(
+            By.XPATH,
+            "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
+        )
+        assert len(file_items) == 2, f"Expected 2 files in dataset, found {len(file_items)}"
+
+        print("Upload ZIP folder test passed!")
+
+    finally:
+        close_driver(driver)
+        
+def test_upload_empty_zip_dataset():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Login
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
+        driver.find_element(By.NAME, "password").send_keys("1234")
+        driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+        time.sleep(3)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("Zip Empty Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("Zip folder upload description")
+        driver.find_element(By.NAME, "tags").send_keys("zip,test")
+
+        # Switch upload source to ZIP
+        driver.execute_script(
+            "const e = document.getElementById('upload-source'); e.value = 'zip'; e.dispatchEvent(new Event('change'));"
+        )
+        time.sleep(1)
+        wait_for_page_to_load(driver)
+
+        # Upload the zip using the hidden dropzone input
+        zip_path = os.path.abspath("app/modules/dataset/zip_examples/not_fits.zip")
+
+        dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
+        dropzone.send_keys(zip_path)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Verify no dataset count increment and warning shown
+        warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "alerts"))
+        assert warning.is_displayed(), "Warning for no files not displayed"
+        assert "No valid FITS files" in warning.text or warning.text.strip() != "", "Warning text is empty or unexpected"
+        
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets, "Dataset count increased after empty ZIP upload"
+
+        print("Upload empty ZIP test passed!")
+
+    finally:
+        close_driver(driver)
 
 def test_view_dataset():
     driver = initialize_driver()
@@ -265,4 +508,8 @@ test_trending_dataset()
 test_download_counter()
 test_view_dataset()
 test_upload_dataset()
+test_upload_one_zip_dataset()
+test_upload_multiple_zip_dataset()
+test_upload_empty_zip_dataset()
+test_upload_folder_zip_dataset()
 test_badge()
