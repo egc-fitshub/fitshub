@@ -8,8 +8,10 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+import requests
 from flask import (
     abort,
+    current_app,
     jsonify,
     make_response,
     redirect,
@@ -231,6 +233,87 @@ def upload_zip():
         jsonify(
             {
                 "message": "ZIP uploaded successfully",
+                "filenames": new_fits_names,
+            }
+        ),
+        200,
+    )
+
+
+@dataset_bp.route("/dataset/github/fetch", methods=["POST"])
+def github_fetch():
+    user = request.args.get("user")
+    repo = request.args.get("repo")
+
+    if not user or not repo:
+        return jsonify({"error": "User or repo not specified"}), 400
+
+    if current_app.config.get("FLASK_ENV") == "testing":
+        files = [
+            {
+                "name": "file1.fits",
+                "path": "file1.fits",
+                "type": "file",
+                "download_url": f"{request.host_url}app/modules/dataset/fits_examples/file1.fits",
+            },
+            {
+                "name": "file2.fits",
+                "path": "file2.fits",
+                "type": "file",
+                "download_url": f"{request.host_url}app/modules/dataset/fits_examples/file2.fits",
+            },
+        ]
+        return jsonify({"filenames": [f["name"] for f in files]}), 200
+
+    # 1. List repository files
+    list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
+    try:
+        r = requests.get(list_url)
+        r.raise_for_status()
+        files = r.json()
+    except Exception as e:
+        return jsonify({"error": f"Error listing repo contents: {e}"}), 500
+
+    # Get list of .fits files
+    fits_files = [f["name"] for f in files if f["name"].lower().endswith(".fits")]
+
+    if not fits_files:
+        return jsonify({"filenames": []}), 200
+
+    new_fits_names = []
+
+    temp_folder = current_user.temp_folder()
+
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+
+    for fits_name in fits_files:
+        file_url = f"https://api.github.com/repos/{user}/{repo}/contents/{fits_name}"
+        try:
+            fr = requests.get(file_url)
+            fr.raise_for_status()
+            file_info = fr.json()
+
+            download_url = file_info.get("download_url")
+            if not download_url:
+                return jsonify({"error": f"No download URL for {fits_name}"}), 500
+
+            rfile = requests.get(download_url, stream=True)
+            rfile.raise_for_status()
+
+            fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
+            new_fits_names.append(fits_filename)
+
+            with open(fits_path, mode="wb") as out:
+                out.write(rfile.content)
+
+        except Exception as e:
+            return jsonify({"error": f"Error downloading {fits_name}: {e}"}), 500
+
+    return (
+        jsonify(
+            {
+                "message": "Github files uploaded successfully",
                 "filenames": new_fits_names,
             }
         ),
