@@ -151,7 +151,8 @@ def test_upload_dataset():
     finally:
         # Close the browser
         close_driver(driver)
-        
+
+
 def test_upload_one_zip_dataset():
     driver = initialize_driver()
     try:
@@ -210,6 +211,7 @@ def test_upload_one_zip_dataset():
     finally:
         close_driver(driver)
 
+
 def test_upload_multiple_zip_dataset():
     driver = initialize_driver()
     try:
@@ -262,13 +264,12 @@ def test_upload_multiple_zip_dataset():
         assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
-        
+
         driver.find_element(By.LINK_TEXT, "Zip Multiple Upload Title").click()
         wait_for_page_to_load(driver)
-        
+
         file_items = driver.find_elements(
-            By.XPATH,
-            "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
+            By.XPATH, "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
         )
         assert len(file_items) == 2, f"Expected 2 files in dataset, found {len(file_items)}"
 
@@ -276,7 +277,8 @@ def test_upload_multiple_zip_dataset():
 
     finally:
         close_driver(driver)
-        
+
+
 def test_upload_folder_zip_dataset():
     driver = initialize_driver()
     try:
@@ -332,10 +334,9 @@ def test_upload_folder_zip_dataset():
 
         driver.find_element(By.LINK_TEXT, "Zip Folder Upload Title").click()
         wait_for_page_to_load(driver)
-        
+
         file_items = driver.find_elements(
-            By.XPATH,
-            "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
+            By.XPATH, "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
         )
         assert len(file_items) == 2, f"Expected 2 files in dataset, found {len(file_items)}"
 
@@ -343,7 +344,8 @@ def test_upload_folder_zip_dataset():
 
     finally:
         close_driver(driver)
-        
+
+
 def test_upload_empty_zip_dataset():
     driver = initialize_driver()
     try:
@@ -386,8 +388,10 @@ def test_upload_empty_zip_dataset():
         # Verify no dataset count increment and warning shown
         warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "alerts"))
         assert warning.is_displayed(), "Warning for no files not displayed"
-        assert "No valid FITS files" in warning.text or warning.text.strip() != "", "Warning text is empty or unexpected"
-        
+        assert "No valid FITS files" in warning.text or warning.text.strip() != "", (
+            "Warning text is empty or unexpected"
+        )
+
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets, "Dataset count increased after empty ZIP upload"
 
@@ -395,7 +399,7 @@ def test_upload_empty_zip_dataset():
 
     finally:
         close_driver(driver)
-        
+
 
 def test_upload_from_github():
     driver = initialize_driver()
@@ -437,7 +441,7 @@ def test_upload_from_github():
         # Check the files have been listed
         file_items = driver.find_elements(By.CSS_SELECTOR, "#file-list li")
         assert len(file_items) > 0, "No files listed from GitHub repository"
-        
+
         print("Upload from GitHub test passed!")
 
     finally:
@@ -447,6 +451,7 @@ def test_upload_from_github():
         except Exception:
             pass
         close_driver(driver)
+
 
 def test_view_dataset():
     driver = initialize_driver()
@@ -565,4 +570,4 @@ def test_badge():
 # test_upload_empty_zip_dataset()
 # test_upload_folder_zip_dataset()
 test_upload_from_github()
-#test_badge()
+# test_badge()
