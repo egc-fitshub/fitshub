@@ -183,6 +183,50 @@ def test_zip_upload_fits_in_folder_repeated_name(test_client):
     logout(test_client)
 
 
+def test_zip_upload_multiple_files_repeated_name(test_client):
+    filename_1 = "one_fits.zip"
+    filename_2 = "multiple_fits.zip"
+
+    fits_names_1 = ["file1.fits"]
+    fits_names_2 = ["file1 (1).fits", "file2.fits"]
+
+    fits_names = fits_names_1 + fits_names_2
+
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename_1), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename_1))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names_1])
+
+    with open(os.path.join("app/modules/dataset/zip_examples", filename_2), mode="rb") as f:
+        data = dict(file=(BytesIO(f.read()), filename_2))
+
+    response = test_client.post("/dataset/file/upload/zip", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "ZIP uploaded successfully"
+    assert all([fits_name in json["filenames"] for fits_name in fits_names_2])
+
+    # Remove temp folder
+    file_path = current_user.temp_folder()
+
+    for fits_name in fits_names:
+        assert os.path.exists(os.path.join(file_path, fits_name))
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
 def test_zip_upload_non_zip_file(test_client):
     filename = "file1.fits"
 
