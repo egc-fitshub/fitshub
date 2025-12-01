@@ -121,15 +121,9 @@ class DataSetRepository(BaseRepository):
 
         ref_tags = set()
         if ref_dataset.ds_meta_data.tags:
-            ref_tags = set(
-                tag.strip().lower()
-                for tag in ref_dataset.ds_meta_data.tags.split(",")
-                if tag.strip()
-            )
+            ref_tags = set(tag.strip().lower() for tag in ref_dataset.ds_meta_data.tags.split(",") if tag.strip())
 
-        ref_authors = set(
-            author.id for author in ref_dataset.ds_meta_data.authors
-        )
+        ref_authors = set(author.id for author in ref_dataset.ds_meta_data.authors)
 
         all_candidates = (
             self.session.query(DataSet)
@@ -149,11 +143,7 @@ class DataSetRepository(BaseRepository):
                         score += 1.5
 
             if dataset.ds_meta_data and dataset.ds_meta_data.tags:
-                candidate_tags = set(
-                    tag.strip().lower()
-                    for tag in dataset.ds_meta_data.tags.split(",")
-                    if tag.strip()
-                )
+                candidate_tags = set(tag.strip().lower() for tag in dataset.ds_meta_data.tags.split(",") if tag.strip())
                 shared_tags_count = len(ref_tags & candidate_tags)
                 score += shared_tags_count * 2.0
 
@@ -164,9 +154,7 @@ class DataSetRepository(BaseRepository):
                     .scalar()
                     or 0
                 )
-                classified_datasets.append(
-                    (dataset, score, download_count)
-                )
+                classified_datasets.append((dataset, score, download_count))
 
         classified_datasets.sort(key=lambda x: (x[1], x[2]), reverse=True)
 
