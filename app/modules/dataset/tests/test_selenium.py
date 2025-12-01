@@ -395,6 +395,58 @@ def test_upload_empty_zip_dataset():
 
     finally:
         close_driver(driver)
+        
+
+def test_upload_from_github():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Login
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
+        driver.find_element(By.NAME, "password").send_keys("1234")
+        driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+        time.sleep(2)
+        wait_for_page_to_load(driver)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("GitHub Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("GitHub upload description")
+        driver.find_element(By.NAME, "tags").send_keys("github,test")
+
+        # Select GitHub as source and trigger UI update
+        driver.execute_script(
+            "const e = document.getElementById('upload-source'); e.value = 'github'; e.dispatchEvent(new Event('change'));"
+        )
+        wait_for_page_to_load(driver)
+        time.sleep(0.5)
+
+        # Fill GitHub repo URL and click fetch button
+        gh_input = driver.find_element(By.ID, "github_url")
+        gh_input.clear()
+        gh_input.send_keys("https://github.com/user/repo")
+        driver.find_element(By.ID, "github_fetch_btn").click()
+
+        # Wait for the client to populate the file list
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#file-list li")) > 0)
+
+        # Check the files have been listed
+        file_items = driver.find_elements(By.CSS_SELECTOR, "#file-list li")
+        assert len(file_items) > 0, "No files listed from GitHub repository"
+        
+        print("Upload from GitHub test passed!")
+
+    finally:
+        # restore original fetch and close driver
+        try:
+            driver.execute_script("if (window._origFetch) window.fetch = window._origFetch;")
+        except Exception:
+            pass
+        close_driver(driver)
 
 def test_view_dataset():
     driver = initialize_driver()
@@ -504,12 +556,13 @@ def test_badge():
 
 
 # Call the test function
-test_trending_dataset()
-test_download_counter()
-test_view_dataset()
-test_upload_dataset()
-test_upload_one_zip_dataset()
-test_upload_multiple_zip_dataset()
-test_upload_empty_zip_dataset()
-test_upload_folder_zip_dataset()
-test_badge()
+# test_trending_dataset()
+# test_download_counter()
+# test_view_dataset()
+# test_upload_dataset()
+# test_upload_one_zip_dataset()
+# test_upload_multiple_zip_dataset()
+# test_upload_empty_zip_dataset()
+# test_upload_folder_zip_dataset()
+test_upload_from_github()
+#test_badge()
