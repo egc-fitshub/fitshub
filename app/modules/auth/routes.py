@@ -1,12 +1,12 @@
-from datetime import datetime
-import io
 import base64
+import io
+from datetime import datetime
 
-from flask import redirect, render_template, request, url_for, session
-from flask_login import current_user, login_required, login_user, logout_user
-from werkzeug.security import generate_password_hash
 import pyotp
 import qrcode
+from flask import redirect, render_template, request, session, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.security import generate_password_hash
 
 from app import db
 from app.modules.auth import auth_bp
@@ -50,61 +50,58 @@ def login():
     form = LoginForm()
     qr_code_data = None
     needs_2fa = False
-    
+
     if request.method == "POST":
+        if "pending_user_id" in session:
+            user = User.query.get(session["pending_user_id"])
 
-        if 'pending_user_id' in session:
-            user = User.query.get(session['pending_user_id'])
-            
             if not user:
-                session.pop('pending_user_id', None)
-                session.pop('remember_me', None)
-                session.pop('temp_token', None)
+                session.pop("pending_user_id", None)
+                session.pop("remember_me", None)
+                session.pop("temp_token", None)
                 return render_template("auth/login_form.html", form=form, error="Session expired. Please login again.")
-            
-            code = form.code.data
-            
-            if not code or len(code) != 6:
 
+            code = form.code.data
+
+            if not code or len(code) != 6:
                 needs_2fa = True
-                if user.token is None and 'temp_token' in session:
-                    token = session['temp_token']
+                if user.token is None and "temp_token" in session:
+                    token = session["temp_token"]
                     totp_uri = pyotp.TOTP(token).provisioning_uri(
-                        name=f"{user.profile.surname}, {user.profile.name}", 
-                        issuer_name="FITSHUB.IO"
+                        name=f"{user.profile.surname}, {user.profile.name}", issuer_name="FITSHUB.IO"
                     )
                     qr_image = qrcode.make(totp_uri).get_image()
                     buffered = io.BytesIO()
                     qr_image.save(buffered, format="PNG")
                     qr_code_data = base64.b64encode(buffered.getvalue()).decode()
-                
+
                 return render_template(
                     "auth/login_form.html",
                     form=form,
                     qr_code=qr_code_data,
                     needs_2fa=needs_2fa,
-                    error="Please enter a valid 6-digit code."
+                    error="Please enter a valid 6-digit code.",
                 )
-            
-            if user.token is None:
 
-                temp_token = session.get('temp_token')
+            if user.token is None:
+                temp_token = session.get("temp_token")
                 if not temp_token:
-                    session.pop('pending_user_id', None)
-                    session.pop('remember_me', None)
-                    return render_template("auth/login_form.html", form=form, error="Session expired. Please try again.")
-                
+                    session.pop("pending_user_id", None)
+                    session.pop("remember_me", None)
+                    return render_template(
+                        "auth/login_form.html", form=form, error="Session expired. Please try again."
+                    )
+
                 try:
                     authentication_service.set_user_token(user, temp_token, code)
-                    login_user(user, remember=session.get('remember_me', False))
-                    session.pop('pending_user_id', None)
-                    session.pop('remember_me', None)
-                    session.pop('temp_token', None)
+                    login_user(user, remember=session.get("remember_me", False))
+                    session.pop("pending_user_id", None)
+                    session.pop("remember_me", None)
+                    session.pop("temp_token", None)
                     return redirect(url_for("public.index"))
                 except ValueError:
                     totp_uri = pyotp.TOTP(temp_token).provisioning_uri(
-                        name=f"{user.profile.surname}, {user.profile.name}", 
-                        issuer_name="FITSHUB.IO"
+                        name=f"{user.profile.surname}, {user.profile.name}", issuer_name="FITSHUB.IO"
                     )
                     qr_image = qrcode.make(totp_uri).get_image()
                     buffered = io.BytesIO()
@@ -116,13 +113,13 @@ def login():
                         form=form,
                         qr_code=qr_code_data,
                         needs_2fa=needs_2fa,
-                        error="Invalid authentication code. Please try again."
+                        error="Invalid authentication code. Please try again.",
                     )
             else:
                 if authentication_service.verify_token(user, code):
-                    login_user(user, remember=session.get('remember_me', False))
-                    session.pop('pending_user_id', None)
-                    session.pop('remember_me', None)
+                    login_user(user, remember=session.get("remember_me", False))
+                    session.pop("pending_user_id", None)
+                    session.pop("remember_me", None)
                     return redirect(url_for("public.index"))
                 else:
                     needs_2fa = True
@@ -130,78 +127,67 @@ def login():
                         "auth/login_form.html",
                         form=form,
                         needs_2fa=needs_2fa,
-                        error="Invalid authentication code. Please try again."
+                        error="Invalid authentication code. Please try again.",
                     )
-        
+
         else:
             email = form.email.data
             password = form.password.data
-            
+
             if not email or not password:
                 return render_template("auth/login_form.html", form=form, error="Email and password are required.")
-            
+
             user = authentication_service.repository.get_by_email(email)
-            
+
             if user is None or not user.check_password(password):
                 return render_template("auth/login_form.html", form=form, error="Invalid credentials")
-            
+
             if not user.profile.enabled_two_factor:
                 login_user(user, remember=form.remember_me.data)
                 return redirect(url_for("public.index"))
-            
-            session['pending_user_id'] = user.id
-            session['remember_me'] = form.remember_me.data
-            
+
+            session["pending_user_id"] = user.id
+            session["remember_me"] = form.remember_me.data
+
             needs_2fa = True
-            
+
             if user.token is None:
                 qr_image, token = authentication_service.generate_qr_code(user)
-                session['temp_token'] = token
-                
+                session["temp_token"] = token
+
                 buffered = io.BytesIO()
                 qr_image.save(buffered, format="PNG")
                 qr_code_data = base64.b64encode(buffered.getvalue()).decode()
-            
-            return render_template(
-                "auth/login_form.html",
-                form=form,
-                qr_code=qr_code_data,
-                needs_2fa=needs_2fa
-            )
-    
-    if 'pending_user_id' in session:
-        user = User.query.get(session['pending_user_id'])
+
+            return render_template("auth/login_form.html", form=form, qr_code=qr_code_data, needs_2fa=needs_2fa)
+
+    if "pending_user_id" in session:
+        user = User.query.get(session["pending_user_id"])
         if user:
             needs_2fa = True
-            if user.token is None and 'temp_token' in session:
-                token = session['temp_token']
+            if user.token is None and "temp_token" in session:
+                token = session["temp_token"]
                 totp_uri = pyotp.TOTP(token).provisioning_uri(
-                    name=f"{user.profile.surname}, {user.profile.name}", 
-                    issuer_name="FITSHUB.IO"
+                    name=f"{user.profile.surname}, {user.profile.name}", issuer_name="FITSHUB.IO"
                 )
                 qr_image = qrcode.make(totp_uri).get_image()
                 buffered = io.BytesIO()
                 qr_image.save(buffered, format="PNG")
                 qr_code_data = base64.b64encode(buffered.getvalue()).decode()
         else:
-            session.pop('pending_user_id', None)
-            session.pop('remember_me', None)
-            session.pop('temp_token', None)
-    
-    return render_template(
-        "auth/login_form.html",
-        form=form,
-        qr_code=qr_code_data,
-        needs_2fa=needs_2fa
-    )
+            session.pop("pending_user_id", None)
+            session.pop("remember_me", None)
+            session.pop("temp_token", None)
+
+    return render_template("auth/login_form.html", form=form, qr_code=qr_code_data, needs_2fa=needs_2fa)
 
 
 @auth_bp.route("/logout")
 def logout():
     logout_user()
-    session.pop('pending_user_id', None)
-    session.pop('remember_me', None)
-    session.pop('temp_token', None)
+    session.pop("pending_user_id", None)
+    session.pop("remember_me", None)
+    session.pop("temp_token", None)
     return redirect(url_for("public.index"))
 
 
