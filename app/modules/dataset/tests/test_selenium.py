@@ -43,7 +43,8 @@ def upload_agree_and_submit(driver):
 def switch_upload_source(driver, source):
     """Helper function to switch upload source."""
     driver.execute_script(
-        f"const e = document.getElementById('upload-source'); e.value = '{source}'; e.dispatchEvent(new Event('change'));"
+        f"const e = document.getElementById('upload-source'); e.value = '{source}'; "
+        + "e.dispatchEvent(new Event('change'));"
     )
     time.sleep(1)
     wait_for_page_to_load(driver)
