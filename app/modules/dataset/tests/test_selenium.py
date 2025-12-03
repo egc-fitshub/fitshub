@@ -562,13 +562,13 @@ def test_badge():
 
 
 # Call the test function
-# test_trending_dataset()
-# test_download_counter()
-# test_view_dataset()
-# test_upload_dataset()
-# test_upload_one_zip_dataset()
-# test_upload_multiple_zip_dataset()
-# test_upload_empty_zip_dataset()
-# test_upload_folder_zip_dataset()
+test_trending_dataset()
+test_download_counter()
+test_view_dataset()
+test_upload_dataset()
+test_upload_one_zip_dataset()
+test_upload_multiple_zip_dataset()
+test_upload_empty_zip_dataset()
+test_upload_folder_zip_dataset()
 test_upload_from_github()
-# test_badge()
+test_badge()
