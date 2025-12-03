@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
+
 def login(driver, host):
     """Helper function to log in a user."""
     driver.get(f"{host}/login")
@@ -24,7 +25,8 @@ def login(driver, host):
     password_field.send_keys(Keys.RETURN)
     time.sleep(4)
     wait_for_page_to_load(driver)
-    
+
+
 def upload_agree_and_submit(driver):
     """Helper function to agree to terms and submit uploads form."""
     # Check I agree and send form
@@ -36,7 +38,8 @@ def upload_agree_and_submit(driver):
     upload_btn.send_keys(Keys.RETURN)
     wait_for_page_to_load(driver)
     time.sleep(2)
-    
+
+
 def switch_upload_source(driver, source):
     """Helper function to switch upload source."""
     driver.execute_script(
@@ -44,7 +47,8 @@ def switch_upload_source(driver, source):
     )
     time.sleep(1)
     wait_for_page_to_load(driver)
-    
+
+
 def upload_to_dropzone(driver, file_path):
     """Helper function to upload a file to the dropzone."""
     path = os.path.abspath("app/modules/dataset/" + file_path)
@@ -53,6 +57,7 @@ def upload_to_dropzone(driver, file_path):
     dropzone.send_keys(path)
     time.sleep(2)
     wait_for_page_to_load(driver)
+
 
 def wait_for_page_to_load(driver, timeout=4):
     WebDriverWait(driver, timeout).until(
@@ -196,10 +201,10 @@ def test_upload_one_zip_dataset():
         driver.find_element(By.NAME, "desc").send_keys("Zip upload description")
         driver.find_element(By.NAME, "tags").send_keys("zip,test")
 
-        switch_upload_source(driver, 'zip')
+        switch_upload_source(driver, "zip")
 
         upload_to_dropzone(driver, "zip_examples/one_fits.zip")
-        
+
         upload_agree_and_submit(driver)
 
         # Verify redirect and dataset count increment
@@ -231,8 +236,7 @@ def test_upload_multiple_zip_dataset():
         driver.find_element(By.NAME, "desc").send_keys("Zip multiple upload description")
         driver.find_element(By.NAME, "tags").send_keys("zip,test")
 
-
-        switch_upload_source(driver, 'zip')
+        switch_upload_source(driver, "zip")
 
         upload_to_dropzone(driver, "zip_examples/multiple_fits.zip")
 
@@ -275,7 +279,7 @@ def test_upload_folder_zip_dataset():
         driver.find_element(By.NAME, "desc").send_keys("Zip folder upload description")
         driver.find_element(By.NAME, "tags").send_keys("zip,test")
 
-        switch_upload_source(driver, 'zip')
+        switch_upload_source(driver, "zip")
 
         upload_to_dropzone(driver, "zip_examples/fits_in_folder.zip")
 
@@ -318,7 +322,7 @@ def test_upload_empty_zip_dataset():
         driver.find_element(By.NAME, "desc").send_keys("Zip folder upload description")
         driver.find_element(By.NAME, "tags").send_keys("zip,test")
 
-        switch_upload_source(driver, 'zip')
+        switch_upload_source(driver, "zip")
 
         upload_to_dropzone(driver, "zip_examples/not_fits.zip")
 
@@ -354,7 +358,7 @@ def test_upload_from_github():
         driver.find_element(By.NAME, "tags").send_keys("github,test")
 
         # Select GitHub as source and trigger UI update
-        switch_upload_source(driver, 'github')
+        switch_upload_source(driver, "github")
 
         # Fill GitHub repo URL and click fetch button
         gh_input = driver.find_element(By.ID, "github_url")
@@ -384,11 +388,11 @@ def test_view_dataset():
 
         #  Login
         login(driver, host)
-        
+
         # Navigate to a dataset page
         driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
-        
+
         print("View dataset test passed!")
 
     finally:
@@ -406,17 +410,17 @@ def test_download_counter():
         download_counters = len(driver.find_elements(By.ID, "download_counter"))
         datasets = count_home_datasets(driver, host)
         assert download_counters == datasets
-        
+
         # Login
         login(driver, host)
-        
+
         # Check download counter in dataset view
         driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(7) .align-middle:nth-child(2)").click()
         driver.find_element(By.LINK_TEXT, "Sample dataset 3").click()
         driver.find_element(By.ID, "download_counter").click()
         assert driver.find_element(By.ID, "download_counter") is not None
         assert driver.find_element(By.ID, "download_counter").text is not None
-        
+
         print("Download counter test passed!")
     finally:
         close_driver(driver)
@@ -430,7 +434,7 @@ def test_trending_dataset():
         # Go to home
         host = get_host_for_selenium_testing()
         driver.get(f"{host}/")
-        
+
         # Check trending datasets components
         trending_datasets = count_trending_datasets(driver, host)
         trending_download_counters = len(driver.find_elements(By.ID, "trending_download_counter"))
@@ -439,7 +443,7 @@ def test_trending_dataset():
         fire_icon = driver.find_element(By.ID, "fire_icon")
         assert fire_icon is not None
         assert trending_datasets == trending_download_counters == titles == authors
-        
+
         print("Trending datasets test passed!")
     finally:
         close_driver(driver)
@@ -454,7 +458,7 @@ def test_badge_is_shown():
 
         # Login
         login(driver, host)
-        
+
         # Navigate to a dataset page and check badge is visible
         driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
