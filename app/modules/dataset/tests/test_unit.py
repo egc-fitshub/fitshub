@@ -1,8 +1,7 @@
 import os
 import shutil
-from io import BytesIO
-
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 
 import pytest
 from flask_login import current_user
