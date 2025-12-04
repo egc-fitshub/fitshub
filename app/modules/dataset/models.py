@@ -139,7 +139,7 @@ class DataSet(db.Model):
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
             "download_counter": self.download_counter,
-            "communities": self.communities,
+            "communities": [{"id": c.id, "name": c.name} for c in self.communities().all()],
         }
 
     def __repr__(self):
