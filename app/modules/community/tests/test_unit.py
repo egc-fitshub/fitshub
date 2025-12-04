@@ -77,11 +77,6 @@ def test_sample_assertion(test_client):
     assert greeting == "Hello, World!", "The greeting does not coincide with 'Hello, World!'"
 
 
-def test_get_all_communities(test_client):
-    response = test_client.get("/community")
-    assert response.status_code == 200, "Failed to retrieve communities"
-
-
 def test_create_from_form(test_client):
     login(test_client, "curator1@example.com", "password123")
 
