@@ -305,7 +305,7 @@ def propose_dataset(community_id, dataset_id):
     else:
         flash("Dataset proposed successfully! It is now pending review by the curators.", "success")
 
-    return redirect(url_for('public.index'))
+    return redirect(url_for("public.index"))
 
 
 def check_if_dataset_curator(community_id):
