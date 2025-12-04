@@ -61,6 +61,7 @@ class TestingConfig(Config):
         f"{os.getenv('MARIADB_TEST_DATABASE', 'default_db')}"
     )
     WTF_CSRF_ENABLED = False
+    MAIL_SUPPRESS_SEND = os.getenv("WORKING_DIR", "") != "/app/"
 
 
 class ProductionConfig(Config):
