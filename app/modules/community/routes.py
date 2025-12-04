@@ -1,0 +1,384 @@
+from flask import flash, redirect, render_template, url_for
+from flask_login import current_user, login_required
+
+from app.modules.auth.models import RoleType
+from app.modules.auth.services import AuthenticationService
+from app.modules.auth.utils import role_required
+from app.modules.community import community_bp
+from app.modules.community.forms import AddCuratorsForm, CommunityForm
+from app.modules.community.services import CommunityDataSetService, CommunityService
+from app.modules.dataset.services import DataSetService
+
+community_service = CommunityService()
+user_service = AuthenticationService()
+dataset_service = DataSetService()
+community_dataset_service = CommunityDataSetService()
+
+
+"""
+READ ALL
+"""
+
+
+@community_bp.route("/community", methods=["GET"])
+def index():
+    communities = community_service.get_all_communities()
+    return render_template("community/index.html", communities=communities, authorization=False)
+
+
+"""
+GET ALL FROM USER
+"""
+
+
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+@community_bp.route("/my_communities", methods=["GET"])
+def get_communities_user():
+    communities = user_service.get_curated_communities_by_id(current_user.id)
+    return render_template("community/index.html", communities=communities, authorization=True)
+
+
+"""
+READ BY ID
+"""
+
+
+@community_bp.route("/community/<int:community_id>", methods=["GET"])
+def get_community(community_id):
+    community = community_service.get_or_404(community_id)
+
+    return render_template("community/details.html", community=community)
+
+
+"""
+CREATE
+"""
+
+
+def populate_curator_choices(form):
+    curators = user_service.get_curators()
+    form.curator_ids.choices = [(str(u.id), u.email) for u in curators]
+
+
+@community_bp.route("/community/create", methods=["GET", "POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def create_community():
+    form = CommunityForm()
+    populate_curator_choices(form)
+
+    if form.validate_on_submit():
+        result = community_service.create_from_form(
+            form_data=form,
+            logo_file=form.logo_file.data,
+        )
+        return community_service.handle_service_response(
+            result=result,
+            errors=form.errors,
+            success_url_redirect="community.index",
+            success_msg="Community created successfully!",
+            error_template="community/create_community.html",
+            form=form,
+        )
+
+    return render_template("community/create_community.html", form=form)
+
+
+"""
+DELETE COMMUNITY
+"""
+
+
+@community_bp.route("/community/<int:community_id>/delete", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.ADMINISTRATOR])
+def delete_community(community_id):
+    result = community_service.delete(community_id)
+    if not result:
+        flash("Something went wrong", "danger")
+    else:
+        flash("Community deleted successfully!", "success")
+
+    return redirect(url_for("community.index"))
+
+
+"""
+UPDATE COMMUNITY
+"""
+
+
+@community_bp.route("/community/<int:community_id>/update", methods=["GET", "POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def update_community(community_id):
+    community = community_service.get_or_404(community_id)
+    if not community:
+        flash("Community not found.", "danger")
+        return redirect(url_for("community.index"))
+
+    form = CommunityForm(obj=community)
+
+    form.submit.label.text = "Update Community"
+
+    if form.validate_on_submit():
+        result = community_service.update_from_form(
+            community_id=community_id, form_data=form, logo_file=form.logo_file.data
+        )
+
+        return community_service.handle_service_response(
+            result=result,
+            errors=form.errors,
+            success_url_redirect="community.get_communities_user",
+            success_msg="Community updated successfully!",
+            error_template="community/create_community.html",
+            form=form,
+        )
+
+    return render_template("community/create_community.html", form=form, community=community)
+
+
+"""
+LEAVE COMMUNITY
+"""
+
+
+@community_bp.route("/community/<int:community_id>/leave/", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def leave_community(community_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+    if not has_permission:
+        flash("You have no permission to curate this community")
+        return redirect(url_for("community.get_community", community_id=community_id))
+
+    result = community_service.leave_community(community_id, current_user.id)
+
+    if "error" in result:
+        flash(result["error"], "danger")
+        return redirect(url_for("community.get_community", community_id=community_id))
+    else:
+        flash(result["success"], "success")
+
+    return redirect(url_for("community.index"))
+
+
+"""
+KICK CURATOR FROM COMMUNITY
+"""
+
+
+@community_bp.route("/community/<int:community_id>/kick/<int:user_id>", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.ADMINISTRATOR])
+def kick_from_community(community_id, user_id):
+    community = community_service.get_or_404(community_id)
+
+    if not community:
+        flash("Community not found.", "danger")
+        return redirect(url_for("community.index"))
+
+    result = community_service.leave_community(community_id, user_id)
+
+    if "error" in result:
+        flash(result["error"], "danger")
+        return redirect(url_for("community.view_curators", community_id=community_id))
+    else:
+        flash(result["success"], "success")
+
+    return redirect(url_for("community.view_curators", community_id=community_id))
+
+
+"""
+VIEW CURATORS
+"""
+
+
+def get_available_curators_choices(community_id):
+    community = community_service.get_or_404(community_id)
+    existing_curator_ids = [u.id for u in community.curators.all()]
+    avilable_curators = user_service.get_curators()
+
+    available_users = [u for u in avilable_curators if u.id not in existing_curator_ids]
+
+    return [(str(u.id), u.email) for u in available_users]
+
+
+@community_bp.route("/community/<int:community_id>/curators", methods=["GET"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def view_curators(community_id):
+    _, community = check_if_dataset_curator(community_id)
+
+    if not community:
+        flash("Community not found.", "danger")
+        return redirect(url_for("community.index"))
+
+    curator_form = AddCuratorsForm()
+    curator_form.curator_ids.choices = get_available_curators_choices(community_id)
+
+    return render_template("community/community_curators.html", community=community, curator_form=curator_form)
+
+
+"""
+ADD CURATORS
+"""
+
+
+@community_bp.route("/community/<int:community_id>/add_curators", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def add_curator_to_community(community_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+
+    if not community:
+        flash("Community not found.", "danger")
+        return redirect(url_for("community.index"))
+
+    if not has_permission:
+        flash("You have no permissions on this community.", "danger")
+        return redirect(url_for("community.index"))
+
+    form = AddCuratorsForm()
+    form.curator_ids.choices = get_available_curators_choices(community_id)
+
+    if form.validate_on_submit():
+        user_ids_to_add = form.curator_ids.data
+
+        result = community_service.add_curator(community_id, user_ids_to_add)
+
+        if "error" in result:
+            flash(result["error"], "danger")
+        else:
+            flash(result["success"], "success")
+
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Validation error: {error}", "danger")
+
+    return redirect(url_for("community.view_curators", community_id=community_id))
+
+
+"""
+SELECT COMMUNITY FOR PROPOSAL
+"""
+
+
+def get_available_communities(dataset_id):
+    associated_community_ids = [
+        assoc.community_id for assoc in community_dataset_service.get_communities_associated_to_dataset(dataset_id)
+    ]
+
+    all_communities = community_service.get_all_communities()
+
+    available_communities = [comm for comm in all_communities if comm.id not in associated_community_ids]
+
+    return available_communities
+
+
+@community_bp.route("/dataset/<int:dataset_id>/propose_to", methods=["GET"])
+def select_community_for_proposal(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+    if not dataset:
+        flash("Dataset not found.", "danger")
+        return redirect(url_for("static"))
+
+    available_communities = get_available_communities(dataset_id)
+
+    return render_template("community/proposals.html", dataset=dataset, communities=available_communities)
+
+
+"""
+PROPOSE DATASET
+"""
+
+
+@community_bp.route("/community/<int:community_id>/propose/<int:dataset_id>", methods=["POST"])
+def propose_dataset(community_id, dataset_id):
+    result = community_dataset_service.propose_dataset(community_id, dataset_id)
+
+    if isinstance(result, dict) and "error" in result:
+        flash(result["error"], "danger")
+        return redirect(url_for("community.select_community_for_proposal", dataset_id=dataset_id))
+    else:
+        flash("Dataset proposed successfully! It is now pending review by the curators.", "success")
+
+    return redirect(url_for("community.get_community", community_id=community_id))
+
+
+def check_if_dataset_curator(community_id):
+    community = community_service.get_or_404(community_id)
+    if current_user in community.curators.all() or current_user.role.value == "administrator":
+        return True, community
+
+    return False, community
+
+
+"""
+PENDING DATASETS
+"""
+
+
+@community_bp.route("/community/<int:community_id>/review", methods=["GET"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def review_pending_datasets(community_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+    if not has_permission:
+        flash("You have no permission to curate this community")
+        return redirect(url_for("community.get_community", community_id=community_id))
+
+    pending_associations = community_dataset_service.get_pending_datasets(community_id)
+
+    pending_datasets = [assoc.dataset for assoc in pending_associations]
+
+    return render_template("community/review_datasets.html", community=community, pending_datasets=pending_datasets)
+
+
+"""
+APPROVE DATASET
+"""
+
+
+@community_bp.route("/community/<int:community_id>/approve/<int:dataset_id>", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def approve_dataset(community_id, dataset_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+    if not has_permission:
+        flash("You have no permission to curate this community")
+        return redirect("community/details.html", community=community)
+
+    result = community_dataset_service.update_dataset_status(community_id, dataset_id, "accepted")
+
+    if isinstance(result, dict) and "error" in result:
+        flash(result["error"], "danger")
+    else:
+        flash("Dataset approved and added to the community!", "success")
+
+    return redirect(url_for("community.get_community", community_id=community_id))
+
+
+"""
+REJECT DATASET
+"""
+
+
+@community_bp.route("/community/<int:community_id>/reject/<int:dataset_id>", methods=["POST"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
+def reject_dataset(community_id, dataset_id):
+    has_permission, community = check_if_dataset_curator(community_id)
+    if not has_permission:
+        flash("You have no permission to curate this community")
+        return redirect("community/details.html", community=community)
+
+    result = community_dataset_service.update_dataset_status(community_id, dataset_id, "rejected")
+
+    if isinstance(result, dict) and "error" in result:
+        flash(result["error"], "danger")
+    else:
+        flash("Dataset rejected from the community.", "warning")
+
+    return redirect(url_for("community.get_community", community_id=community_id))

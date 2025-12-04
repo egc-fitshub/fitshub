@@ -1,0 +1,96 @@
+{% extends "base_template.html" %}
+
+{% block title %}Review Datasets: {{ community.name }}{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('community.get_community', community_id=community.id) }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+            <i data-feather="arrow-left" class="center-button-icon"></i>
+            Back to Community Details
+        </a>
+    </div>
+</div>
+
+<h1 class="h2 mb-4">
+    Review Datasets for <b>{{ community.name }}</b>
+</h1>
+
+<p class="lead">There are currently **{{ pending_datasets|length }}** datasets pending review.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="row">
+      <div class="col-12">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% if pending_datasets %}
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Dataset Title</th>
+                        <th>Uploaded By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dataset in pending_datasets %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('dataset.subdomain_index', doi=dataset.ds_meta_data.publication_doi) }}" target="_blank" title="View dataset details">
+                                    {{ dataset.ds_meta_data.title }}
+                                </a>
+                            </td>
+                            <td>{{ dataset.user.profile.name }} {{ dataset.user.profile.surname }}</td>
+                            
+                            <td class="d-flex gap-2">
+                                
+                                <form method="POST" action="{{ url_for('community.approve_dataset', community_id=community.id, dataset_id=dataset.id) }}" class="d-inline">
+                                    <button type="submit" 
+                                            class="btn btn-success btn-sm"
+                                            onclick="return confirm('Approve: Are you sure you want to accept this dataset into the community?');"
+                                            title="Accept Dataset">
+                                        <i data-feather="check" style="width: 14px; height: 14px;"></i> Approve
+                                    </button>
+                                </form>
+                                
+                                <form method="POST" action="{{ url_for('community.reject_dataset', community_id=community.id, dataset_id=dataset.id) }}" class="d-inline">
+                                    <button type="submit" 
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Reject: Are you sure you want to reject this dataset?');"
+                                            title="Reject Dataset">
+                                        <i data-feather="x" style="width: 14px; height: 14px;"></i> Reject
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-success">
+        <p class="mb-0">All pending datasets have been reviewed! There is nothing to do here.</p>
+    </div>
+{% endif %}
+
+
+</div>
+
+{% endblock %}

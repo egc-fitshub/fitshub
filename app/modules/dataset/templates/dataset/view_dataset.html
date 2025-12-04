@@ -319,6 +319,11 @@
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
+
+        <a href="{{ url_for('community.select_community_for_proposal', dataset_id=dataset.id) }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
+            <i data-feather="users" class="center-button-icon"></i>
+            Propose for a community
+        </a>
     </div>
     
 </div>
