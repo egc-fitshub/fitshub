@@ -2,6 +2,8 @@ import os
 import secrets
 from datetime import datetime, timedelta
 
+import pyotp
+import qrcode
 from flask import url_for
 from flask_login import current_user, login_user
 from flask_mail import Message
@@ -138,3 +140,21 @@ class AuthenticationService(BaseService):
             return user.curated_communities
         else:
             return None
+
+    def set_user_token(self, user: User, token: str, code: str) -> None:
+        totp = pyotp.TOTP(token)
+        if not totp.verify(code):
+            raise ValueError("Invalid authentication code.")
+        user.token = token
+        db.session.commit()
+
+    def generate_qr_code(self, user: User) -> tuple:
+        token = pyotp.random_base32()
+        totp = pyotp.TOTP(token).provisioning_uri(
+            name=f"{user.profile.surname}, {user.profile.name}", issuer_name="FITSHUB.IO"
+        )
+        return (qrcode.make(totp).get_image(), token)
+
+    def verify_token(self, user: User, code: str) -> bool:
+        totp = pyotp.TOTP(user.token)
+        return totp.verify(code)

@@ -5,6 +5,7 @@ from app.modules.auth.models import RoleType, User
 from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
 from app.modules.conftest import login, logout
 from app.modules.dataset.models import DataSet, DSMetaData
+from app.modules.profile.models import UserProfile
 
 
 @pytest.fixture(scope="module")
@@ -13,11 +14,27 @@ def test_client(test_client):
     Extends the test_client fixture to add additional specific data for module testing.
     """
     with test_client.application.app_context():
+        test_user = User.query.filter_by(email="test@example.com").first()
+        if test_user and not test_user.profile:
+            test_user.profile = UserProfile(name="Test", surname="User")
+            db.session.add(test_user)
+            db.session.commit()
+
         curator1 = User(email="curator1@example.com", password="password123", role=RoleType.CURATOR)
+        curator1.profile = UserProfile(name="Curator", surname="One")
+
         curator2 = User(email="curator2@example.com", password="password123", role=RoleType.CURATOR)
+        curator2.profile = UserProfile(name="Curator", surname="Two")
+
         admin1 = User(email="admin1@example.com", password="password123", role=RoleType.ADMINISTRATOR)
+        admin1.profile = UserProfile(name="Admin", surname="One")
+
         user1 = User(email="user1@example.com", password="password123", role=RoleType.USER)
+        user1.profile = UserProfile(name="User", surname="One")
+
         user2 = User(email="user2@example.com", password="password123", role=RoleType.USER)
+        user2.profile = UserProfile(name="User", surname="Two")
+
         db.session.add(curator1)
         db.session.add(curator2)
         db.session.add(admin1)
@@ -41,7 +58,7 @@ def test_client(test_client):
         db.session.add(ds_meta_data)
         db.session.commit()
 
-        dataset = DataSet(user_id=1, ds_meta_data_id=ds_meta_data.id)
+        dataset = DataSet(user_id=user1.id, ds_meta_data_id=ds_meta_data.id)
         db.session.add(dataset)
         db.session.commit()
 
@@ -563,8 +580,6 @@ def test_reject_dataset_success(test_client):
 
         community_id = community.id
         dataset_id = dataset.id
-
-        db.session.close()
 
     response = test_client.post(f"/community/{community_id}/reject/{dataset_id}", follow_redirects=True)
     assert response.status_code == 200, f"Should reject successfully, got {response.status_code}"

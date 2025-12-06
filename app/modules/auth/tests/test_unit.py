@@ -1,8 +1,11 @@
 import pytest
 from flask import url_for
 
+from app import db
+from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
+from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 
 
@@ -11,7 +14,11 @@ def test_client(test_client):
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
         # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
-        pass
+        user = User.query.filter_by(email="test@example.com").first()
+        if user and not user.profile:
+            user.profile = UserProfile(name="Test", surname="User")
+            db.session.add(user)
+            db.session.commit()
 
     yield test_client
 

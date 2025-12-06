@@ -10,6 +10,8 @@ class UserProfile(db.Model):
     name = db.Column(db.String(100), nullable=False)
     surname = db.Column(db.String(100), nullable=False)
 
+    enabled_two_factor = db.Column(db.Boolean, default=False)
+
     def save(self):
         if not self.id:
             db.session.add(self)
