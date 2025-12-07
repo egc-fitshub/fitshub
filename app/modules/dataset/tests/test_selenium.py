@@ -390,8 +390,10 @@ def test_view_dataset():
         #  Login
         login(driver, host)
 
-        # Navigate to a dataset page
-        driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        # Ensure we're on the dataset list page, then navigate to a dataset page
+        driver.get(f"{host}/dataset/list")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.LINK_TEXT, "Sample dataset 3").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
 
         print("View dataset test passed!")
@@ -461,7 +463,9 @@ def test_badge_is_shown():
         # Login
         login(driver, host)
 
-        # Navigate to a dataset page and check badge is visible
+        # Navigate to the dataset list, then to a dataset page and check badge is visible
+        driver.get(f"{host}/dataset/list")
+        wait_for_page_to_load(driver)
         driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
 
