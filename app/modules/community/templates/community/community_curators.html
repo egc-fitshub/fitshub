@@ -1,0 +1,190 @@
+{% extends "base_template.html" %}
+
+{% block title %}Manage Curators: {{ community.name }}{% endblock %}
+
+{% block head_extra %}
+
+<style>
+.table-icon {
+width: 18px;
+height: 18px;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('community.get_community', community_id=community.id) }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+            <i data-feather="arrow-left" class="table-icon"></i>
+            Back to Community Details
+        </a>
+    </div>
+</div>
+
+<h1 class="h2 mb-4">
+    <b>Curators</b> of {{ community.name }}
+</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="row">
+      <div class="col-12">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% set curators = community.curators.all() %}
+
+{% if curators %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">Curator Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for curator in curators %}
+                        <tr>
+                            <td>
+                                {% set full_name = [curator.profile.name, curator.profile.surname] | join(' ') %}
+                                {{ full_name if full_name|length > 0 else 'N/A' }}
+                            </td>
+                            <td>{{ curator.email }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if curator.role.value == 'administrator' else 'info' }}">
+                                    {{ curator.role.value.capitalize() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set is_last_curator = community.curators.count() <= 1 %}
+                                
+                                {% if not is_last_curator %}
+
+                                    {% set remove_action_url = url_for('community.kick_from_community', community_id=community.id, user_id=curator.id) %}
+                                    {% set is_admin_kicking = current_user.role.value == "administrator" and current_user.id != curator.id %}
+
+                                    {% if is_admin_kicking %}
+                                        <form method="POST" action="{{ remove_action_url }}" class="d-inline">
+                                            <button type="submit" ... onclick="return confirm('ADMIN: Are you sure you want to kick {{ curator.email }}?');">
+                                                <i data-feather="user-minus"></i> Kick
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                    
+                                        {% if current_user.role.value == "administrator" or current_user.id == curator.id %}
+                                            
+                                            <form method="POST" action="{{ url_for('community.leave_community', community_id=community.id, user_id=curator.id) }}" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-outline-danger" 
+                                                        title="Remove Curator"
+                                                        onclick="return confirm('Are you sure you want to remove {{ curator.email }} from this community?');"
+                                                        {% if curator.id == current_user.id and community.curators.count() > 1 %}
+                                                            style="width: 100px;" 
+                                                        {% endif %}
+                                                        >
+                                                    <i data-feather="user-minus" class="table-icon"></i> 
+                                                    {% if curator.id == current_user.id %}
+                                                        Leave
+                                                    {% else %}
+                                                        Remove
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+
+                                        {% else %}
+                                            <span class="text-muted small">No action</span>
+                                        {% endif %}
+                                    
+                                    {% endif %}
+                                    
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot remove the last curator">
+                                        <i data-feather="alert-triangle" class="table-icon"></i> Last Curator
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-end">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCuratorsModal">
+                <i data-feather="user-plus" class="table-icon"></i> Add Curators
+            </button>
+        </div>
+    </div>
+
+{% else %}
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <p class="mb-0">No curators found for this community.</p>
+        </div>
+    </div>
+{% endif %}
+
+    <div class="modal fade" id="addCuratorsModal" tabindex="-1" aria-labelledby="addCuratorsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('community.add_curator_to_community', community_id=community.id) }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCuratorsModalLabel">Add Curators to {{ community.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if curator_form.curator_ids.choices %}
+                            <p>Select one or more users to assign as curators for this community.</p>
+                            
+                            {{ curator_form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                {{ curator_form.curator_ids.label(class="form-label") }}
+                                {{ curator_form.curator_ids(class="form-select", size="10") }}
+                                {% for error in curator_form.curator_ids.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                                <div class="form-text">Hold Ctrl (Windows) / Cmd (Mac) to select multiple users.</div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                All available users are already curating this community.
+                            </div>
+                        {% endif %}
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        {% if curator_form.curator_ids.choices %}
+                            {{ curator_form.submit(class="btn btn-success") }}
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
