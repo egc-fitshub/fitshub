@@ -14,6 +14,9 @@ def login(driver, host):
     driver.get(f"{host}/login")
     wait_for_page_to_load(driver)
 
+    # Add cookie to indicate testing mode
+    driver.execute_script("document.cookie = 'SELENIUM_TEST=1; path=/';")
+
     # Find the username and password field and enter the values
     email_field = driver.find_element(By.NAME, "email")
     password_field = driver.find_element(By.NAME, "password")
@@ -58,6 +61,13 @@ def upload_to_dropzone(driver, file_path):
     dropzone.send_keys(path)
     time.sleep(2)
     wait_for_page_to_load(driver)
+
+def add_github_repo(driver, repo_url):
+    """Helper function to add a GitHub repository URL."""
+    gh_input = driver.find_element(By.ID, "github_url")
+    gh_input.clear()
+    gh_input.send_keys(repo_url)
+    driver.find_element(By.ID, "github_fetch_btn").click()
 
 
 def wait_for_page_to_load(driver, timeout=4):
@@ -362,19 +372,135 @@ def test_upload_from_github():
         switch_upload_source(driver, "github")
 
         # Fill GitHub repo URL and click fetch button
-        gh_input = driver.find_element(By.ID, "github_url")
-        gh_input.clear()
-        gh_input.send_keys("https://github.com/user/repo")
-        driver.find_element(By.ID, "github_fetch_btn").click()
+        add_github_repo(driver, "https://github.com/egc-fitshub/fits_test")
 
-        # Wait for the client to populate the file list
-        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#file-list li")) > 0)
+        # Wait and check for rate limit warning
+        time.sleep(10)
 
-        # Check the files have been listed
-        file_items = driver.find_elements(By.CSS_SELECTOR, "#file-list li")
-        assert len(file_items) > 0, "No files listed from GitHub repository"
+        warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "github_error"))
+        if "403" in warning.text:
+            print("GitHub API rate limit reached; skipping GitHub upload test.")
+        else:
+            # Check the files have been listed
+            file_items = driver.find_elements(By.CSS_SELECTOR, "#file-list li")
+            assert len(file_items) == 2, "Not all files listed from GitHub repository"
 
-        print("Upload from GitHub test passed!")
+            upload_agree_and_submit(driver)
+            wait_for_page_to_load(driver)
+
+            # Assert that the first upload has the correct title, then open the dataset page
+            title_elements = driver.find_elements(By.LINK_TEXT, "GitHub Upload Title")
+            assert len(title_elements) > 0, "Uploaded dataset title not found"
+            assert title_elements[0].text == "GitHub Upload Title", "Uploaded dataset title does not match"
+
+            # Click the dataset title to open the dataset detail page (so file list is visible)
+            title_elements[0].click()
+            wait_for_page_to_load(driver)
+
+            # Assert that the files have been uploaded correctly to the dataset
+            file_items = driver.find_elements(
+                By.XPATH, "//div[contains(@class,'list-group')]/div[contains(@class,'list-group-item')][position()>1]"
+            )
+            assert len(file_items) == 2, f"Expected 2 files in dataset, found {len(file_items)}"
+
+            print("Upload from GitHub test passed!")
+
+    finally:
+        close_driver(driver)
+
+def test_upload_from_github_non_existing_repo():
+    """Test uploading a dataset from a non-existing GitHub repository."""
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        login(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("GitHub Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("GitHub upload description")
+        driver.find_element(By.NAME, "tags").send_keys("github,test")
+
+        # Select GitHub as source and trigger UI update
+        switch_upload_source(driver, "github")
+
+        # Fill GitHub repo URL and click fetch button
+        add_github_repo(driver, "https://github.com/egc-fitshub/non_existing_repo")
+
+        # Wait and check for rate limit warning
+        time.sleep(3)
+
+        warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "github_error"))
+        if "403" in warning.text:
+            print("GitHub API rate limit reached; skipping non-existing GitHub repository upload test.")
+        else:
+            assert "404" in warning.text, "Expected 404 error for non-existing repository"
+            print("Upload from GitHub non-existing repository test passed!")
+
+    finally:
+        close_driver(driver)
+
+def test_upload_from_github_invalid_repo():
+    """Test uploading a dataset from an invalid GitHub repository."""
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        login(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("GitHub Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("GitHub upload description")
+        driver.find_element(By.NAME, "tags").send_keys("github,test")
+
+        # Select GitHub as source and trigger UI update
+        switch_upload_source(driver, "github")
+
+        # Fill GitHub repo URL and click fetch button
+        add_github_repo(driver, "Not a valid URL")
+
+        # Wait and check for correct warning
+        time.sleep(3)
+
+        warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "github_error"))
+        assert "Invalid GitHub repository URL" in warning.text, "Expected 404 error for non-existing repository"
+        print("Upload from GitHub invalid repository test passed!")
+
+    finally:
+        close_driver(driver)
+
+def test_upload_from_github_empty_entry():
+    """Test uploading a dataset  from Github url with empty entry."""
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+
+        login(driver, host)
+
+        # Open upload page and fill basic info
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+        driver.find_element(By.NAME, "title").send_keys("GitHub Upload Title")
+        driver.find_element(By.NAME, "desc").send_keys("GitHub upload description")
+        driver.find_element(By.NAME, "tags").send_keys("github,test")
+
+        # Select GitHub as source and trigger UI update
+        switch_upload_source(driver, "github")
+
+        # Fill GitHub repo URL and click fetch button
+        add_github_repo(driver, "")
+
+        # Wait and check warning is shown
+        time.sleep(3)
+
+        warning = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.ID, "github_error"))
+
+        assert "Please enter a GitHub repository URL" in warning.text, "Expected 404 error for non-existing repository"
+        print("Upload from GitHub empty entry test passed!")
 
     finally:
         close_driver(driver)
@@ -494,7 +620,6 @@ def test_badge_is_shown():
 
 
 # Call the test function
-
 test_trending_dataset()
 test_download_counter()
 test_view_dataset()
@@ -504,4 +629,7 @@ test_upload_multiple_zip_dataset()
 test_upload_empty_zip_dataset()
 test_upload_folder_zip_dataset()
 test_upload_from_github()
+test_upload_from_github_non_existing_repo()
+test_upload_from_github_invalid_repo()
+test_upload_from_github_empty_entry()
 test_badge_is_shown()

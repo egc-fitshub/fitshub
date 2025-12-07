@@ -248,23 +248,6 @@ def github_fetch():
     if not user or not repo:
         return jsonify({"error": "User or repo not specified"}), 400
 
-    if current_app.config.get("FLASK_ENV") == "testing":
-        files = [
-            {
-                "name": "file1.fits",
-                "path": "file1.fits",
-                "type": "file",
-                "download_url": f"{request.host_url}app/modules/dataset/fits_examples/file1.fits",
-            },
-            {
-                "name": "file2.fits",
-                "path": "file2.fits",
-                "type": "file",
-                "download_url": f"{request.host_url}app/modules/dataset/fits_examples/file2.fits",
-            },
-        ]
-        return jsonify({"filenames": [f["name"] for f in files]}), 200
-
     # 1. List repository files
     list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
     try:
