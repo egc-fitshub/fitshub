@@ -47,6 +47,7 @@ def test_login_and_check_element():
         # Close the browser
         close_driver(driver)
 
+
 def test_connect_to_mailhog():
     """Test connection to MailHog web interface.
     Runs only in Docker environment where MailHog is reachable.
@@ -66,12 +67,13 @@ def test_connect_to_mailhog():
 
         # Search for the text 'mailhog' in the page
         page_text = driver.page_source or ""
-        if 'mailhog' not in page_text.lower():
+        if "mailhog" not in page_text.lower():
             raise AssertionError("MailHog connection test failed: 'mailhog' not found in page")
         print("MailHog connection test passed!")
 
     finally:
         close_driver(driver)
+
 
 def test_forgot_password_mailhog():
     """

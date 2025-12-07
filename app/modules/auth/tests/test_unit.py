@@ -21,6 +21,7 @@ def test_client(test_client):
 
     yield test_client
 
+
 def test_mailhog_reacheable_from_docker_1():
     if not (os.getenv("WORKING_DIR") == "/app/"):
         pytest.skip("Only runs in Docker environment")
@@ -30,6 +31,7 @@ def test_mailhog_reacheable_from_docker_1():
         assert response.status_code == 200, "MailHog is not reachable from Docker"
     except requests.ConnectionError:
         assert False, "MailHog is not reachable from Docker"
+
 
 def test_mailhog_shows_email_sent_1(test_client):
     if not (os.getenv("WORKING_DIR") == "/app/"):
