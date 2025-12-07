@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -49,12 +50,54 @@ def initialize_driver():
     # --- Local mode ---
     if driver_name == "chrome":
         options = webdriver.ChromeOptions()
-        service = ChromeService(ChromeDriverManager().install())
+        # Prefer explicit path via env var to avoid online GitHub API calls
+        chrome_path = os.environ.get("CHROMEDRIVER_PATH")
+        if chrome_path and Path(chrome_path).exists():
+            service = ChromeService(chrome_path)
+        else:
+            try:
+                service = ChromeService(ChromeDriverManager().install())
+            except ValueError:
+                # webdriver_manager failed (likely GitHub rate limit). Try common system locations.
+                fallback = [
+                    "/usr/local/bin/chromedriver",
+                    "/usr/bin/chromedriver",
+                    str(Path.home() / ".local" / "bin" / "chromedriver"),
+                ]
+                found = next((p for p in fallback if Path(p).exists()), None)
+                if found:
+                    service = ChromeService(found)
+                else:
+                    raise
+
         driver = webdriver.Chrome(service=service, options=options)
 
     elif driver_name == "firefox":
         options = webdriver.FirefoxOptions()
-        service = FirefoxService(GeckoDriverManager().install())
+        # Prefer explicit path via env var to avoid online GitHub API calls
+        gecko_path = os.environ.get("GECKODRIVER_PATH") or os.environ.get("GECKO_DRIVER")
+        if gecko_path and Path(gecko_path).exists():
+            service = FirefoxService(gecko_path)
+        else:
+            try:
+                service = FirefoxService(GeckoDriverManager().install())
+            except ValueError:
+                # webdriver_manager failed (likely GitHub API rate limit). Try common system locations.
+                fallback = [
+                    "/usr/local/bin/geckodriver",
+                    "/usr/bin/geckodriver",
+                    str(Path.home() / ".local" / "bin" / "geckodriver"),
+                ]
+                found = next((p for p in fallback if Path(p).exists()), None)
+                if found:
+                    service = FirefoxService(found)
+                else:
+                    # Re-raise with a helpful hint
+                    raise ValueError(
+                        "Failed to obtain geckodriver. Either set GECKODRIVER_PATH to a local geckodriver binary "
+                        "or set a GH_TOKEN environment variable so webdriver_manager can authenticate with GitHub."
+                    )
+
         driver = webdriver.Firefox(service=service, options=options)
 
     else:

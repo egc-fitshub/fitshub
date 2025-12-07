@@ -28,6 +28,3 @@ def test_fitsmodel_index():
         # Close the browser
         close_driver(driver)
 
-
-# Call the test function
-test_fitsmodel_index()

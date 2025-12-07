@@ -28,6 +28,3 @@ def test_webhook_index():
         # Close the browser
         close_driver(driver)
 
-
-# Call the test function
-test_webhook_index()
