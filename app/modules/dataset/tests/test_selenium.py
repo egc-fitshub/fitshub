@@ -416,7 +416,8 @@ def test_download_counter():
         login(driver, host)
 
         # Check download counter in dataset view
-        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(7) .align-middle:nth-child(2)").click()
+        driver.get(f"{host}/dataset/list")
+        wait_for_page_to_load(driver)
         driver.find_element(By.LINK_TEXT, "Sample dataset 3").click()
         driver.find_element(By.ID, "download_counter").click()
         assert driver.find_element(By.ID, "download_counter") is not None
@@ -489,6 +490,7 @@ def test_badge_is_shown():
 
 
 # Call the test function
+
 test_trending_dataset()
 test_download_counter()
 test_view_dataset()
