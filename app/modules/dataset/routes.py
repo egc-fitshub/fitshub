@@ -11,7 +11,6 @@ from zipfile import ZipFile
 import requests
 from flask import (
     abort,
-    current_app,
     jsonify,
     make_response,
     redirect,
