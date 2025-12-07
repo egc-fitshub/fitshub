@@ -244,6 +244,71 @@ def test_login_requires_two_factor(test_client, two_factor_user):
     test_client.get("/logout", follow_redirects=True)
 
 
+def _initiate_two_factor_flow(test_client, user):
+    response = test_client.post(
+        "/login", data=dict(email=user.email, password="test1234"), follow_redirects=False
+    )
+    assert response.status_code == 200
+    with test_client.session_transaction() as session:
+        assert session.get("pending_user_id") == user.id
+        assert "temp_token" in session
+    return response
+
+
+def test_login_handles_missing_pending_user_session(test_client):
+    with test_client.session_transaction() as session:
+        session["pending_user_id"] = 999999
+        session["remember_me"] = True
+        session["temp_token"] = "fake-token"
+
+    response = test_client.post("/login", data=dict(code="123456"), follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Session expired. Please login again." in response.data
+    with test_client.session_transaction() as session:
+        assert "pending_user_id" not in session
+        assert "temp_token" not in session
+        assert "remember_me" not in session
+
+
+def test_login_rejects_non_six_digit_code(test_client, two_factor_user):
+    _initiate_two_factor_flow(test_client, two_factor_user)
+    response = test_client.post("/login", data=dict(code="123"), follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Please enter a valid 6-digit code." in response.data
+    with test_client.session_transaction() as session:
+        assert session.get("pending_user_id") == two_factor_user.id
+        assert "temp_token" in session
+    test_client.get("/logout", follow_redirects=True)
+
+
+def test_login_handles_invalid_code_during_token_setup(test_client, two_factor_user, monkeypatch):
+    _initiate_two_factor_flow(test_client, two_factor_user)
+    def raise_error(self, user, token, code):
+        raise ValueError("Invalid authentication code.")
+
+    monkeypatch.setattr(AuthenticationService, "set_user_token", raise_error)
+    response = test_client.post("/login", data=dict(code="000000"), follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Invalid authentication code. Please try again." in response.data
+    assert b"data:image/png;base64" in response.data
+    with test_client.session_transaction() as session:
+        assert session.get("pending_user_id") == two_factor_user.id
+        assert "temp_token" in session
+    test_client.get("/logout", follow_redirects=True)
+
+
+def test_login_get_shows_qr_for_pending_user(test_client, two_factor_user):
+    _initiate_two_factor_flow(test_client, two_factor_user)
+    response = test_client.get("/login")
+    assert response.status_code == 200
+    assert b"Two-Factor Authentication Required" in response.data
+    assert b"data:image/png;base64," in response.data
+    with test_client.session_transaction() as session:
+        assert session.get("pending_user_id") == two_factor_user.id
+        assert "temp_token" in session
+    test_client.get("/logout", follow_redirects=True)
+
+
 def test_login_sets_token_and_redirects_after_code(test_client, two_factor_user):
     test_client.post("/login", data=dict(email=two_factor_user.email, password="test1234"), follow_redirects=False)
     with test_client.session_transaction() as session:
@@ -263,6 +328,7 @@ def test_login_shows_error_for_invalid_code(test_client, two_factor_user_with_to
     test_client.post(
         "/login", data=dict(email=two_factor_user_with_token.email, password="test1234"), follow_redirects=False
     )
+    
     def always_fail(self, otp, for_time=None, valid_window=0):
         return False
 
