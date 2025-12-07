@@ -27,4 +27,3 @@ def test_webhook_index():
     finally:
         # Close the browser
         close_driver(driver)
-

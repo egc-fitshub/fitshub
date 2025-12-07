@@ -63,6 +63,7 @@ def upload_to_dropzone(driver, file_path):
     time.sleep(2)
     wait_for_page_to_load(driver)
 
+
 def add_github_repo(driver, repo_url):
     """Helper function to add a GitHub repository URL."""
     gh_input = driver.find_element(By.ID, "github_url")
@@ -83,7 +84,7 @@ def wait_for_element(driver, by, value, timeout=10):
 
 
 def open_dataset_detail_by_title(driver, host, title):
-    """ Helper function to open dataset detail page by title. Generated with the help of GitHub Copilot."""
+    """Helper function to open dataset detail page by title. Generated with the help of GitHub Copilot."""
     rows = driver.find_elements(By.XPATH, "//table//tbody//tr")
     for r in rows:
         # Try to find anchors in the title cell or actions column
@@ -418,8 +419,8 @@ def test_upload_from_github():
         # Wait and check for rate limit warning or file list
         time.sleep(10)
         WebDriverWait(driver, 15).until(
-                lambda d: d.find_elements(By.CSS_SELECTOR, "#file-list li") or d.find_elements(By.ID, "github_error")
-            )
+            lambda d: d.find_elements(By.CSS_SELECTOR, "#file-list li") or d.find_elements(By.ID, "github_error")
+        )
 
         errors = driver.find_elements(By.ID, "github_error")
         if errors and errors[0].is_displayed():
@@ -455,6 +456,7 @@ def test_upload_from_github():
     finally:
         close_driver(driver)
 
+
 def test_upload_from_github_non_existing_repo():
     """Test uploading a dataset from a non-existing GitHub repository."""
     driver = initialize_driver()
@@ -479,8 +481,8 @@ def test_upload_from_github_non_existing_repo():
         # Wait and check for rate limit warning or error
         time.sleep(10)
         WebDriverWait(driver, 10).until(
-                lambda d: d.find_elements(By.ID, "github_error") or d.find_elements(By.CSS_SELECTOR, "#file-list li")
-            )
+            lambda d: d.find_elements(By.ID, "github_error") or d.find_elements(By.CSS_SELECTOR, "#file-list li")
+        )
 
         warning_elems = driver.find_elements(By.ID, "github_error")
         if warning_elems and "403" in warning_elems[0].text:
@@ -491,6 +493,7 @@ def test_upload_from_github_non_existing_repo():
 
     finally:
         close_driver(driver)
+
 
 def test_upload_from_github_invalid_repo():
     """Test uploading a dataset from an invalid GitHub repository."""
@@ -525,6 +528,7 @@ def test_upload_from_github_invalid_repo():
 
     finally:
         close_driver(driver)
+
 
 def test_upload_from_github_empty_entry():
     """Test uploading a dataset  from Github url with empty entry."""

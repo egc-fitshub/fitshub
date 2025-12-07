@@ -27,4 +27,3 @@ def test_fitsmodel_index():
     finally:
         # Close the browser
         close_driver(driver)
-
