@@ -133,4 +133,3 @@ zope.event==5.1.1
 zope.interface==7.2
 zstandard==0.23.0
 astropy==7.1.1
-elasticsearch==9.2.0

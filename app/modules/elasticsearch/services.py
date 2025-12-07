@@ -28,11 +28,14 @@ class ElasticsearchService(BaseService):
             # No application context available (e.g., running from CLI)
             config = {}
 
-        host = host or config.get(
-            "ELASTICSEARCH_HOST",
-            "http://elasticsearch:9200",
-        )
-        index_name = index_name or config.get("ELASTICSEARCH_INDEX", "search_index")
+        if host is None:
+            host = config.get(
+                "ELASTICSEARCH_HOST",
+                "http://elasticsearch:9200",
+            )
+
+        if index_name is None:
+            index_name = config.get("ELASTICSEARCH_INDEX", "search_index")
         retry_attempts = int(config.get("ELASTICSEARCH_RETRY_ATTEMPTS", 5))
         retry_delay = int(config.get("ELASTICSEARCH_RETRY_DELAY", 2))
 
