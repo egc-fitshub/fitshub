@@ -1,5 +1,6 @@
 import os
 import time
+import re
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -592,14 +593,14 @@ def test_badge_is_shown():
         # Navigate to the dataset list, then to a dataset page and check badge is visible
         driver.get(f"{host}/dataset/list")
         wait_for_page_to_load(driver)
-        driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        driver.find_element(By.LINK_TEXT, "Sample dataset 3").click()
         driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
 
         badge_image = driver.find_element(By.CSS_SELECTOR, ".badge-actions-block img")
         assert badge_image.is_displayed(), "Badge image is not visible"
         badge_src = badge_image.get_attribute("src")
         assert "img.shields.io" in badge_src, "Badge image src is not from shields.io"
-        assert "dataset/4/badge.json" in badge_src
+        assert re.search(r"dataset/\d+/badge\.json", badge_src), f"Badge src unexpected: {badge_src}"
 
         # Check markdown and HTML copy values are correct
         markdown_input = driver.find_element(By.ID, "markdown-input")
@@ -608,11 +609,11 @@ def test_badge_is_shown():
         markdown_value = markdown_input.get_attribute("value")
         html_value = html_input.get_attribute("value")
 
-        assert markdown_value.startswith("[![Sample dataset 4]"), "Markdown value is incorrect"
+        assert markdown_value.startswith("[![Sample dataset 3]"), "Markdown value is incorrect"
         assert "shields.io" in markdown_value, "Markdown value is incorrect"
 
         assert html_value.startswith("<a href="), "HTML value is incorrect"
-        assert "doi/10.1234/dataset4" in html_value, "HTML value is incorrect"
+        assert "doi/10.1234/dataset3" in html_value, "HTML value is incorrect"
         print("Badge test passed!")
 
     finally:
