@@ -145,6 +145,7 @@ def test_admin_roles_success_as_admin(test_client):
     if not admin:
         admin = User(email="admin@test.com", password="test1234", role=RoleType.ADMINISTRATOR)
         admin.profile = UserProfile(name="Admin", surname="User")
+        admin.profile.enabled_two_factor = False
         db.session.add(admin)
         db.session.commit()
 
