@@ -283,6 +283,7 @@ def github_fetch():
         200,
     )
 
+
 def fetch_file_list(list_url):
     r = requests.get(list_url)
     r.raise_for_status()
@@ -307,6 +308,7 @@ def fetch_file(file_url, fits_name, new_fits_names):
     with open(fits_path, mode="wb") as out:
         out.write(rfile.content)
 
+
 def with_github_error_handler(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
@@ -314,47 +316,46 @@ def with_github_error_handler(func, *args, **kwargs):
         status = e.response.status_code if e.response is not None else None
 
         if status == 403 and "rate limit" in e.response.text.lower():
-            return jsonify({
-                "error": "GitHub is temporarily blocking too many requests. Please try again later.",
-                "details": str(e),
-                "status": 429
-            }), 429
+            return jsonify(
+                {
+                    "error": "GitHub is temporarily blocking too many requests. Please try again later.",
+                    "details": str(e),
+                    "status": 429,
+                }
+            ), 429
 
         if status == 404:
-            return jsonify({
-                "error": "The FITS file you're trying to download no longer exists in the repository.",
-                "details": str(e),
-                "status": 404
-            }), 404
+            return jsonify(
+                {
+                    "error": "The FITS file you're trying to download no longer exists in the repository.",
+                    "details": str(e),
+                    "status": 404,
+                }
+            ), 404
 
-        return jsonify({
-            "error": "Download failed due to a server response error.",
-            "details": str(e),
-            "status": status or 500
-        }), 500
-
+        return jsonify(
+            {"error": "Download failed due to a server response error.", "details": str(e), "status": status or 500}
+        ), 500
 
     except requests.exceptions.ConnectionError:
-        return jsonify({
-            "error": "Unable to reach the server. Please check your internet connection or try again later.",
-            "details": str(e),
-            "status": 503
-        }), 503
+        return jsonify(
+            {
+                "error": "Unable to reach the server. Please check your internet connection or try again later.",
+                "details": str(e),
+                "status": 503,
+            }
+        ), 503
 
     except requests.exceptions.Timeout:
-        return jsonify({
-            "error": "The request is taking too long. Please try again.",
-            "details": str(e),
-            "status": 408
-        }), 408
-
+        return jsonify(
+            {"error": "The request is taking too long. Please try again.", "details": str(e), "status": 408}
+        ), 408
 
     except Exception as e:
-        return jsonify({
-            "error": "Something went wrong while downloading FITS files.",
-            "details": str(e),
-            "status": 500
-        }), 500
+        return jsonify(
+            {"error": "Something went wrong while downloading FITS files.", "details": str(e), "status": 500}
+        ), 500
+
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
 def delete():
