@@ -15,8 +15,11 @@ def test_client(test_client):
         # Add HERE new elements to the database that you want to exist in the test context.
         # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
         user = User.query.filter_by(email="test@example.com").first()
-        if user and not user.profile:
-            user.profile = UserProfile(name="Test", surname="User")
+        if user:
+            
+            if not user.profile:
+                user.profile = UserProfile(name="Test", surname="User")
+            user.profile.enabled_two_factor = False
             db.session.add(user)
             db.session.commit()
 
