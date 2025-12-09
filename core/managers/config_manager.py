@@ -1,6 +1,8 @@
 import os
 import secrets
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
 
 class ConfigManager:
     def __init__(self, app):
@@ -32,6 +34,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TIMEZONE = "Europe/Madrid"
     TEMPLATES_AUTO_RELOAD = True
+    PHOTO_UPLOAD_FOLDER = os.path.join(BASE_DIR, "app", "static", "img", "photos")
     UPLOAD_FOLDER = "uploads"
     # Mail settings
     MAIL_SERVER = os.getenv("MAIL_SERVER", "127.0.0.1")
@@ -58,6 +61,7 @@ class TestingConfig(Config):
         f"{os.getenv('MARIADB_TEST_DATABASE', 'default_db')}"
     )
     WTF_CSRF_ENABLED = False
+    MAIL_SUPPRESS_SEND = os.getenv("WORKING_DIR", "") != "/app/"
 
 
 class ProductionConfig(Config):

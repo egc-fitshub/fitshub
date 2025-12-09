@@ -319,6 +319,11 @@
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
+
+        <a href="{{ url_for('community.select_community_for_proposal', dataset_id=dataset.id) }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
+            <i data-feather="users" class="center-button-icon"></i>
+            Propose for a community
+        </a>
     </div>
     
 </div>
@@ -342,6 +347,7 @@
                 </div>
             </div>
             <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
+                <pre id="imgContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
                 <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
 
             </div>
@@ -397,6 +403,11 @@ function copyInputToClipboard(elementId, buttonElement) {
         fetch(`/file/view/${fileId}`)
             .then(response => response.json())
             .then(data => {
+                if (data.success && data.image) {
+                    document.getElementById('imgContent').innerHTML = `<img src="${data.image}" alt="FITS Image" style="max-width: 100%; height: auto;">`;
+                } else {
+                    document.getElementById('imgContent').textContent = data.content || 'No image available';
+                }
                 document.getElementById('fileContent').textContent = data.content;
                 currentFileId = fileId;
                 document.getElementById('downloadButton').href = `/file/download/${fileId}`;

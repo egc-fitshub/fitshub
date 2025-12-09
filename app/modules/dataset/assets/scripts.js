@@ -406,12 +406,17 @@ var currentId = 0;
             const githubUrl = document.getElementById('github_url').value.trim();
             const githubError = document.getElementById('github_error');
             const github_fetch_btn = document.getElementById('github_fetch_btn');
+            const loadingGithub = document.getElementById('loading-github');
             githubError.style.display = 'none';
             githubError.textContent = '';
+
+            loadingGithub.style.display = 'block';
+            loadingGithub.textContent = 'Fetching FITS files from GitHub...';
 
             if (!githubUrl) {
                 githubError.textContent = "Please enter a GitHub repository URL";
                 githubError.style.display = 'block';
+                loadingGithub.style.display = 'none';
                 return;
             }
 
@@ -420,6 +425,7 @@ var currentId = 0;
             if (!repoMatch) {
                 githubError.textContent = "Invalid GitHub repository URL";
                 githubError.style.display = 'block';
+                loadingGithub.style.display = 'none';
                 return;
             }
 
@@ -461,6 +467,10 @@ var currentId = 0;
                     console.error(err);
                     githubError.textContent = "Error fetching from GitHub. Check the URL or repository permissions.";
                     githubError.style.display = 'block';
+                    loadingGithub.style.display = 'none';
                 })
-                .finally(() => github_fetch_btn.disabled = false);
+                .finally(() => {
+                    github_fetch_btn.disabled = false;
+                    loadingGithub.style.display = 'none';
+                });
         });
