@@ -8,6 +8,7 @@ from flask_login import current_user
 
 from app import db
 from app.modules.auth.models import User
+from app.modules.auth.services import AuthenticationService
 from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
@@ -21,7 +22,11 @@ def test_client(test_client):
     con un DOI específico para probar los badges.
     """
     with test_client.application.app_context():
-        user_test = User(email="user_badge@example.com", password="test1234")
+        service = AuthenticationService()
+        user_test = service.create_with_profile(
+            name="User", surname="Badge", email="user_badge@example.com", password="test1234"
+        )
+        user_test.profile.enabled_two_factor = False
         db.session.add(user_test)
         db.session.commit()
 
