@@ -28,6 +28,10 @@ def wait_for_page_to_load(driver, timeout=8):
     )
 
 
+def wait_for_text(driver, text, timeout=12):
+    WebDriverWait(driver, timeout).until(lambda d: text in d.page_source)
+
+
 def wait_for_element(driver, locator, timeout=10):
     return WebDriverWait(driver, timeout).until(EC.visibility_of_element_located(locator))
 
@@ -238,7 +242,7 @@ def test_forgot_password_unknown_email_shows_error():
 
 def test_forgot_password_success_sets_token():
     email = generate_unique_email("forgot")
-    user = create_temporary_user(email=email)
+    create_temporary_user(email=email)
     driver = initialize_driver()
 
     try:
@@ -254,7 +258,7 @@ def test_forgot_password_success_sets_token():
             driver.find_element(By.XPATH, "//input[@type='submit']").send_keys(Keys.RETURN)
             wait_for_page_to_load(driver)
 
-        wait_for_element(driver, (By.XPATH, "//*[contains(text(), 'Correo de recuperación enviado.')]"))
+            wait_for_text(driver, "Correo de recuperación enviado.")
 
         with flask_app.app_context():
             refreshed = User.query.filter_by(email=email).first()
