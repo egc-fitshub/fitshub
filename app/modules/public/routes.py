@@ -27,9 +27,13 @@ def index():
     total_dataset_views = dataset_service.total_dataset_views()
     total_fits_model_views = fits_model_service.total_fits_model_views()
 
+    # Get trending datasets
+    trending_datasets = dataset_service.get_trending_datasets(limit=5, period_days=7)
+
     return render_template(
         "public/index.html",
         datasets=dataset_service.latest_synchronized(),
+        trending_datasets=trending_datasets,
         datasets_counter=datasets_counter,
         fits_models_counter=fits_models_counter,
         total_dataset_downloads=total_dataset_downloads,

@@ -25,7 +25,11 @@ def get_host_for_testing(test_type: str) -> str:
             "/app/": "http://nginx_web_server_container",
             "/vagrant/": "http://localhost:5000",
         },
-        "selenium": {"": "http://localhost:5000", "/app/": "http://localhost", "/vagrant/": "http://localhost:5000"},
+        "selenium": {
+            "": "http://localhost:5000",
+            "/app/": "http://web:5000",
+            "/vagrant/": "http://localhost:5000",
+        },
     }
 
     # Check if the provided test type is valid

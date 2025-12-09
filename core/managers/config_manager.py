@@ -45,6 +45,14 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", None)
     MAIL_DEBUG = os.getenv("MAIL_DEBUG", "False") in ("True", "true", "1")
+    # Elasticsearch settings
+    ELASTICSEARCH_HOST = os.getenv(
+        "ELASTICSEARCH_HOST",
+        "http://elasticsearch:9200",
+    )
+    ELASTICSEARCH_INDEX = os.getenv("ELASTICSEARCH_INDEX", "search_index")
+    ELASTICSEARCH_RETRY_ATTEMPTS = int(os.getenv("ELASTICSEARCH_RETRY_ATTEMPTS", "5"))
+    ELASTICSEARCH_RETRY_DELAY = int(os.getenv("ELASTICSEARCH_RETRY_DELAY", "2"))
 
 
 class DevelopmentConfig(Config):

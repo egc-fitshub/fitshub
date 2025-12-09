@@ -1,0 +1,32 @@
+name: Enhancement Task
+description: Enhancement task template
+labels: ["tipo: Enhancement"]
+projects: [egc-fitshub/2]
+assignees: []
+body:
+  - type: textarea
+    id: suggestion_summary
+    attributes:
+      label: Suggestion summary
+      description: What do you suggest?
+      placeholder: Short summary of the suggestion.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause
+      description: Why would this be beneficial? Why is this needed?
+      placeholder: Add the cause here.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: implementation_details
+    attributes:
+      label: Implementation details
+      description: Any specific details on how to implement this enhancement.
+      placeholder: Add implementation details here.
+    validations:
+      required: false

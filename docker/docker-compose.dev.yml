@@ -7,7 +7,9 @@ services:
       - "5000:5000"
     depends_on:
       - db
+      - selenium-hub
       - mailhog
+      - elasticsearch
     build:
       context: ../
       dockerfile: docker/images/Dockerfile.dev
@@ -46,6 +48,20 @@ services:
     networks:
       - fitshub_network
 
+  elasticsearch:
+    container_name: elasticsearch_container
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - fitshub_network
+
   mailhog:
     container_name: mailhog_container
     image: mailhog/mailhog:latest
@@ -55,8 +71,45 @@ services:
     networks:
       - fitshub_network
 
+  selenium-hub:
+    container_name: selenium_hub_container
+    image: selenium/hub:latest
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+    networks:
+      - fitshub_network
+
+  selenium-chrome:
+    container_name: selenium_chrome_container
+    image: selenium/node-chrome:latest
+    shm_size: 2gb
+    ports:
+      - "5900:5900"
+    env_file:
+      - ../.env.selenium
+    depends_on:
+      - selenium-hub
+    networks:
+      - fitshub_network
+
+  selenium-firefox:
+    container_name: selenium_firefox_container
+    image: selenium/node-firefox:latest
+    shm_size: 2gb
+    ports:
+      - "5901:5900"
+    env_file:
+      - ../.env.selenium
+    depends_on:
+      - selenium-hub
+    networks:
+      - fitshub_network
+
 volumes:
   db_data:
+  es_data:
 
 networks:
   fitshub_network:

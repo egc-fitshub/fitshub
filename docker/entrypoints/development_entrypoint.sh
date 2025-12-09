@@ -15,6 +15,21 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+wait_for_elasticsearch_green() {
+    local es_url="${ELASTICSEARCH_HOST:-http://elasticsearch:9200}"
+    local trimmed_url="${es_url%/}"
+    local health_endpoint="${trimmed_url}/_cluster/health"
+
+    echo "Waiting for Elasticsearch at ${trimmed_url} to reach green status..."
+
+    until curl -fsSL "${health_endpoint}" | grep -q '"status":"green"'; do
+        echo "Elasticsearch is not green yet. Retrying in 5 seconds..."
+        sleep 5
+    done
+
+    echo "Elasticsearch cluster is green."
+}
+
 # Install Rosemary
 pip install -e ./
 
@@ -62,6 +77,17 @@ else
     # Run the migration process to apply all database schema changes
     flask db upgrade
 fi
+
+wait_for_elasticsearch_green
+
+echo "Creating/refreshing the search index with initial data..."
+flask shell <<'PY'
+from app.modules.elasticsearch.utils import init_search_index, reindex_all
+
+init_search_index()
+reindex_all()
+PY
+
 
 # Start the Flask application with specified host and port, enabling reload and debug mode
 exec flask run --host=0.0.0.0 --port=5000 --reload --debug
