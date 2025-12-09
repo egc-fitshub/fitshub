@@ -249,12 +249,10 @@ def github_fetch():
 
     # 1. List repository files
     list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
-    try:
-        r = requests.get(list_url)
-        r.raise_for_status()
-        files = r.json()
-    except Exception as e:
-        return jsonify({"error": f"Error listing repo contents: {e}"}), 500
+
+    files = with_github_error_handler(fetch_file_list, list_url)
+    if isinstance(files, tuple):
+        return files
 
     # Get list of .fits files
     fits_files = [f["name"] for f in files if f["name"].lower().endswith(".fits")]
@@ -271,26 +269,9 @@ def github_fetch():
 
     for fits_name in fits_files:
         file_url = f"https://api.github.com/repos/{user}/{repo}/contents/{fits_name}"
-        try:
-            fr = requests.get(file_url)
-            fr.raise_for_status()
-            file_info = fr.json()
-
-            download_url = file_info.get("download_url")
-            if not download_url:
-                return jsonify({"error": f"No download URL for {fits_name}"}), 500
-
-            rfile = requests.get(download_url, stream=True)
-            rfile.raise_for_status()
-
-            fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
-            new_fits_names.append(fits_filename)
-
-            with open(fits_path, mode="wb") as out:
-                out.write(rfile.content)
-
-        except Exception as e:
-            return jsonify({"error": f"Error downloading {fits_name}: {e}"}), 500
+        res = with_github_error_handler(fetch_file, file_url, fits_name, new_fits_names)
+        if isinstance(res, tuple):
+            return res
 
     return (
         jsonify(
@@ -301,6 +282,79 @@ def github_fetch():
         ),
         200,
     )
+
+
+def fetch_file_list(list_url):
+    r = requests.get(list_url)
+    r.raise_for_status()
+    return r.json()
+
+
+def fetch_file(file_url, fits_name, new_fits_names):
+    fr = requests.get(file_url)
+    fr.raise_for_status()
+    file_info = fr.json()
+
+    download_url = file_info.get("download_url")
+    if not download_url:
+        return jsonify({"error": f"No download URL for {fits_name}"}), 500
+
+    rfile = requests.get(download_url, stream=True)
+    rfile.raise_for_status()
+
+    fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
+    new_fits_names.append(fits_filename)
+
+    with open(fits_path, mode="wb") as out:
+        out.write(rfile.content)
+
+
+def with_github_error_handler(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response is not None else None
+
+        if status == 403 and "rate limit" in e.response.text.lower():
+            return jsonify(
+                {
+                    "error": "GitHub is temporarily blocking too many requests. Please try again later.",
+                    "details": str(e),
+                    "status": 429,
+                }
+            ), 429
+
+        if status == 404:
+            return jsonify(
+                {
+                    "error": "The FITS file or the repository does not exist.",
+                    "details": str(e),
+                    "status": 404,
+                }
+            ), 404
+
+        return jsonify(
+            {"error": "Download failed due to a server response error.", "details": str(e), "status": status or 500}
+        ), 500
+
+    except requests.exceptions.ConnectionError as e:
+        return jsonify(
+            {
+                "error": "Unable to reach the server. Please check your internet connection or try again later.",
+                "details": str(e),
+                "status": 503,
+            }
+        ), 503
+
+    except requests.exceptions.Timeout as e:
+        return jsonify(
+            {"error": "The request is taking too long. Please try again.", "details": str(e), "status": 408}
+        ), 408
+
+    except Exception as e:
+        return jsonify(
+            {"error": "Something went wrong while downloading FITS files.", "details": str(e), "status": 500}
+        ), 500
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])

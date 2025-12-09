@@ -425,7 +425,7 @@ def test_upload_from_github():
         errors = driver.find_elements(By.ID, "github_error")
         if errors and errors[0].is_displayed():
             warning = errors[0]
-            if "403" in warning.text:
+            if "too many requests" in warning.text:
                 print("GitHub API rate limit reached; skipping GitHub upload test.")
             else:
                 raise AssertionError(f"GitHub error during fetch: {warning.text}")
@@ -485,7 +485,7 @@ def test_upload_from_github_non_existing_repo():
         )
 
         warning_elems = driver.find_elements(By.ID, "github_error")
-        if warning_elems and "403" in warning_elems[0].text:
+        if warning_elems and "too many requests" in warning_elems[0].text:
             print("GitHub API rate limit reached; skipping non-existing GitHub repository upload test.")
         else:
             assert warning_elems and "404" in warning_elems[0].text, "Expected 404 error for non-existing repository"
