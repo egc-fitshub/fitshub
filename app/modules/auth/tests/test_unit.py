@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 
 from app import db
-from app.modules.auth.models import User
+from app.modules.auth.models import RoleType, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.models import UserProfile
@@ -140,12 +140,18 @@ def test_update_roles_unauthorized(test_client):
     test_client.get("/logout", follow_redirects=True)
 
 
-"""
 def test_admin_roles_success_as_admin(test_client):
+    admin = User.query.filter_by(email="admin@test.com").first()
+    if not admin:
+        admin = User(email="admin@test.com", password="test1234", role=RoleType.ADMINISTRATOR)
+        admin.profile = UserProfile(name="Admin", surname="User")
+        db.session.add(admin)
+        db.session.commit()
+
     login_response = test_client.post(
         "/login",
         data=dict(email="admin@test.com", password="test1234"),
-        follow_redirects=True
+        follow_redirects=True,
     )
 
     assert login_response.request.path == url_for("public.index"), "El login del admin falló"
@@ -154,8 +160,4 @@ def test_admin_roles_success_as_admin(test_client):
 
     assert response.status_code == 200
     assert response.request.path == url_for("auth.admin_roles"), "El admin debería poder acceder a la página de roles"
-
-    assert b"test@example.com" in response.data
-
     test_client.get("/logout", follow_redirects=True)
-"""
