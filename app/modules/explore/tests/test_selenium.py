@@ -12,6 +12,13 @@ def wait_for_page_to_load(driver, timeout=DEFAULT_TIMEOUT):
     WebDriverWait(driver, timeout).until(lambda d: d.execute_script("return document.readyState") == "complete")
 
 
+def wait_for_element(driver, element_id, visible=True, timeout=DEFAULT_TIMEOUT):
+    locator = (By.ID, element_id)
+    wait = WebDriverWait(driver, timeout)
+    condition = EC.visibility_of_element_located if visible else EC.presence_of_element_located
+    return wait.until(condition(locator))
+
+
 def set_input_value(element, value):
     element.clear()
     element.send_keys(value)
@@ -35,9 +42,9 @@ def test_explore_filters_render_base_state():
     try:
         open_explore_page(driver)
 
-        required_ids = [
-            "results-container",
-            "no-results",
+        presence_only_ids = ["results-container"]
+        hidden_ids = ["no-results"]
+        visible_ids = [
             "search-query-filter",
             "filter-publication-type",
             "filter-sorting",
@@ -47,8 +54,15 @@ def test_explore_filters_render_base_state():
             "clear-filters",
         ]
 
-        for element_id in required_ids:
-            element = driver.find_element(By.ID, element_id)
+        for element_id in presence_only_ids:
+            assert wait_for_element(driver, element_id, visible=False), f"{element_id} should exist in the DOM"
+
+        for element_id in hidden_ids:
+            element = wait_for_element(driver, element_id, visible=False)
+            assert "d-none" in element.get_attribute("class"), f"{element_id} should be hidden initially"
+
+        for element_id in visible_ids:
+            element = wait_for_element(driver, element_id)
             assert element.is_displayed(), f"{element_id} should be visible"
 
         select = Select(driver.find_element(By.ID, "filter-publication-type"))
