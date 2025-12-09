@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime, timedelta
 
-import pyotp
-import pyotp.totp as pyotp_totp
 import pytest
 from flask import url_for
 
