@@ -2,15 +2,15 @@ import pyotp
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
-from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import close_driver, initialize_driver
-from app import app as flask_app, db
+from app import app as flask_app
+from app import db
 from app.modules.auth.models import RoleType, User
 from app.modules.profile.models import UserProfile
-
+from core.environment.host import get_host_for_selenium_testing
+from core.selenium.common import close_driver, initialize_driver
 
 TWO_FACTOR_EMAIL = "twofactor@example.com"
 TWO_FACTOR_PASSWORD = "test1234"
@@ -31,7 +31,9 @@ def ensure_two_factor_user():
     with flask_app.app_context():
         user = User.query.filter_by(email=TWO_FACTOR_EMAIL).first()
         if not user:
-            user = User(email=TWO_FACTOR_EMAIL, password=TWO_FACTOR_PASSWORD, role=RoleType.USER, token=TWO_FACTOR_SECRET)
+            user = User(
+                email=TWO_FACTOR_EMAIL, password=TWO_FACTOR_PASSWORD, role=RoleType.USER, token=TWO_FACTOR_SECRET
+            )
             db.session.add(user)
             db.session.commit()
 
@@ -75,9 +77,7 @@ def test_login_and_check_element():
         wait_for_page_to_load(driver)
 
         try:
-            wait_for_element(
-                driver, (By.XPATH, "//h1[contains(@class, 'h2 mb-3') and contains(., 'Latest datasets')]")
-            )
+            wait_for_element(driver, (By.XPATH, "//h1[contains(@class, 'h2 mb-3') and contains(., 'Latest datasets')]"))
             print("Test passed!")
 
         except NoSuchElementException:
@@ -111,9 +111,7 @@ def test_two_factor_login_flow():
         driver.find_element(By.ID, "submit").send_keys(Keys.RETURN)
         wait_for_page_to_load(driver)
 
-        wait_for_element(
-            driver, (By.XPATH, "//h1[contains(@class, 'h2 mb-3') and contains(., 'Latest datasets')]")
-        )
+        wait_for_element(driver, (By.XPATH, "//h1[contains(@class, 'h2 mb-3') and contains(., 'Latest datasets')]"))
         assert driver.current_url != f"{host}/login"
 
         driver.get(f"{host}/logout")

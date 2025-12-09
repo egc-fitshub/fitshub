@@ -1,7 +1,8 @@
+import uuid
+
 import pyotp
 import pyotp.totp as pyotp_totp
 import pytest
-import uuid
 from flask import url_for
 
 from app import db
@@ -245,9 +246,7 @@ def test_login_requires_two_factor(test_client, two_factor_user):
 
 
 def _initiate_two_factor_flow(test_client, user):
-    response = test_client.post(
-        "/login", data=dict(email=user.email, password="test1234"), follow_redirects=False
-    )
+    response = test_client.post("/login", data=dict(email=user.email, password="test1234"), follow_redirects=False)
     assert response.status_code == 200
     with test_client.session_transaction() as session:
         assert session.get("pending_user_id") == user.id
@@ -283,6 +282,7 @@ def test_login_rejects_non_six_digit_code(test_client, two_factor_user):
 
 def test_login_handles_invalid_code_during_token_setup(test_client, two_factor_user, monkeypatch):
     _initiate_two_factor_flow(test_client, two_factor_user)
+
     def raise_error(self, user, token, code):
         raise ValueError("Invalid authentication code.")
 
@@ -328,7 +328,7 @@ def test_login_shows_error_for_invalid_code(test_client, two_factor_user_with_to
     test_client.post(
         "/login", data=dict(email=two_factor_user_with_token.email, password="test1234"), follow_redirects=False
     )
-    
+
     def always_fail(self, otp, for_time=None, valid_window=0):
         return False
 
@@ -349,9 +349,7 @@ def test_login_skips_two_factor_when_disabled(test_client, clean_database):
     user.profile.enabled_two_factor = False
     db.session.commit()
 
-    response = test_client.post(
-        "/login", data=dict(email=email, password="safe1234"), follow_redirects=True
-    )
+    response = test_client.post("/login", data=dict(email=email, password="safe1234"), follow_redirects=True)
     assert response.request.path == url_for("public.index")
 
     with test_client.session_transaction() as session:
@@ -389,9 +387,7 @@ def test_existing_token_remains_after_two_factor_login(test_client, two_factor_u
 
 def test_logout_clears_two_factor_session(test_client, two_factor_user):
     test_client.get("/logout", follow_redirects=True)
-    test_client.post(
-        "/login", data=dict(email=two_factor_user.email, password="test1234"), follow_redirects=False
-    )
+    test_client.post("/login", data=dict(email=two_factor_user.email, password="test1234"), follow_redirects=False)
     with test_client.session_transaction() as session:
         assert session.get("pending_user_id") == two_factor_user.id
         assert "temp_token" in session

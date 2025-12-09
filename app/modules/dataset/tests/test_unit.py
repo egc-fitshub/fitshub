@@ -8,11 +8,11 @@ from flask_login import current_user
 
 from app import db
 from app.modules.auth.models import User
+from app.modules.auth.services import AuthenticationService
 from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
-from app.modules.auth.services import AuthenticationService
 
 
 @pytest.fixture(scope="module")
@@ -24,10 +24,8 @@ def test_client(test_client):
     with test_client.application.app_context():
         service = AuthenticationService()
         user_test = service.create_with_profile(
-            name = "User",
-            surname = "Badge",
-            email="user_badge@example.com", 
-            password="test1234")
+            name="User", surname="Badge", email="user_badge@example.com", password="test1234"
+        )
         user_test.profile.enabled_two_factor = False
         db.session.add(user_test)
         db.session.commit()
