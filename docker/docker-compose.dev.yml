@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     depends_on:
       - db
+      - selenium-hub
       - mailhog
     build:
       context: ../
@@ -52,6 +53,42 @@ services:
     ports:
       - "1025:1025" # SMTP
       - "8025:8025" # Web UI
+    networks:
+      - fitshub_network
+
+  selenium-hub:
+    container_name: selenium_hub_container
+    image: selenium/hub:latest
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+    networks:
+      - fitshub_network
+
+  selenium-chrome:
+    container_name: selenium_chrome_container
+    image: selenium/node-chrome:latest
+    shm_size: 2gb
+    ports:
+      - "5900:5900"
+    env_file:
+      - ../.env.selenium
+    depends_on:
+      - selenium-hub
+    networks:
+      - fitshub_network
+
+  selenium-firefox:
+    container_name: selenium_firefox_container
+    image: selenium/node-firefox:latest
+    shm_size: 2gb
+    ports:
+      - "5901:5900"
+    env_file:
+      - ../.env.selenium
+    depends_on:
+      - selenium-hub
     networks:
       - fitshub_network
 
