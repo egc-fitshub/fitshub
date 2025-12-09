@@ -337,7 +337,7 @@ def with_github_error_handler(func, *args, **kwargs):
             {"error": "Download failed due to a server response error.", "details": str(e), "status": status or 500}
         ), 500
 
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError as e:
         return jsonify(
             {
                 "error": "Unable to reach the server. Please check your internet connection or try again later.",
@@ -346,7 +346,7 @@ def with_github_error_handler(func, *args, **kwargs):
             }
         ), 503
 
-    except requests.exceptions.Timeout:
+    except requests.exceptions.Timeout as e:
         return jsonify(
             {"error": "The request is taking too long. Please try again.", "details": str(e), "status": 408}
         ), 408
