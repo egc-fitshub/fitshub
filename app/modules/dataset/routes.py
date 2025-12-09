@@ -327,7 +327,7 @@ def with_github_error_handler(func, *args, **kwargs):
         if status == 404:
             return jsonify(
                 {
-                    "error": "The FITS file you're trying to download no longer exists in the repository.",
+                    "error": "The FITS file or the repository does not exist.",
                     "details": str(e),
                     "status": 404,
                 }

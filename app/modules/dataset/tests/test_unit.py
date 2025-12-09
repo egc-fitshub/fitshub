@@ -14,6 +14,12 @@ from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, Pu
 from app.modules.profile.models import UserProfile
 
 
+TEST_FITS_GITHUB_REPO_USER = "egc-fitshub"
+TEST_FITS_GITHUB_REPO_NAME_WITH_FILES = "fits_test"
+NOT_EXISTING_GITHUB_REPO_NAME = "this_does_not_exist"
+TEST_FITS_GITHUB_REPO_NAME_WITHOUT_FILES = "fitshub"
+
+
 @pytest.fixture(scope="module")
 def test_client(test_client):
     """
@@ -40,6 +46,100 @@ def test_client(test_client):
         db.session.commit()
 
     yield test_client
+
+
+def test_github_upload_with_fits(test_client):
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.post(
+        f"/dataset/github/fetch?user={TEST_FITS_GITHUB_REPO_USER}&repo={TEST_FITS_GITHUB_REPO_NAME_WITH_FILES}"
+    )
+
+    if response.status_code == 429 or response.status_code == 403:
+        assert response.json["error"] == "GitHub is temporarily blocking too many requests. Please try again later."
+        return
+
+    assert response.status_code == 200
+
+    json = response.json
+    assert json["message"] == "Github files uploaded successfully"
+
+    file_path = current_user.temp_folder()
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_github_upload_without_fits(test_client):
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.post(
+        f"/dataset/github/fetch?user={TEST_FITS_GITHUB_REPO_USER}&repo={TEST_FITS_GITHUB_REPO_NAME_WITHOUT_FILES}"
+    )
+
+    if response.status_code == 429 or response.status_code == 403:
+        assert response.json["error"] == "GitHub is temporarily blocking too many requests. Please try again later."
+        return
+
+    assert response.status_code == 200
+
+    json = response.json
+    assert len(json["filenames"]) == 0
+
+    file_path = current_user.temp_folder()
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_github_upload_no_repo(test_client):
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.post("/dataset/github/fetch")
+
+    assert response.status_code == 400
+
+    json = response.json
+    assert json["error"] == "User or repo not specified"
+
+    file_path = current_user.temp_folder()
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
+
+
+def test_github_upload_not_existing_repo(test_client):
+    login_response = login(test_client, "user_badge@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.post(
+        f"/dataset/github/fetch?user={TEST_FITS_GITHUB_REPO_USER}&repo={NOT_EXISTING_GITHUB_REPO_NAME}"
+    )
+
+    if response.status_code == 429 or response.status_code == 403:
+        assert response.json["error"] == "GitHub is temporarily blocking too many requests. Please try again later."
+        return
+
+    assert response.status_code == 404
+
+    json = response.json
+    assert json["error"] == "The FITS file or the repository does not exist."
+
+    file_path = current_user.temp_folder()
+
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    logout(test_client)
 
 
 def test_zip_upload_single_fits(test_client):
