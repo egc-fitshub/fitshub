@@ -13,7 +13,6 @@ from app.modules.dataset import repositories, services
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
 
-
 TEST_FITS_GITHUB_REPO_USER = "egc-fitshub"
 TEST_FITS_GITHUB_REPO_NAME_WITH_FILES = "fits_test"
 NOT_EXISTING_GITHUB_REPO_NAME = "this_does_not_exist"
