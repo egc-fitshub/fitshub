@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+import requests
 from flask import (
     abort,
     jsonify,
@@ -145,34 +146,46 @@ def list_dataset():
     )
 
 
-@dataset_bp.route("/dataset/file/upload", methods=["POST"])
-@login_required
-def upload():
-    file = request.files["file"]
+def generate_temp_filename(filename):
     temp_folder = current_user.temp_folder()
-
-    if not file or not file.filename.endswith(".fits"):
-        return jsonify({"message": "No valid file"}), 400
-
-    # create temp folder
-    if not os.path.exists(temp_folder):
-        os.makedirs(temp_folder)
-
-    file_path = os.path.join(temp_folder, file.filename)
+    file_path = os.path.join(temp_folder, filename)
 
     if os.path.exists(file_path):
         # Generate unique filename (by recursion)
-        base_name, extension = os.path.splitext(file.filename)
+        base_name, extension = os.path.splitext(filename)
         i = 1
         while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
             i += 1
         new_filename = f"{base_name} ({i}){extension}"
         file_path = os.path.join(temp_folder, new_filename)
     else:
-        new_filename = file.filename
+        new_filename = filename
+
+    return (file_path, new_filename)
+
+
+def save_file_to_temp(file):
+    temp_folder = current_user.temp_folder()
+
+    # create temp folder
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+
+    file_path, new_filename = generate_temp_filename(file.filename)
+    file.save(file_path)
+    return (file_path, new_filename)
+
+
+@dataset_bp.route("/dataset/file/upload", methods=["POST"])
+@login_required
+def upload():
+    file = request.files["file"]
+
+    if not file or not file.filename.endswith(".fits"):
+        return jsonify({"message": "No valid file"}), 400
 
     try:
-        file.save(file_path)
+        file_path, new_filename = save_file_to_temp(file)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
@@ -181,6 +194,109 @@ def upload():
             {
                 "message": "FITS uploaded and validated successfully",
                 "filename": new_filename,
+            }
+        ),
+        200,
+    )
+
+
+@dataset_bp.route("/dataset/file/upload/zip", methods=["POST"])
+@login_required
+def upload_zip():
+    file = request.files["file"]
+    new_fits_names = []
+
+    if not file or not file.filename.endswith(".zip"):
+        return jsonify({"message": "No valid file"}), 400
+
+    try:
+        file_path, new_filename = save_file_to_temp(file)
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+    with ZipFile(file_path) as zip:
+        names = zip.namelist()
+        fits_names = [name for name in names if name.endswith(".fits")]
+
+        for fits_name in fits_names:
+            fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
+            new_fits_names.append(fits_filename)
+
+            with zip.open(fits_name, mode="r") as fits:
+                with open(fits_path, mode="wb") as out:
+                    out.write(fits.read())
+
+    os.remove(file_path)
+
+    return (
+        jsonify(
+            {
+                "message": "ZIP uploaded successfully",
+                "filenames": new_fits_names,
+            }
+        ),
+        200,
+    )
+
+
+@dataset_bp.route("/dataset/github/fetch", methods=["POST"])
+def github_fetch():
+    user = request.args.get("user")
+    repo = request.args.get("repo")
+
+    if not user or not repo:
+        return jsonify({"error": "User or repo not specified"}), 400
+
+    # 1. List repository files
+    list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
+    try:
+        r = requests.get(list_url)
+        r.raise_for_status()
+        files = r.json()
+    except Exception as e:
+        return jsonify({"error": f"Error listing repo contents: {e}"}), 500
+
+    # Get list of .fits files
+    fits_files = [f["name"] for f in files if f["name"].lower().endswith(".fits")]
+
+    if not fits_files:
+        return jsonify({"filenames": []}), 200
+
+    new_fits_names = []
+
+    temp_folder = current_user.temp_folder()
+
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+
+    for fits_name in fits_files:
+        file_url = f"https://api.github.com/repos/{user}/{repo}/contents/{fits_name}"
+        try:
+            fr = requests.get(file_url)
+            fr.raise_for_status()
+            file_info = fr.json()
+
+            download_url = file_info.get("download_url")
+            if not download_url:
+                return jsonify({"error": f"No download URL for {fits_name}"}), 500
+
+            rfile = requests.get(download_url, stream=True)
+            rfile.raise_for_status()
+
+            fits_path, fits_filename = generate_temp_filename(os.path.basename(fits_name))
+            new_fits_names.append(fits_filename)
+
+            with open(fits_path, mode="wb") as out:
+                out.write(rfile.content)
+
+        except Exception as e:
+            return jsonify({"error": f"Error downloading {fits_name}: {e}"}), 500
+
+    return (
+        jsonify(
+            {
+                "message": "Github files uploaded successfully",
+                "filenames": new_fits_names,
             }
         ),
         200,

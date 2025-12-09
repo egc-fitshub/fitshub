@@ -41,7 +41,7 @@
         <div class="sidebar-content js-simplebar">
             <a class="sidebar-brand" href="{{ url_for('public.index') }}">
                 <img src="{{ url_for("static", filename="img/logos/logo.png") }}" class="d-block"
-                     style="max-width: 100%; height: auto;">
+                     style="max-width: 90%; height: auto;">
             </a>
 
 
@@ -69,17 +69,6 @@
                             class="align-middle">Team</span>
                     </a>
                 </li>
-
-                <li class="sidebar-header">
-                            Communities
-                        </li>
-
-                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.index' else '' }}">
-                            <a class="sidebar-link" href="{{ url_for('community.index') }}">
-                                <i class="align-middle" data-feather="list"></i> <span
-                                    class="align-middle">Communities</span>
-                            </a>
-                        </li>
 
                 {% if current_user.is_anonymous %}
 
@@ -126,17 +115,17 @@
                             Communities
                         </li>
 
-                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.get_communities_user' else '' }}">
-                            <a class="sidebar-link" href="{{ url_for('community.get_communities_user') }}">
-                                <i class="align-middle" data-feather="list"></i> <span
-                                    class="align-middle">My communities</span>
-                            </a>
-                        </li>
-
                         <li class="sidebar-item {{ 'active' if request.endpoint == 'community.create_community' else '' }}">
                             <a class="sidebar-link" href="{{ url_for('community.create_community') }}">
                                 <i class="align-middle" data-feather="upload"></i> <span
                                     class="align-middle">Create a community</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'community.get_communities_user' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('community.get_communities_user') }}">
+                                <i class="align-middle" data-feather="list"></i> <span
+                                    class="align-middle">My communities</span>
                             </a>
                         </li>
                     

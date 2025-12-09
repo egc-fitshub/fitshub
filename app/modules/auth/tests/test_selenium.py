@@ -43,7 +43,3 @@ def test_login_and_check_element():
     finally:
         # Close the browser
         close_driver(driver)
-
-
-# Call the test function
-test_login_and_check_element()

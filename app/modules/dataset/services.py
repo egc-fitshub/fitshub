@@ -225,6 +225,9 @@ class DataSetService(BaseService):
 
         return False
 
+    def get_trending_datasets(self, limit: int = 5, period_days: int = 7):
+        return self.repository.trending_datasets(limit, period_days)
+
 
 class AuthorService(BaseService):
     def __init__(self):

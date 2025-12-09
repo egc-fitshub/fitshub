@@ -20,7 +20,6 @@ READ ALL
 """
 
 
-@community_bp.route("/community", methods=["GET"])
 def index():
     communities = community_service.get_all_communities()
     return render_template("community/index.html", communities=communities, authorization=False)
@@ -31,9 +30,9 @@ GET ALL FROM USER
 """
 
 
+@community_bp.route("/my_communities", methods=["GET"])
 @login_required
 @role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
-@community_bp.route("/my_communities", methods=["GET"])
 def get_communities_user():
     communities = user_service.get_curated_communities_by_id(current_user.id)
     return render_template("community/index.html", communities=communities, authorization=True)
@@ -45,6 +44,8 @@ READ BY ID
 
 
 @community_bp.route("/community/<int:community_id>", methods=["GET"])
+@login_required
+@role_required(roles=[RoleType.CURATOR, RoleType.ADMINISTRATOR])
 def get_community(community_id):
     community = community_service.get_or_404(community_id)
 
@@ -76,7 +77,7 @@ def create_community():
         return community_service.handle_service_response(
             result=result,
             errors=form.errors,
-            success_url_redirect="community.index",
+            success_url_redirect="community.get_communities_user",
             success_msg="Community created successfully!",
             error_template="community/create_community.html",
             form=form,
@@ -100,7 +101,7 @@ def delete_community(community_id):
     else:
         flash("Community deleted successfully!", "success")
 
-    return redirect(url_for("community.index"))
+    return redirect(url_for("community.get_communities_user"))
 
 
 """
@@ -115,7 +116,7 @@ def update_community(community_id):
     community = community_service.get_or_404(community_id)
     if not community:
         flash("Community not found.", "danger")
-        return redirect(url_for("community.index"))
+        return redirect(url_for("community.get_communities_user"))
 
     form = CommunityForm(obj=community)
 
@@ -160,7 +161,7 @@ def leave_community(community_id):
     else:
         flash(result["success"], "success")
 
-    return redirect(url_for("community.index"))
+    return redirect(url_for("community.get_communities_user"))
 
 
 """
@@ -176,7 +177,7 @@ def kick_from_community(community_id, user_id):
 
     if not community:
         flash("Community not found.", "danger")
-        return redirect(url_for("community.index"))
+        return redirect(url_for("community.get_communities_user"))
 
     result = community_service.leave_community(community_id, user_id)
 
@@ -212,7 +213,7 @@ def view_curators(community_id):
 
     if not community:
         flash("Community not found.", "danger")
-        return redirect(url_for("community.index"))
+        return redirect(url_for("community.get_communities_user"))
 
     curator_form = AddCuratorsForm()
     curator_form.curator_ids.choices = get_available_curators_choices(community_id)
@@ -233,11 +234,11 @@ def add_curator_to_community(community_id):
 
     if not community:
         flash("Community not found.", "danger")
-        return redirect(url_for("community.index"))
+        return redirect(url_for("community.get_communities_user"))
 
     if not has_permission:
         flash("You have no permissions on this community.", "danger")
-        return redirect(url_for("community.index"))
+        return redirect(url_for("community.get_communities_user"))
 
     form = AddCuratorsForm()
     form.curator_ids.choices = get_available_curators_choices(community_id)
@@ -304,7 +305,7 @@ def propose_dataset(community_id, dataset_id):
     else:
         flash("Dataset proposed successfully! It is now pending review by the curators.", "success")
 
-    return redirect(url_for("community.get_community", community_id=community_id))
+    return redirect(url_for("public.index"))
 
 
 def check_if_dataset_curator(community_id):
