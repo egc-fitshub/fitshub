@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 
 import pyotp
 import pyotp.totp as pyotp_totp
@@ -123,6 +124,90 @@ def test_forgot_password_post_user_not_found(test_client):
 def test_forgot_password_post_success(test_client):
     response = test_client.post("/forgot-password", data=dict(email="test@example.com"), follow_redirects=True)
     assert response.status_code == 200
+
+
+def test_send_password_reset_email_sets_token_and_sends_mail(test_client, monkeypatch):
+    service = AuthenticationService()
+    email = f"reset+{uuid.uuid4().hex[:8]}@example.com"
+    user = service.create_with_profile(name="Recovery", surname="Flow", email=email, password="test1234")
+
+    captured = {}
+
+    def fake_send(message):
+        captured["message"] = message
+
+    monkeypatch.setattr("app.modules.auth.services.mail.send", fake_send)
+    before = datetime.utcnow()
+    service.send_password_reset_email(user)
+
+    assert user.reset_token
+    assert user.token_expiration and user.token_expiration > before
+    message = captured.get("message")
+    assert message is not None
+    assert message.recipients == [email]
+    assert user.reset_token in (message.html or message.body)
+
+
+def test_reset_password_view_returns_error_for_invalid_token(test_client, monkeypatch):
+    captured = {}
+
+    def fake_render(template_name, **context):
+        captured["template"] = template_name
+        captured["context"] = context
+        return "template stub"
+
+    monkeypatch.setattr("app.modules.auth.routes.render_template", fake_render)
+    response = test_client.get("/reset-password/invalid-token")
+    assert response.status_code == 200
+    assert captured["template"] == "reset_password.html"
+    assert captured["context"]["error"] == "Token inválido o expirado."
+
+
+def test_reset_password_view_rejects_expired_token(test_client, monkeypatch):
+    service = AuthenticationService()
+    email = f"expired+{uuid.uuid4().hex[:8]}@example.com"
+    user = service.create_with_profile(name="Expired", surname="Token", email=email, password="test1234")
+    token = "expired-token"
+    user.reset_token = token
+    user.token_expiration = datetime.utcnow() - timedelta(minutes=5)
+    db.session.commit()
+
+    captured = {}
+
+    def fake_render(template_name, **context):
+        captured["template"] = template_name
+        captured["context"] = context
+        return "template stub"
+
+    monkeypatch.setattr("app.modules.auth.routes.render_template", fake_render)
+    response = test_client.get(f"/reset-password/{token}")
+    assert response.status_code == 200
+    assert captured["template"] == "reset_password.html"
+    assert captured["context"]["error"] == "Token inválido o expirado."
+
+
+def test_reset_password_view_updates_password_and_clears_token(test_client):
+    service = AuthenticationService()
+    email = f"reset-success+{uuid.uuid4().hex[:8]}@example.com"
+    user = service.create_with_profile(name="Recover", surname="Success", email=email, password="test1234")
+    token = "valid-token"
+    user.reset_token = token
+    user.token_expiration = datetime.utcnow() + timedelta(hours=1)
+    db.session.commit()
+
+    new_password = "brandnew1234"
+    response = test_client.post(
+        f"/reset-password/{token}",
+        data=dict(password=new_password),
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert response.headers.get("Location", "").endswith(url_for("auth.login"))
+    db.session.refresh(user)
+    assert user.check_password(new_password)
+    assert user.reset_token is None
+    assert user.token_expiration is None
 
 
 def test_admin_roles_unauthorized_access(test_client):
