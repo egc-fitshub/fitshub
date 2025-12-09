@@ -8,19 +8,12 @@ class AuthSeeder(BaseSeeder):
 
     def run(self):
         # Seeding users
-        two_factor_secret = "JBSWY3DPEHPK3PXP"
         users = [
             User(email="user1@example.com", password="1234", role=RoleType.USER),
             User(email="user2@example.com", password="1234", role=RoleType.USER),
             User(email="admin@example.com", password="1234", role=RoleType.ADMINISTRATOR),
             User(email="curator@example.com", password="1234", role=RoleType.CURATOR),
             User(email="user@example.com", password="1234", role=RoleType.USER),
-            User(
-                email="twofactor@example.com",
-                password="test1234",
-                role=RoleType.USER,
-                token=two_factor_secret,
-            ),
         ]
 
         # Inserted users with their assigned IDs are returned by `self.seed`.
@@ -34,7 +27,6 @@ class AuthSeeder(BaseSeeder):
             ("Arthur", "Pendleton"),  # Admin
             ("Eleanor", "Vance"),  # Curator
             ("John", "Smith"),  # User
-            ("Two", "Factor"),  # 2FA User
         ]
 
         for user, name in zip(seeded_users, names):
@@ -45,8 +37,6 @@ class AuthSeeder(BaseSeeder):
                 "name": name[0],
                 "surname": name[1],
             }
-            if user.email == "twofactor@example.com":
-                profile_data["enabled_two_factor"] = True
             user_profile = UserProfile(**profile_data)
             user_profiles.append(user_profile)
 
