@@ -12,6 +12,8 @@ from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
+from app.modules.auth.services import AuthenticationService
+
 
 
 @pytest.fixture(scope="module")
@@ -21,7 +23,13 @@ def test_client(test_client):
     con un DOI específico para probar los badges.
     """
     with test_client.application.app_context():
-        user_test = User(email="user_badge@example.com", password="test1234")
+        service = AuthenticationService()
+        user_test = service.create_with_profile(
+            name = "User",
+            surname = "Badge",
+            email="user_badge@example.com", 
+            password="test1234")
+        user_test.profile.enabled_two_factor = False
         db.session.add(user_test)
         db.session.commit()
 
