@@ -40,8 +40,8 @@ A response with `status` set to `green` or `yellow` means the search cluster is 
 
 ### Using Virtual Environment
 
-[!WARNING]
-To complete the configuration succesfully, it is important that all dependencies, as well as your database, are up to date.
+> [!WARNING]
+> To complete the configuration succesfully, it is important that all dependencies, as well as your database, are up to date.
 
 Fitshub expects an instance of **Elasticsearch** to be running at port 9200. In order for this feature to work, please follow the following steps:
 
