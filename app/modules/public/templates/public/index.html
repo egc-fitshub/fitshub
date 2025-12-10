@@ -29,10 +29,19 @@
                         </p>
                     </div>
                 </div>
-                <div class="mt-2">
+                <div class="mt-2 d-flex">
+                    Authors:&nbsp
                     <p class="p-0 m-0 text-secondary" id="trending_authors">
                         {% for author in dataset.ds_meta_data.authors %}
                             {{ author.name }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+                <div class="mt-2 d-flex">
+                    Communities:&nbsp
+                    <p class="p-0 m-0 text-secondary" id="trending_communities">
+                        {% for community in dataset.communities().all() %}
+                            {{ community.name }}{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                 </div>
