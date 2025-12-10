@@ -1,9 +1,14 @@
 import uuid
 from datetime import datetime, timedelta
-
 import pyotp
 import pyotp.totp as pyotp_totp
+import os
+import re
+import time
+from urllib.parse import urlparse
+
 import pytest
+import requests
 from flask import url_for
 
 from app import db
@@ -28,6 +33,114 @@ def test_client(test_client):
             db.session.commit()
 
     yield test_client
+
+
+def test_mailhog_reacheable_from_docker():
+    if not (os.getenv("WORKING_DIR") == "/app/"):
+        pytest.skip("Only runs in Docker environment")
+    try:
+        host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
+        response = requests.get(f"http://{host}:8025")
+        assert response.status_code == 200, "MailHog is not reachable from Docker"
+    except requests.ConnectionError:
+        assert False, "MailHog is not reachable from Docker"
+
+
+def test_mailhog_shows_email_sent(test_client):
+    if not (os.getenv("WORKING_DIR") == "/app/"):
+        pytest.skip("Only runs in Docker environment")
+
+    # Ensure clean inbox
+    target_email = "test@example.com"
+    host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
+    api_base = f"http://{host}:8025"
+
+    try:
+        requests.delete(f"{api_base}/api/v1/messages")
+    except requests.ConnectionError:
+        assert False, "MailHog is not reachable from Docker"
+
+    # Trigger the email
+    response = test_client.post("/forgot-password", data=dict(email=target_email), follow_redirects=True)
+    assert response.status_code == 200
+
+    # Poll MailHog API for the message addressed to target_email
+    messages = []
+    for _ in range(10):
+        try:
+            r = requests.get(f"{api_base}/api/v2/messages", timeout=2)
+        except requests.ConnectionError:
+            assert False, "MailHog is not reachable from Docker"
+
+        assert r.status_code == 200, "MailHog API is not reachable"
+        messages = r.json().get("items", [])
+
+        # Look for a message whose To header contains the target email
+        found = None
+        for item in messages:
+            headers = item.get("Content", {}).get("Headers", {})
+            to_list = headers.get("To", [])
+            if any(target_email in t for t in to_list):
+                found = item
+                break
+
+        if found:
+            break
+        time.sleep(0.5)
+
+    assert found is not None, "Email not found in MailHog"
+
+
+def test_mailhog_forgot_password_reset_link_works(test_client):
+    if not (os.getenv("WORKING_DIR") == "/app/"):
+        pytest.skip("Only runs in Docker environment")
+
+    target_email = "test@example.com"
+    host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
+    api_base = f"http://{host}:8025"
+
+    # Ensure clean inbox
+    try:
+        requests.delete(f"{api_base}/api/v1/messages")
+    except requests.ConnectionError:
+        pytest.fail("MailHog is not reachable from Docker")
+
+    # Trigger the email
+    resp = test_client.post("/forgot-password", data=dict(email=target_email), follow_redirects=True)
+    assert resp.status_code == 200
+
+    # Poll MailHog API for the reset link
+    found_link = None
+    for _ in range(10):
+        r = requests.get(f"{api_base}/api/v2/messages", timeout=2)
+        assert r.status_code == 200
+        items = r.json().get("items", [])
+        for item in items:
+            headers = item.get("Content", {}).get("Headers", {})
+            to_list = headers.get("To", [])
+            if any(target_email in t for t in to_list):
+                # Get body content
+                body = ""
+                content = item.get("Content", {}) or {}
+                body = content.get("Body", "") or item.get("Raw", {}).get("Data", "") or item.get("Body", "")
+
+                # Find reset link
+                m = re.search(r'(https?://[^\s"\']+/reset-password/[^\s"\']+)', body)
+
+                if m:
+                    found_link = m.group(1)
+                    break
+        if found_link:
+            break
+        time.sleep(0.5)
+
+    assert found_link, "Reset link not found in MailHog message"
+
+    # Follow the link inside the Flask app
+    parsed = urlparse(found_link)
+    resp2 = test_client.get(parsed.path, follow_redirects=True)
+    assert resp2.status_code == 200
+    assert b"reset" in resp2.data.lower() or b"token" in resp2.data.lower()
 
 
 def test_login_success(test_client):
