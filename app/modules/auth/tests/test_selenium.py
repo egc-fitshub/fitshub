@@ -1,12 +1,11 @@
+import os
 import secrets
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pyotp
-import os
-import time
-
 import pytest
 import requests
 from selenium.common.exceptions import NoSuchElementException
@@ -190,6 +189,10 @@ def test_two_factor_login_flow():
         wait_for_page_to_load(driver)
         wait_for_element(driver, (By.XPATH, "//h1[contains(@class, 'h2 mb-3') and contains(., 'Login')]"))
         print("2FA login test passed!")
+    finally:
+        close_driver(driver)
+
+
 def test_connect_to_mailhog():
     """Test connection to MailHog web interface.
     Runs only in Docker environment where MailHog is reachable.
@@ -262,6 +265,10 @@ def test_forgot_password_unknown_email_shows_error():
         wait_for_page_to_load(driver)
         wait_for_element(driver, (By.XPATH, "//*[contains(text(), 'Correo no registrado.')]"))
         print("Forgot password error message test passed!")
+    finally:
+        close_driver(driver)
+
+
 def test_forgot_password_mailhog():
     """
     Submit the forgot-password form and verify MailHog received the email.
@@ -286,9 +293,40 @@ def test_forgot_password_mailhog():
         email_field.send_keys(Keys.RETURN)
 
         time.sleep(2)
-
     finally:
         close_driver(driver)
+
+        # Poll MailHog API for the message (up to 20s)
+    mailhog_host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
+    api_url = f"http://{mailhog_host}:8025/api/v2/messages"
+
+    found = False
+    deadline = time.time() + 20
+    while time.time() < deadline:
+        resp = requests.get(api_url, timeout=5)
+        data = resp.json()
+
+        for item in data.get("items", []):
+            headers = item.get("Content", {}).get("Headers", {})
+            tos = headers.get("To", [])
+        for to in tos:
+            if target_email in to:
+                found = True
+                break
+            if found:
+                break
+
+            body = item.get("Content", {}).get("Body", "") or ""
+            if target_email in body:
+                found = True
+                break
+
+            if found:
+                break
+
+        time.sleep(1)
+
+        assert found, f"Forgot password email for {target_email} not found in MailHog (checked {api_url})"
 
 
 def test_forgot_password_success_sets_token():
@@ -362,44 +400,3 @@ def test_reset_password_flow_completes_login():
     finally:
         cleanup_temporary_user(email)
         close_driver(driver)
-
-
-# Call the test functions
-test_login_and_check_element()
-test_two_factor_login_flow()
-test_two_factor_invalid_code_shows_error()
-test_forgot_password_unknown_email_shows_error()
-test_forgot_password_success_sets_token()
-test_reset_password_flow_completes_login()
-    # Poll MailHog API for the message (up to 20s)
-    mailhog_host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
-    api_url = f"http://{mailhog_host}:8025/api/v2/messages"
-
-    found = False
-    deadline = time.time() + 20
-    while time.time() < deadline:
-        resp = requests.get(api_url, timeout=5)
-        resp.raise_for_status()
-        data = resp.json()
-
-        for item in data.get("items", []):
-            headers = item.get("Content", {}).get("Headers", {})
-            tos = headers.get("To", [])
-            for to in tos:
-                if target_email in to:
-                    found = True
-                    break
-            if found:
-                break
-
-            body = item.get("Content", {}).get("Body", "") or ""
-            if target_email in body:
-                found = True
-                break
-
-        if found:
-            break
-
-    time.sleep(1)
-
-    assert found, f"Forgot password email for {target_email} not found in MailHog (checked {api_url})"
