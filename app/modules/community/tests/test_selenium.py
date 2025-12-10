@@ -1,16 +1,7 @@
 import time
-import pytest
-import time
-import json
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
@@ -24,7 +15,6 @@ def test_community_index():
 
         # Open the index page
         driver.get(f"{host}/community")
-
 
         # Wait a little while to make sure the page has loaded completely
         time.sleep(4)
@@ -56,8 +46,3 @@ def test_community_index():
 
 # Call the test function
 test_community_index()
-
-    
- 
-   
-  

@@ -10,7 +10,6 @@ class AuthBehavior(TaskSet):
 
     @task
     def login(self):
-        resp = self.client.get("/login")
         credentials = [
             ("user1@example.com", "1234"),
         ]
@@ -25,7 +24,6 @@ class AuthBehavior(TaskSet):
 
 class CommunityBehavior(TaskSet):
     def on_start(self):
-        resp = self.client.get("/community")
         self.community_id = 1
         self.dataset_id = 1
 
@@ -74,8 +72,6 @@ class CommunityBehavior(TaskSet):
         resp = self.client.get(f"/community/{self.community_id}/curators")
         if resp.status_code not in (200, 302):
             print(f"view_curators failed: {resp.status_code}")
-    
-
 
     @task
     def add_curator(self):
@@ -84,12 +80,10 @@ class CommunityBehavior(TaskSet):
             return
         data = {}
         data["curator_ids"] = ["2"]
-        
 
         post = self.client.post(f"/community/{self.community_id}/add_curators", data=data, allow_redirects=True)
         if post.status_code not in (200, 302):
             print(f"add_curator failed: {post.status_code}")
-
 
     @task
     def review_pending(self):
@@ -99,16 +93,19 @@ class CommunityBehavior(TaskSet):
 
     @task
     def approve_reject(self):
-        resp = self.client.get(f"/community/{self.community_id}")
-        approve = self.client.post(f"/community/{self.community_id}/approve/{self.dataset_id}", data={}, allow_redirects=True)
+        approve = self.client.post(
+            f"/community/{self.community_id}/approve/{self.dataset_id}", data={}, allow_redirects=True
+        )
         if approve.status_code not in (200, 302):
             print(f"approve failed: {approve.status_code}")
 
-        reject = self.client.post(f"/community/{self.community_id}/reject/{self.dataset_id}", data={}, allow_redirects=True)
+        reject = self.client.post(
+            f"/community/{self.community_id}/reject/{self.dataset_id}", data={}, allow_redirects=True
+        )
         if reject.status_code not in (200, 302):
             print(f"reject failed: {reject.status_code}")
 
-  
+
 class CommunityUser(HttpUser):
     tasks = [AuthBehavior, CommunityBehavior]
     min_wait = 5000
