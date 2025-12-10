@@ -114,6 +114,52 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def recommended_datasets(self, reference_dataset_id, limit=10):
+        ref_dataset = self.get_by_id(reference_dataset_id)
+        if not ref_dataset or not ref_dataset.ds_meta_data:
+            return []
+
+        ref_tags = set()
+        if ref_dataset.ds_meta_data.tags:
+            ref_tags = set(tag.strip().lower() for tag in ref_dataset.ds_meta_data.tags.split(",") if tag.strip())
+
+        ref_authors = set(author.id for author in ref_dataset.ds_meta_data.authors)
+
+        all_candidates = (
+            self.session.query(DataSet)
+            .join(DSMetaData, DataSet.ds_meta_data_id == DSMetaData.id)
+            .filter(DataSet.id != reference_dataset_id)
+            .filter(DSMetaData.dataset_doi.isnot(None))
+            .all()
+        )
+
+        classified_datasets = []
+        for dataset in all_candidates:
+            score = 0.0
+
+            if dataset.ds_meta_data and dataset.ds_meta_data.authors:
+                for author in dataset.ds_meta_data.authors:
+                    if author.id in ref_authors:
+                        score += 1.5
+
+            if dataset.ds_meta_data and dataset.ds_meta_data.tags:
+                candidate_tags = set(tag.strip().lower() for tag in dataset.ds_meta_data.tags.split(",") if tag.strip())
+                shared_tags_count = len(ref_tags & candidate_tags)
+                score += shared_tags_count * 2.0
+
+            if score > 0:
+                download_count = (
+                    self.session.query(func.count(DSDownloadRecord.id))
+                    .filter(DSDownloadRecord.dataset_id == dataset.id)
+                    .scalar()
+                    or 0
+                )
+                classified_datasets.append((dataset, score, download_count))
+
+        classified_datasets.sort(key=lambda x: (x[1], x[2]), reverse=True)
+
+        return [ds for ds, _, _ in classified_datasets[:limit]]
+
 
 class DOIMappingRepository(BaseRepository):
     def __init__(self):
