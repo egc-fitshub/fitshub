@@ -7,7 +7,7 @@ import pytest
 from flask import url_for
 
 from app import db
-from app.modules.auth.models import User
+from app.modules.auth.models import RoleType, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.models import UserProfile
@@ -20,8 +20,10 @@ def test_client(test_client):
         # Add HERE new elements to the database that you want to exist in the test context.
         # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
         user = User.query.filter_by(email="test@example.com").first()
-        if user and not user.profile:
-            user.profile = UserProfile(name="Test", surname="User")
+        if user:
+            if not user.profile:
+                user.profile = UserProfile(name="Test", surname="User")
+            user.profile.enabled_two_factor = False
             db.session.add(user)
             db.session.commit()
 
@@ -229,12 +231,19 @@ def test_update_roles_unauthorized(test_client):
     test_client.get("/logout", follow_redirects=True)
 
 
-"""
 def test_admin_roles_success_as_admin(test_client):
+    admin = User.query.filter_by(email="admin@test.com").first()
+    if not admin:
+        admin = User(email="admin@test.com", password="test1234", role=RoleType.ADMINISTRATOR)
+        admin.profile = UserProfile(name="Admin", surname="User")
+        admin.profile.enabled_two_factor = False
+        db.session.add(admin)
+        db.session.commit()
+
     login_response = test_client.post(
         "/login",
         data=dict(email="admin@test.com", password="test1234"),
-        follow_redirects=True
+        follow_redirects=True,
     )
 
     assert login_response.request.path == url_for("public.index"), "El login del admin falló"
@@ -243,12 +252,7 @@ def test_admin_roles_success_as_admin(test_client):
 
     assert response.status_code == 200
     assert response.request.path == url_for("auth.admin_roles"), "El admin debería poder acceder a la página de roles"
-
-    assert b"test@example.com" in response.data
-
     test_client.get("/logout", follow_redirects=True)
-"""
-
 
 @pytest.fixture
 def two_factor_user(test_client):
