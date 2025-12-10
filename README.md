@@ -22,14 +22,6 @@ Spin up the full stack, including the new Elasticsearch node used for search:
 ```bash
 docker compose -f docker/docker-compose.dev.yml up -d
 ```
-
-The `web` container reads the following environment variables (sourced from `.env`):
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `ELASTICSEARCH_HOST` | `http://elasticsearch:9200` | URL used by the API to reach the Elasticsearch container |
-| `ELASTICSEARCH_INDEX` | `search_index` | Default index for search documents |
-
 Once the containers are running you can check Elasticsearch health from your host machine:
 
 ```bash
