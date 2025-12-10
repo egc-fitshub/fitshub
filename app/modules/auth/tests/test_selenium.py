@@ -1,5 +1,6 @@
 import os
 import secrets
+import socket
 import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -69,6 +70,29 @@ def ensure_two_factor_user():
 
 def generate_unique_email(prefix="selenium") -> str:
     return f"{prefix}-{uuid4().hex[:8]}@example.com"
+
+
+def get_mailhog_host() -> str:
+    override = os.getenv("MAILHOG_HOST")
+    if override:
+        return override
+    return "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
+
+
+def ensure_mailhog_reachable(host: str) -> None:
+    try:
+        resp = requests.get(f"http://{host}:8025", timeout=2)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        pytest.skip(f"MailHog UI not reachable at http://{host}:8025 ({exc})")
+
+    smtp_host = os.getenv("MAIL_SERVER", host)
+    smtp_port = int(os.getenv("MAIL_PORT", "25")) if os.getenv("MAIL_PORT") else 25
+    try:
+        with socket.create_connection((smtp_host, smtp_port), timeout=2):
+            pass
+    except OSError as exc:
+        pytest.skip(f"MailHog SMTP not reachable at {smtp_host}:{smtp_port} ({exc})")
 
 
 @contextmanager
@@ -194,16 +218,13 @@ def test_two_factor_login_flow():
 
 
 def test_connect_to_mailhog():
-    """Test connection to MailHog web interface.
-    Runs only in Docker environment where MailHog is reachable.
-    """
-    if not (os.getenv("WORKING_DIR") == "/app/"):
-        pytest.skip("Only runs in Docker environment")
+    """Test connection to MailHog web interface available in Docker or local setups."""
+    host = get_mailhog_host()
+    ensure_mailhog_reachable(host)
 
     driver = initialize_driver()
 
     try:
-        host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
         mailhog_url = f"http://{host}:8025"
 
         # Open the MailHog web interface
@@ -272,61 +293,65 @@ def test_forgot_password_unknown_email_shows_error():
 def test_forgot_password_mailhog():
     """
     Submit the forgot-password form and verify MailHog received the email.
-    Runs only in the Docker environment where MailHog is reachable.
+    Works in Docker or a local environment that exposes MailHog at :8025.
     """
-    if not (os.getenv("WORKING_DIR") == "/app/"):
-        pytest.skip("Only runs in Docker environment")
+    host = get_mailhog_host()
+    ensure_mailhog_reachable(host)
 
-    target_email = "user1@example.com"
+    target_email = generate_unique_email("mailhog")
+    create_temporary_user(email=target_email)
 
-    driver = initialize_driver()
     try:
-        host = get_host_for_selenium_testing()
+        driver = initialize_driver()
+        try:
+            selenium_host = get_host_for_selenium_testing()
 
-        # Open the forgot password page and submit the form
-        driver.get(f"{host}/forgot-password")
-        time.sleep(2)
+            # Open the forgot password page and submit the form
+            driver.get(f"{selenium_host}/forgot-password")
+            time.sleep(2)
 
-        email_field = driver.find_element(By.NAME, "email")
-        email_field.clear()
-        email_field.send_keys(target_email)
-        email_field.send_keys(Keys.RETURN)
+            email_field = driver.find_element(By.NAME, "email")
+            email_field.clear()
+            email_field.send_keys(target_email)
+            email_field.send_keys(Keys.RETURN)
 
-        time.sleep(2)
-    finally:
-        close_driver(driver)
+            time.sleep(2)
+        finally:
+            close_driver(driver)
 
         # Poll MailHog API for the message (up to 20s)
-    mailhog_host = "mailhog" if os.getenv("WORKING_DIR") == "/app/" else "localhost"
-    api_url = f"http://{mailhog_host}:8025/api/v2/messages"
+        mailhog_host = host
+        api_url = f"http://{mailhog_host}:8025/api/v2/messages"
 
-    found = False
-    deadline = time.time() + 20
-    while time.time() < deadline:
-        resp = requests.get(api_url, timeout=5)
-        data = resp.json()
+        found = False
+        deadline = time.time() + 20
+        while time.time() < deadline:
+            resp = requests.get(api_url, timeout=5)
+            data = resp.json()
 
-        for item in data.get("items", []):
-            headers = item.get("Content", {}).get("Headers", {})
-            tos = headers.get("To", [])
-        for to in tos:
-            if target_email in to:
-                found = True
-                break
-            if found:
-                break
+            for item in data.get("items", []):
+                headers = item.get("Content", {}).get("Headers", {})
+                tos = headers.get("To", [])
+                for to in tos:
+                    if target_email in to:
+                        found = True
+                        break
+                if found:
+                    break
 
-            body = item.get("Content", {}).get("Body", "") or ""
-            if target_email in body:
-                found = True
-                break
+                body = item.get("Content", {}).get("Body", "") or ""
+                if target_email in body:
+                    found = True
+                    break
 
-            if found:
-                break
+                if found:
+                    break
 
-        time.sleep(1)
+            time.sleep(1)
 
         assert found, f"Forgot password email for {target_email} not found in MailHog (checked {api_url})"
+    finally:
+        cleanup_temporary_user(target_email)
 
 
 def test_forgot_password_success_sets_token():
