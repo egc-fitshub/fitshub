@@ -254,6 +254,7 @@ def test_admin_roles_success_as_admin(test_client):
     assert response.request.path == url_for("auth.admin_roles"), "El admin debería poder acceder a la página de roles"
     test_client.get("/logout", follow_redirects=True)
 
+
 @pytest.fixture
 def two_factor_user(test_client):
     service = AuthenticationService()
