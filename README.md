@@ -37,3 +37,43 @@ curl http://localhost:9200/_cluster/health
 ```
 
 A response with `status` set to `green` or `yellow` means the search cluster is ready. The explore UI will show real search results when this service is available, and a friendly message if it is down.
+
+### Using Virtual Environment
+
+[!WARNING]
+To complete the configuration succesfully, it is important that all dependencies, as well as your database, are up to date.
+
+Fitshub expects an instance of **Elasticsearch** to be running at port 9200. In order for this feature to work, please follow the following steps:
+
+- Copy the environment variables from ```.env.local.example``` into your ``.env`` and make sure that the variable ```ELASTICSEARCH_HOST```is set to ```http://localhost:9200```
+- Start the instance of **Elasticsearch** in port 9200. To do so, run the following command: 
+
+``` bash 
+docker compose -f ./docker/docker-compose.dev.yml up -d elasticsearch 
+```
+
+- Once the container is available, please run the following command to check its status:
+```bash
+curl http://localhost:9200/_cluster/health
+```
+
+- If the result of the previous command returns **green**, execute the following command: 
+```bash
+flask shell
+```
+- Inside flask shell, run the following instructions:
+
+```python
+
+from app.modules.elasticsearch.utils import init_search_index, reindex_all
+
+init_search_index()
+reindex_all()
+exit()
+
+```
+
+- Once the instructions have been executed succesfully, you may start your project as usual.
+
+
+
