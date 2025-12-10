@@ -1,12 +1,12 @@
-import uuid
-from datetime import datetime, timedelta
-import pyotp
-import pyotp.totp as pyotp_totp
 import os
 import re
 import time
+import uuid
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
+import pyotp
+import pyotp.totp as pyotp_totp
 import pytest
 import requests
 from flask import url_for
