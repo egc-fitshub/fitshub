@@ -245,7 +245,7 @@ def github_fetch():
     repo = request.args.get("repo")
 
     if not user or not repo:
-        return jsonify({"error": "User or repo not specified"}), 400
+        return jsonify({"error": "User or repo not specified", "status": 400}), 400
 
     # 1. List repository files
     list_url = f"https://api.github.com/repos/{user}/{repo}/contents/"
