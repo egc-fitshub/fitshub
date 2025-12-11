@@ -488,7 +488,9 @@ def test_upload_from_github_non_existing_repo():
         if warning_elems and "too many requests" in warning_elems[0].text:
             print("GitHub API rate limit reached; skipping non-existing GitHub repository upload test.")
         else:
-            assert warning_elems and "404" in warning_elems[0].text, "Expected 404 error for non-existing repository"
+            assert warning_elems and "The FITS file or the repository does not exist." in warning_elems[0].text, (
+                "Expected 404 error for non-existing repository"
+            )
             print("Upload from GitHub non-existing repository test passed!")
 
     finally:
