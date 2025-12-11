@@ -12,7 +12,7 @@ from app.modules.auth.models import User
 from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
 from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
-from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, PublicationType
+from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
 
 TEST_FITS_GITHUB_REPO_USER = "egc-fitshub"
