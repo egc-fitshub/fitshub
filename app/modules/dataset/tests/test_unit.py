@@ -12,7 +12,7 @@ from app.modules.auth.models import User
 from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
 from app.modules.conftest import login, logout
 from app.modules.dataset import repositories, services
-from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, PublicationType
+from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
 
 TEST_FITS_GITHUB_REPO_USER = "egc-fitshub"
@@ -782,3 +782,176 @@ def test_recommendations_with_rejected_communities(test_client):
         assert not candidate_in_recommendations or recommendations[0].id != candidate.id, (
             "Rejected community associations should not boost recommendation score"
         )
+
+def test_recommendations_combined_scoring(test_client):
+    """
+    Test todos los factores (comunidad, tags y autores) en la puntuación.
+    """
+    with test_client.application.app_context():
+        unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+        user = User(email=unique_email, password="password")
+        db.session.add(user)
+        db.session.flush()
+        
+        profile = UserProfile(user_id=user.id, name="Test", surname="User")
+        db.session.add(profile)
+        
+        community = Community(name="Combined Test Community", description="Test")
+        db.session.add(community)
+        db.session.flush()
+        
+        ref_metadata = DSMetaData(
+            title="Combined Scoring Reference",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            tags="machine learning,ai",
+        )
+        db.session.add(ref_metadata)
+        db.session.flush()
+        
+        ref_author = Author(
+            name="John Doe",
+            affiliation="University",
+            ds_meta_data_id=ref_metadata.id,
+        )
+        db.session.add(ref_author)
+        
+        ref_dataset = DataSet(user_id=user.id, ds_meta_data_id=ref_metadata.id)
+        db.session.add(ref_dataset)
+        db.session.flush()
+        
+        ref_assoc = CommunityDataSet(
+            community_id=community.id,
+            dataset_id=ref_dataset.id,
+            status=CommunityDataSetStatus.ACCEPTED,
+        )
+        db.session.add(ref_assoc)
+        
+        candidate1_metadata = DSMetaData(
+            title="All Factors Match",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            dataset_doi="10.1234/all",
+            tags="machine learning,ai,deep learning",
+        )
+        db.session.add(candidate1_metadata)
+        db.session.flush()
+        
+        candidate1_author = Author(
+            name="John Doe",
+            affiliation="University",
+            ds_meta_data_id=candidate1_metadata.id,
+        )
+        db.session.add(candidate1_author)
+        
+        candidate1 = DataSet(user_id=user.id, ds_meta_data_id=candidate1_metadata.id)
+        db.session.add(candidate1)
+        db.session.flush()
+        
+        c1_assoc = CommunityDataSet(
+            community_id=community.id,
+            dataset_id=candidate1.id,
+            status=CommunityDataSetStatus.ACCEPTED,
+        )
+        db.session.add(c1_assoc)
+        
+        candidate2_metadata = DSMetaData(
+            title="Only Tags Match",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            dataset_doi="10.1234/tags",
+            tags="machine learning",
+        )
+        db.session.add(candidate2_metadata)
+        db.session.flush()
+        
+        candidate2 = DataSet(user_id=user.id, ds_meta_data_id=candidate2_metadata.id)
+        db.session.add(candidate2)
+        db.session.flush()
+        
+        db.session.commit()
+        
+        repo = repositories.DataSetRepository()
+        recommendations = repo.recommended_datasets(ref_dataset.id, limit=10)
+        
+        assert len(recommendations) >= 2, "Should have recommendations"
+        assert recommendations[0].id == candidate1.id, "Dataset matching all factors should rank highest"
+
+
+def test_recommendations_no_doi_excluded(test_client):
+    """
+    Test Datasets sin DOI son excluidos de las recomendaciones.
+    """
+    with test_client.application.app_context():
+        unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+        user = User(email=unique_email, password="password")
+        db.session.add(user)
+        db.session.flush()
+        
+        profile = UserProfile(user_id=user.id, name="Test", surname="User")
+        db.session.add(profile)
+        
+        ref_metadata = DSMetaData(
+            title="DOI Test Reference",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            dataset_doi="10.1234/ref",
+            tags="test",
+        )
+        db.session.add(ref_metadata)
+        db.session.flush()
+        
+        ref_dataset = DataSet(user_id=user.id, ds_meta_data_id=ref_metadata.id)
+        db.session.add(ref_dataset)
+        db.session.flush()
+        
+        no_doi_metadata = DSMetaData(
+            title="No DOI Dataset",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            tags="test",
+        )
+        db.session.add(no_doi_metadata)
+        db.session.flush()
+        
+        no_doi_dataset = DataSet(user_id=user.id, ds_meta_data_id=no_doi_metadata.id)
+        db.session.add(no_doi_dataset)
+        
+        db.session.commit()
+        
+        repo = repositories.DataSetRepository()
+        recommendations = repo.recommended_datasets(ref_dataset.id, limit=10)
+        
+        no_doi_in_recommendations = any(rec.id == no_doi_dataset.id for rec in recommendations)
+        assert not no_doi_in_recommendations, "Datasets without DOI should be excluded from recommendations"
+
+
+def test_recommendations_empty_when_no_candidates(test_client):
+    with test_client.application.app_context():
+        unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+        user = User(email=unique_email, password="password")
+        db.session.add(user)
+        db.session.flush()
+        
+        profile = UserProfile(user_id=user.id, name="Test", surname="User")
+        db.session.add(profile)
+        
+        ref_metadata = DSMetaData(
+            title="Dataset sin recomendaciones",
+            description="Test",
+            publication_type=PublicationType.NONE,
+            dataset_doi="10.1234/noRecom",
+            tags="noRecom",
+        )
+        db.session.add(ref_metadata)
+        db.session.flush()
+        
+        ref_dataset = DataSet(user_id=user.id, ds_meta_data_id=ref_metadata.id)
+        db.session.add(ref_dataset)
+        
+        db.session.commit()
+        
+        repo = repositories.DataSetRepository()
+        recommendations = repo.recommended_datasets(ref_dataset.id, limit=10)
+        
+        assert len(recommendations) == 0, "Should return empty list when no valid candidates exist"
