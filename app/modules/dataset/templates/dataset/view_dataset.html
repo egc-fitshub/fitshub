@@ -218,6 +218,36 @@
         </div> 
 
         <div class="card">
+            <div class="card-body mb-0 pb-0">
+                <h3> Related datasets </h3>
+            </div>
+            <div class="card-body mt-0 pt-0 pb-3">
+                {% if recommended_datasets %}
+                    {% for recommendation in recommended_datasets %}
+                        <div class="mb-2 recommended-item">
+                            <h4 class="mb-1 recommended-item-title">
+                                <a href="{{ recommendation.get_fitshub_doi() }}"> {{ recommendation.ds_meta_data.title }}</a>
+                            </h4>
+                            <div class="d-flex justify-content-between">
+                                <div class="medium text-muted recommended-item-authors">
+                                    {% for author in recommendation.ds_meta_data.authors %}
+                                        {{ author.name }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="d-flex recommended-item-downloads">
+                                    <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
+                                    <p class="text-secondary" id="recommended_item_download_counter">{{ recommendation.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
+                                </div> 
+                            </div>                       
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted recommendation_fallback_message">No recommended datasets.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
 
             <div class="card-body">
 

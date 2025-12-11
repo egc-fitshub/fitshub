@@ -211,3 +211,10 @@
 .badge-actions-buttons .btn {
     border-radius: 5px; 
 }
+
+.recommended-item {
+    background-color: #f5f5f5;
+    padding: 15px;
+    padding-bottom: 8px;
+    border-radius: 6px;
+}
