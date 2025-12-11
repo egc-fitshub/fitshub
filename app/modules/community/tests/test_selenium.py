@@ -14,13 +14,12 @@ def test_community_index():
         host = get_host_for_selenium_testing()
 
         # Open the index page
-        driver.get(f"{host}/community")
+        driver.get(f"{host}/login")
 
         # Wait a little while to make sure the page has loaded completely
         time.sleep(4)
 
         try:
-            driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
             driver.find_element(By.ID, "email").click()
             driver.find_element(By.ID, "email").send_keys("admin@example.com")
             driver.find_element(By.ID, "password").click()
