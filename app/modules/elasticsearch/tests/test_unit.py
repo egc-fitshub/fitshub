@@ -259,7 +259,13 @@ def test_search_builds_filters_and_formats_hits():
     must = body["query"]["bool"]["must"]
     filter_clauses = body["query"]["bool"]["filter"]
 
-    assert any("multi_match" in clause for clause in must)
+    assert must
+    bool_clause = must[0]["bool"]
+    should_clauses = bool_clause["should"]
+    assert bool_clause["minimum_should_match"] == 1
+    assert any("multi_match" in clause for clause in should_clauses)
+    nested_clause = next(clause["nested"] for clause in should_clauses if "nested" in clause)
+    assert nested_clause["path"] == "authors"
     assert any("term" in clause for clause in filter_clauses)
     assert any("terms" in clause for clause in filter_clauses)
     assert any("range" in clause for clause in filter_clauses)

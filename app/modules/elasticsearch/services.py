@@ -1,11 +1,5 @@
-# flake8: noqa
-
-"""Elasticsearch services layer."""
-
 import time
 from datetime import datetime
-
-from flask import current_app
 
 from elasticsearch import (
     ApiError,
@@ -14,6 +8,7 @@ from elasticsearch import (
     Elasticsearch,
     NotFoundError,
 )
+from flask import current_app
 
 from app.modules.elasticsearch.repositories import ElasticsearchRepository
 from core.services.BaseService import BaseService
@@ -235,17 +230,41 @@ class ElasticsearchService(BaseService):
 
             # Texto libre
             if query:
+                text_fields_clause = {
+                    "multi_match": {
+                        "query": query,
+                        "fields": [
+                            "title^4",
+                            "description^3",
+                            "filename^2",
+                        ],
+                        "fuzziness": "AUTO",
+                    }
+                }
+
+                author_nested_clause = {
+                    "nested": {
+                        "path": "authors",
+                        "score_mode": "avg",
+                        "query": {
+                            "multi_match": {
+                                "query": query,
+                                "fields": [
+                                    "authors.name^2",
+                                    "authors.affiliation",
+                                ],
+                                "fuzziness": "AUTO",
+                                "operator": "and",
+                            }
+                        },
+                    }
+                }
+
                 must_clauses.append(
                     {
-                        "multi_match": {
-                            "query": query,
-                            "fields": [
-                                "title^4",
-                                "description^3",
-                                "authors.name^2",
-                                "filename^2",
-                            ],
-                            "fuzziness": "AUTO",
+                        "bool": {
+                            "should": [text_fields_clause, author_nested_clause],
+                            "minimum_should_match": 1,
                         }
                     }
                 )
