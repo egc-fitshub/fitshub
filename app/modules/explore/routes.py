@@ -1,8 +1,8 @@
 from elasticsearch import ConnectionError as ESConnectionError
 from flask import current_app, jsonify, render_template, request
 
-from app.modules.dataset.models import PublicationType
 from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
+from app.modules.dataset.models import PublicationType
 from app.modules.explore import explore_bp
 
 
@@ -128,7 +128,7 @@ def api_search():
                 filtered_results.append(result)
         results = filtered_results
         total = len(results)
-            
+
     return jsonify(
         {
             "results": results,
