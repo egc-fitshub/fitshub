@@ -5,6 +5,7 @@ from typing import Optional
 from flask_login import current_user
 from sqlalchemy import desc, func
 
+from app.modules.community.repositories import CommunityDataSetRepository
 from app.modules.dataset.models import Author, DataSet, DOIMapping, DSDownloadRecord, DSMetaData, DSViewRecord
 from core.repositories.BaseRepository import BaseRepository
 
@@ -123,7 +124,13 @@ class DataSetRepository(BaseRepository):
         if ref_dataset.ds_meta_data.tags:
             ref_tags = set(tag.strip().lower() for tag in ref_dataset.ds_meta_data.tags.split(",") if tag.strip())
 
-        ref_authors = set(author.id for author in ref_dataset.ds_meta_data.authors)
+        ref_authors = set()
+        if ref_dataset.ds_meta_data.authors:
+            ref_authors = set(author.id for author in ref_dataset.ds_meta_data.authors)
+
+        community_repo = CommunityDataSetRepository()
+        ref_community_associations = community_repo.get_communities_associated_to_dataset(reference_dataset_id)
+        ref_communities = set(assoc.community_id for assoc in ref_community_associations)
 
         all_candidates = (
             self.session.query(DataSet)
@@ -146,6 +153,11 @@ class DataSetRepository(BaseRepository):
                 candidate_tags = set(tag.strip().lower() for tag in dataset.ds_meta_data.tags.split(",") if tag.strip())
                 shared_tags_count = len(ref_tags & candidate_tags)
                 score += shared_tags_count * 2.0
+
+            candidate_community_associations = community_repo.get_communities_associated_to_dataset(dataset.id)
+            candidate_communities = set(assoc.community_id for assoc in candidate_community_associations)
+            shared_communities_count = len(ref_communities & candidate_communities)
+            score += shared_communities_count * 2.5
 
             if score > 0:
                 download_count = (
