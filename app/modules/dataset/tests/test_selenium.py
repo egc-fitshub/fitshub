@@ -680,3 +680,40 @@ def test_badge_is_shown():
 
     finally:
         close_driver(driver)
+
+
+def test_recommended_datasets():
+    """Test viewing recommended datasets."""
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        #  Login
+        login(driver, host)
+
+        # Ensure we're on the dataset list page, then navigate to a dataset page
+        driver.get(f"{host}/dataset/list")
+        wait_for_page_to_load(driver)
+
+        open_dataset_detail_by_title(driver, host, "Sample dataset 3")
+        driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
+
+        # If there are recommended datasets, check titles and download counts
+        recommended_datasets = len(driver.find_elements(By.CLASS_NAME, "recommended-item"))
+        if recommended_datasets > 0:
+            recommended_datasets_titles = driver.find_elements(By.CLASS_NAME, "recommended-item-title")
+            recommended_datasets_downloads = driver.find_elements(By.CLASS_NAME, "recommended-item-downloads")
+            assert recommended_datasets_titles is not None
+            assert recommended_datasets_downloads is not None
+            assert len(recommended_datasets_titles) == len(recommended_datasets_downloads) == recommended_datasets
+        # Else, check fallback message is shown
+        else:
+            fallback_message = driver.find_element(By.CLASS_NAME, "recommendation_fallback_message").click()
+            assert fallback_message is not None
+            assert "No recommended datasets." in fallback_message.text
+
+        print("Dataset recommendations passed!")
+
+    finally:
+        close_driver(driver)
