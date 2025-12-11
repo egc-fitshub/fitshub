@@ -631,9 +631,10 @@ def test_trending_dataset():
         trending_download_counters = len(driver.find_elements(By.ID, "trending_download_counter"))
         titles = len(driver.find_elements(By.ID, "trending_title"))
         authors = len(driver.find_elements(By.ID, "trending_authors"))
+        communities = len(driver.find_elements(By.ID, "trending_communities"))
         fire_icon = driver.find_element(By.ID, "fire_icon")
         assert fire_icon is not None
-        assert trending_datasets == trending_download_counters == titles == authors
+        assert trending_datasets == trending_download_counters == titles == authors == communities
 
         print("Trending datasets test passed!")
     finally:
