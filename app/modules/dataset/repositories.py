@@ -129,7 +129,7 @@ class DataSetRepository(BaseRepository):
             ref_authors = set(author.id for author in ref_dataset.ds_meta_data.authors)
 
         community_repo = CommunityDataSetRepository()
-        ref_community_associations = community_repo.get_communities_associated_to_dataset(reference_dataset_id)
+        ref_community_associations = community_repo.get_approved_communities_associated_to_dataset(reference_dataset_id)
         ref_communities = set(assoc.community_id for assoc in ref_community_associations)
 
         all_candidates = (
@@ -154,7 +154,7 @@ class DataSetRepository(BaseRepository):
                 shared_tags_count = len(ref_tags & candidate_tags)
                 score += shared_tags_count * 2.0
 
-            candidate_community_associations = community_repo.get_communities_associated_to_dataset(dataset.id)
+            candidate_community_associations = community_repo.get_approved_communities_associated_to_dataset(dataset.id)
             candidate_communities = set(assoc.community_id for assoc in candidate_community_associations)
             shared_communities_count = len(ref_communities & candidate_communities)
             score += shared_communities_count * 2.5
