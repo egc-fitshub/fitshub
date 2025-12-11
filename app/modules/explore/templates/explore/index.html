@@ -93,6 +93,31 @@
                 <div id="date-error" class="text-danger small mt-1 d-none">⚠️ End date must be after start date</div>
               </div>
 
+              <!-- Filtro: comunidad -->
+              <div class="mb-3">
+                  <label class="form-label">Community</label>
+                  <div class="custom-select-wrapper position-relative">
+                      <div class="custom-select form-select" id="custom-community-select">
+                          <span class="selected-option">Any</span>
+                          <i class="ki-duotone ki-down fs-3 position-absolute" style="right: 12px; top: 50%; transform: translateY(-50%);"></i>
+                      </div>
+                      <div class="custom-options" id="community-options" style="display: none;">
+                          <div class="custom-option" data-value="">
+                              <span>Any</span>
+                          </div>
+                          {% for comm_id, comm_name, comm_logo_url in community_choices %}
+                          <div class="custom-option" data-value="{{ comm_id }}" data-logo="{{ comm_logo_url }}">
+                              {% if comm_logo_url %}
+                              <img src="{{ comm_logo_url }}" alt="{{ comm_name }}" style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px; object-fit: cover;">
+                              {% endif %}
+                              <span>{{ comm_name }}</span>
+                          </div>
+                          {% endfor %}
+                      </div>
+                      <input type="hidden" id="filter-community" value="">
+                  </div>
+              </div>
+
               <!-- Filtro: orden -->
               <div class="mb-3">
                   <label class="form-label">Sort by</label>
@@ -115,4 +140,103 @@
 
 {% block scripts %}
 <script src="{{ url_for('explore.scripts') }}"></script>
+<style>
+.custom-select-wrapper {
+    position: relative;
+}
+
+.custom-select {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.custom-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.custom-option:hover {
+    background-color: #f8f9fa;
+}
+
+.custom-option.selected {
+    background-color: #e9ecef;
+}
+
+.selected-option {
+    display: flex;
+    align-items: center;
+}
+
+.selected-option img {
+    margin-right: 8px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customSelect = document.getElementById('custom-community-select');
+    const optionsContainer = document.getElementById('community-options');
+    const hiddenInput = document.getElementById('filter-community');
+    const selectedSpan = customSelect.querySelector('.selected-option');
+    const options = optionsContainer.querySelectorAll('.custom-option');
+
+    customSelect.addEventListener('click', function(e) {
+        e.stopPropagation();
+        optionsContainer.style.display = optionsContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            options.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            const value = this.dataset.value;
+            hiddenInput.value = value;
+            
+            const logo = this.dataset.logo;
+            const text = this.querySelector('span').textContent;
+            
+            if (logo && value) {
+                selectedSpan.innerHTML = `<img src="${logo}" style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px; object-fit: cover;">${text}`;
+            } else {
+                selectedSpan.textContent = text;
+            }
+            
+            optionsContainer.style.display = 'none';
+            
+            hiddenInput.dispatchEvent(new Event('change'));
+        });
+    });
+
+    document.addEventListener('click', function() {
+        optionsContainer.style.display = 'none';
+    });
+
+    optionsContainer.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
 {% endblock %}

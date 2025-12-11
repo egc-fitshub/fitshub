@@ -2,6 +2,7 @@ from elasticsearch import ConnectionError as ESConnectionError
 from flask import current_app, jsonify, render_template, request
 
 from app.modules.dataset.models import PublicationType
+from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
 from app.modules.explore import explore_bp
 
 
@@ -10,9 +11,11 @@ def index():
     # value = se usa en el filtro (Enum.value) → ej: "conferencepaper"
     # label = se muestra en el select (bonito) → ej: "Conference Paper"
     publication_type_choices = [(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType]
+    community_choices = [(comm.id, comm.name, comm.logo_url) for comm in Community.query.all()]
     return render_template(
         "explore/index.html",
         publication_type_choices=publication_type_choices,
+        community_choices=community_choices,
     )
 
 
@@ -50,6 +53,7 @@ def api_search():
     tags = request.args.get("tags")
     date_from = request.args.get("date_from")
     date_to = request.args.get("date_to")
+    community = request.args.get("community")
 
     page = int(request.args.get("page", 1))
     size = int(request.args.get("size", 10))
@@ -111,6 +115,20 @@ def api_search():
         )
         return jsonify({"error": "Unexpected search error"}), 500
 
+    if community:
+        filtered_results = []
+        for result in results:
+            dataset_id = result.get("id")
+            association = CommunityDataSet.query.filter_by(
+                community_id=community,
+                dataset_id=dataset_id,
+                status=CommunityDataSetStatus.ACCEPTED,
+            ).first()
+            if association:
+                filtered_results.append(result)
+        results = filtered_results
+        total = len(results)
+            
     return jsonify(
         {
             "results": results,
