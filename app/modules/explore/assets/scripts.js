@@ -303,8 +303,8 @@ function createHubfileCard(hubfile) {
     buttonsWrapper.className = 'mt-3';
     body.appendChild(buttonsWrapper);
 
-    const viewButton = document.createElement('a');
-    viewButton.href = `/hubfiles/${encodeURIComponent(hubfile.id)}`;
+    const viewButton = document.createElement('button');
+    viewButton.onclick = () => window.viewFile(hubfile.id);
     viewButton.className = 'btn btn-outline-secondary btn-xs me-2 d-inline-flex align-items-center';
     viewButton.style.fontSize = '0.75rem';
     viewButton.style.padding = '0.25rem 0.5rem';
