@@ -783,6 +783,7 @@ def test_recommendations_with_rejected_communities(test_client):
             "Rejected community associations should not boost recommendation score"
         )
 
+
 def test_recommendations_combined_scoring(test_client):
     """
     Test todos los factores (comunidad, tags y autores) en la puntuación.
