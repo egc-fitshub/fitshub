@@ -1,4 +1,6 @@
+import os
 import random
+from io import BytesIO
 
 from locust import HttpUser, TaskSet, events, task
 
@@ -31,7 +33,14 @@ class DatasetBehavior(TaskSet):
     @task
     def dataset(self):
         response = self.client.get("/dataset/upload")
-        get_csrf_token(response)
+        csrf_token = get_csrf_token(response)
+
+        login_data = {
+            "email": "user@example.com",
+            "password": "1234",
+            "csrf_token": csrf_token,
+        }
+        self.client.post("/login", data=login_data)
 
     @task
     def ensure_generation_json_badge_data(self):
@@ -82,6 +91,42 @@ class DatasetBehavior(TaskSet):
             json = response.json()
             if json["status"] != 400 and json["status"] != 403 and json["status"] != 429:
                 response.failure(f"Failed: {json['details']}")
+            else:
+                response.success()
+
+    @task
+    def upload_zip(self):
+        with open(os.path.join("app/modules/dataset/zip_examples", "one_fits.zip"), mode="rb") as f:
+            with self.client.post(
+                "/dataset/file/upload/zip",
+                catch_response=True,
+                files={"file": ("one_fits.zip", BytesIO(f.read()))},
+                allow_redirects=False,
+            ) as response:
+                if response.status_code != 200:
+                    response.failure(f"Failed: {response.text}")
+                else:
+                    response.success()
+
+    @task
+    def upload_non_zip_file(self):
+        with open(os.path.join("app/modules/dataset/fits_examples", "file1.fits"), mode="rb") as f:
+            with self.client.post(
+                "/dataset/file/upload/zip",
+                catch_response=True,
+                files={"file": ("file1.fits", BytesIO(f.read()))},
+                allow_redirects=False,
+            ) as response:
+                if response.status_code != 400:
+                    response.failure(f"Failed: {response.text}")
+                else:
+                    response.success()
+
+    @task
+    def upload_no_zip(self):
+        with self.client.post("/dataset/file/upload/zip", catch_response=True, allow_redirects=False) as response:
+            if response.status_code != 400:
+                response.failure(f"Failed: {response.text}")
             else:
                 response.success()
 
