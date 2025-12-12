@@ -614,13 +614,13 @@ def test_download_counter_rendering():
         assert driver.find_element(By.ID, "download_counter") is not None
         assert driver.find_element(By.ID, "download_counter").text is not None
 
-        print("Download counter test passed!")
+        print("Download counter rendering test passed!")
     finally:
         close_driver(driver)
 
 
 def test_download_counter_increments():
-    """Test download counter rendering."""
+    """Test download counter increments after being created."""
     driver = initialize_driver()
     try:
         host = get_host_for_selenium_testing()
@@ -658,6 +658,8 @@ def test_download_counter_increments():
         wait_for_page_to_load(driver)
 
         assert driver.find_element(By.ID, "download_counter").text == "1 download"
+
+        print("Download counter increment test passed!")
     finally:
         close_driver(driver)
 
