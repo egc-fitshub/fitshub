@@ -205,7 +205,6 @@ def test_explore_dataset_by_publication_type():
         open_explore_page(driver)
 
         pub_select = Select(driver.find_element(By.ID, "filter-publication-type"))
-        selected_value = None
         for option in pub_select.options:
             value = option.get_attribute("value")
             if value == "Data Management Plan":
