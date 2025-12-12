@@ -102,6 +102,125 @@ def test_explore_date_range_validation():
         close_driver(driver)
 
 
+def test_explore_no_datasets_in_range():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        date_from = driver.find_element(By.ID, "filter-date-from")
+        date_to = driver.find_element(By.ID, "filter-date-to")
+
+        set_input_value(date_from, "1900-01-01")
+        set_input_value(date_to, "1900-12-31")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "no-results")))
+        no_results_element = driver.find_element(By.ID, "no-results")
+        assert no_results_element.is_displayed(), "No results message should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
+def test_explore_datasets_in_range():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        date_from = driver.find_element(By.ID, "filter-date-from")
+        date_to = driver.find_element(By.ID, "filter-date-to")
+
+        set_input_value(date_from, "2024-01-01")
+        set_input_value(date_to, "2028-12-31")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
+def test_explore_dataset_by_name():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        query_field = driver.find_element(By.ID, "search-query-filter")
+        set_input_value(query_field, "Sample dataset")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
+def test_explore_dataset_no_match():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        query_field = driver.find_element(By.ID, "search-query-filter")
+        set_input_value(query_field, "NonExistentDataset12345")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "no-results")))
+        no_results_element = driver.find_element(By.ID, "no-results")
+        assert no_results_element.is_displayed(), "No results message should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
+def test_explore_dataset_by_tag():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        tags_field = driver.find_element(By.ID, "filter-tags")
+        set_input_value(tags_field, "tag1")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
+def test_explore_dataset_by_publication_type():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        pub_select = Select(driver.find_element(By.ID, "filter-publication-type"))
+        selected_value = None
+        for option in pub_select.options:
+            value = option.get_attribute("value")
+            if value == "Data Management Plan":
+                pub_select.select_by_value(value)
+                break
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
 def test_clear_filters_button_resets_inputs():
     driver = initialize_driver()
 
@@ -144,9 +263,3 @@ def test_clear_filters_button_resets_inputs():
 
     finally:
         close_driver(driver)
-
-
-if __name__ == "__main__":
-    test_explore_filters_render_base_state()
-    test_explore_date_range_validation()
-    test_clear_filters_button_resets_inputs()
