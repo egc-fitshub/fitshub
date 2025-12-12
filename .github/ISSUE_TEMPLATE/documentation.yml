@@ -17,7 +17,7 @@ body:
     id: details
     attributes:
       label: Details
-      description: What specific sections or topics should be covered?
+      description: What specific sections or topics should be covered? What should be the estimated word count? Provide any relevant links or references, if applicable.
       placeholder: Add any details here.
     validations:
       required: true
