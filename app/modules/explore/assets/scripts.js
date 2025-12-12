@@ -316,7 +316,7 @@ function createHubfileCard(hubfile) {
     buttonsWrapper.appendChild(viewButton);
 
     const downloadButton = document.createElement('a');
-    downloadButton.href = `/hubfiles/download/${encodeURIComponent(hubfile.id)}`;
+    downloadButton.href = `/file/download/${encodeURIComponent(hubfile.id)}`;
     downloadButton.className = 'btn btn-outline-secondary btn-xs d-inline-flex align-items-center';
     downloadButton.style.fontSize = '0.75rem';
     downloadButton.style.padding = '0.25rem 0.5rem';
