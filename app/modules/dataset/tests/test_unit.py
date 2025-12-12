@@ -399,7 +399,7 @@ def test_download_counter_increments(test_client, sample_metadata):
 def test_multiple_download_counter_increments(test_client, sample_metadata):
     ds_test = services.DataSetService().create(user_id=1, ds_meta_data_id=sample_metadata.id)
 
-    for _ in range (0,5):
+    for _ in range(0, 5):
         services.DataSetService().update_download_counter(ds_test.id)
     obtained_ds = repositories.DataSetRepository().get_by_id(ds_test.id)
     assert obtained_ds.download_counter == 5
@@ -407,19 +407,12 @@ def test_multiple_download_counter_increments(test_client, sample_metadata):
 
 def test_download_counter_not_negative(test_client, sample_metadata):
     with pytest.raises(ValueError):
-        services.DataSetService().create(
-            user_id=1,
-            ds_meta_data_id=sample_metadata.id,
-            download_counter=-1
-        )
+        services.DataSetService().create(user_id=1, ds_meta_data_id=sample_metadata.id, download_counter=-1)
+
 
 def test_download_counter_set_to_zero(test_client, sample_metadata):
     with pytest.raises(ValueError):
-        services.DataSetService().create(
-            user_id=1,
-            ds_meta_data_id=sample_metadata.id,
-            download_counter=8
-        )
+        services.DataSetService().create(user_id=1, ds_meta_data_id=sample_metadata.id, download_counter=8)
 
 
 @pytest.fixture(scope="module")

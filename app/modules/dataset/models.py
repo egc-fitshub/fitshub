@@ -80,7 +80,7 @@ class DataSet(db.Model):
         "CommunityDataSet", back_populates="dataset", lazy="dynamic", cascade="all, delete-orphan"
     )
 
-    @validates('download_counter')
+    @validates("download_counter")
     def validate_download_counter(self, key, value):
         if value < 0:
             raise ValueError(f"download_counter cannot be negative, got: {value}")
