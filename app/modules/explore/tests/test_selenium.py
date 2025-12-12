@@ -220,6 +220,36 @@ def test_explore_dataset_by_publication_type():
         close_driver(driver)
 
 
+def test_mixed_filters_yield_results():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        query_field = driver.find_element(By.ID, "search-query-filter")
+        pub_select = Select(driver.find_element(By.ID, "filter-publication-type"))
+        tags_field = driver.find_element(By.ID, "filter-tags")
+        date_from = driver.find_element(By.ID, "filter-date-from")
+        date_to = driver.find_element(By.ID, "filter-date-to")
+        set_input_value(date_from, "2024-01-01")
+        set_input_value(date_to, "2028-12-31")
+
+        set_input_value(query_field, "Author 1")
+        for option in pub_select.options:
+            value = option.get_attribute("value")
+            if value == "Data Management Plan":
+                pub_select.select_by_value(value)
+                break
+        set_input_value(tags_field, "tag2")
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+    finally:
+        close_driver(driver)
+
+
 def test_clear_filters_button_resets_inputs():
     driver = initialize_driver()
 
