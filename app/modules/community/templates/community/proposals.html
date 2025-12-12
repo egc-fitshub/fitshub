@@ -52,11 +52,7 @@
                 <tbody>
                     {% for community in communities %}
                         <tr>
-                            <td>
-                                <a href="{{ url_for('community.get_community', community_id=community.id) }}">
-                                    {{ community.name }}
-                                </a>
-                            </td>
+                            <td>{{ community.name }}</td>
                             <td>{{ community.description | truncate(100) }}</td>
                             <td>{{ community.curators.count() }}</td>
                             <td>

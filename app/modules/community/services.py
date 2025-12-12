@@ -202,23 +202,3 @@ class CommunityDataSetService(BaseService):
     def get_pending_datasets(self, community_id):
         community = self.community_repository.get_or_404(community_id)
         return community.dataset_associations.filter(CommunityDataSet.status == CommunityDataSetStatus.PENDING).all()
-
-    def delete_association(self, community_id, dataset_id):
-        try:
-            association = self.repository.get_existing_association(community_id=community_id, dataset_id=dataset_id)
-
-            if not association:
-                return {"error": "Association not found."}
-
-            self.repository.session.delete(association)
-            self.repository.session.commit()
-
-            return {
-                "success": f"""Association between Community {community_id}
-                and Dataset {dataset_id} deleted successfully."""
-            }
-
-        except Exception as e:
-            self.repository.session.rollback()
-            current_app.logger.error(f"FALLO AL BORRAR ASOCIACIÓN: {e}", exc_info=True)
-            return {"error": str(e)}
