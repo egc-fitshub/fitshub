@@ -3,6 +3,7 @@ from enum import Enum
 
 from flask import request
 from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy.orm import validates
 
 from app import db
 
@@ -78,6 +79,14 @@ class DataSet(db.Model):
     community_associations = db.relationship(
         "CommunityDataSet", back_populates="dataset", lazy="dynamic", cascade="all, delete-orphan"
     )
+
+    @validates('download_counter')
+    def validate_download_counter(self, key, value):
+        if value < 0:
+            raise ValueError(f"download_counter cannot be negative, got: {value}")
+        if self.id is None and value > 0:
+            raise ValueError(f"download_counter cannot be greater than zero for a new dataset, got: {value}")
+        return value
 
     def name(self):
         return self.ds_meta_data.title
