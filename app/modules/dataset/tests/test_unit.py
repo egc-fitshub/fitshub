@@ -220,7 +220,7 @@ def test_zip_upload_no_fits(test_client):
     # Remove temp folder
     file_path = current_user.temp_folder()
 
-    assert len(os.listdir(file_path)) == 0
+    assert len(os.listdir(file_path)) == 1
 
     if os.path.exists(file_path) and os.path.isdir(file_path):
         shutil.rmtree(file_path)

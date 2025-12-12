@@ -226,8 +226,6 @@ def upload_zip():
                 with open(fits_path, mode="wb") as out:
                     out.write(fits.read())
 
-    os.remove(file_path)
-
     return (
         jsonify(
             {
