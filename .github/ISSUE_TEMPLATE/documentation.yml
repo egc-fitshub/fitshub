@@ -1,0 +1,23 @@
+name: Documentation Task
+description: Documentation task template
+labels: ["tipo: Documentation"]
+projects: [egc-fitshub/2]
+assignees: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What documentation needs to be created or improved?
+      placeholder: Short summary of the documentation task.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What specific sections or topics should be covered? What should be the estimated word count? Provide any relevant links or references, if applicable.
+      placeholder: Add any details here.
+    validations:
+      required: true
