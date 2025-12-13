@@ -6,7 +6,6 @@ import time
 from sys import argv
 
 import requests
-from flask import Flask
 
 import app
 from app.modules.elasticsearch.utils import init_search_index, reindex_all
