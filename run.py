@@ -32,6 +32,7 @@ def info(args):
     print("\tFor docker-prod:")
     print("\t\t--stop\t\t\tStops the containers.")
 
+
 def copy_env(env, args):
     if "--no-env" not in args:
         shutil.copyfile(os.path.join(CWD, f".env.{env}.example"), os.path.join(CWD, ".env"))
@@ -52,6 +53,7 @@ def local(args):
 
     subprocess.run(command)
 
+
 def docker(args):
     # Copy .env file
     copy_env("docker", args)
@@ -60,7 +62,10 @@ def docker(args):
     if "--stop" in args:
         subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down"])
     else:
-        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "--build", "--remove-orphans"])
+        subprocess.run(
+            ["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "--build", "--remove-orphans"]
+        )
+
 
 def docker_prod(args):
     # Copy .env file
@@ -70,7 +75,9 @@ def docker_prod(args):
     if "--stop" in args:
         subprocess.run(["docker", "compose", "-f", "docker/docker-compose.prod.yml", "down"])
     else:
-        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.prod.yml", "up", "-d", "--build", "--remove-orphans"])
+        subprocess.run(
+            ["docker", "compose", "-f", "docker/docker-compose.prod.yml", "up", "-d", "--build", "--remove-orphans"]
+        )
 
 
 def vagrant(args):
@@ -96,6 +103,7 @@ def vagrant(args):
         shutil.rmtree(os.path.join(os.getcwd(), ".vagrant"), ignore_errors=True)
     else:
         subprocess.run(["vagrant", "up", "--provision"])
+
 
 def main(args):
     commands = {"info": info, "local": local, "docker": docker, "docker-prod": docker_prod, "vagrant": vagrant}
