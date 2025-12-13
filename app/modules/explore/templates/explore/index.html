@@ -1,155 +1,176 @@
 {% extends "base_template.html" %}
+{% set title = "Explore" %}
 
-{% block title %}Explore{% endblock %}
+{% block breadcrumb %}
+
+<ol class="breadcrumb text-muted fs-6 fw-semibold">
+    <li class="breadcrumb-item"><a href="/" class="">Home</a></li>
+    <li class="breadcrumb-item text-muted">Explore</li>
+</ol>
+
+{% endblock %}
 
 {% block content %}
+<div class="row g-4">
 
-    <h1 class="h2 mb-3"><b>Explore</b></h1>
+    <!-- Results -->
+  <div class="col-lg-6">
+    <div id="results-container"></div>
 
-    <div class="row">
+      <!--begin::Empty State-->
+      <div id="no-results" class="text-center d-none mt-5" data-kt-search-element="empty">
+          <div class="pt-10 pb-10">
+              <i class="ki-duotone ki-search-list fs-4x opacity-50">
+                  <span class="path1"></span>
+                  <span class="path2"></span>
+                  <span class="path3"></span>
+              </i>
+          </div>
+          <div class="pb-15 fw-semibold">
+              <h3 class="text-gray-600 fs-5 mb-2">No results found</h3>
+              <div class="text-muted fs-7">Please try again with a different query</div>
+          </div>
+      </div>
+      <!--end::Empty State-->
+  </div>
 
-        <h3 class="h3 mb-3">
-                <span id="results_number"></span>
-            </h3>
+  <!-- Filters -->
+  <div class="col-md-6 col-lg-6 col-sm-12" id="filters-panel">
+      <div class="card position-sticky" style="top: 85px; z-index: 1;">
+          <div class="card-body">
+              <!-- Filtro: búsqueda -->
+               <div class="mb-3">
+              <input id="search-query-filter" type="text" class="form-control" placeholder="Search datasets...">
+              </div>
+              <!-- Filtro: tipo de publicación -->
+              <div class="mb-3">
+                  <label class="form-label">Publication type</label>
+                  <select class="form-select" id="filter-publication-type">
+                    <option value="">Any</option>
+                    <option value="annotationcollection">Annotation Collection</option>
+                    <option value="book">Book</option>
+                    <option value="section">Book Section</option>
+                    <option value="conferencepaper">Conference Paper</option>
+                    <option value="datamanagementplan">Data Management Plan</option>
+                    <option value="article">Journal Article</option>
+                    <option value="patent">Patent</option>
+                    <option value="preprint">Preprint</option>
+                    <option value="deliverable">Project Deliverable</option>
+                    <option value="milestone">Project Milestone</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="report">Report</option>
+                    <option value="softwaredocumentation">Software Documentation</option>
+                    <option value="taxonomictreatment">Taxonomic Treatment</option>
+                    <option value="technicalnote">Technical Note</option>
+                    <option value="thesis">Thesis</option>
+                    <option value="workingpaper">Working Paper</option>
+                    <option value="other">Other</option>
+                </select>
+              </div>
 
-        <div class="col-lg-7 scrollable-column">
+              <!-- Filtro: tags -->
+              <div class="mb-3">
+                <label class="form-label">Tags</label>
+                <input id="filter-tags" 
+                      type="text" 
+                      class="form-control" 
+                      placeholder="Enter tags separated by commas">
+              </div>
 
-
-            <div class="row">
-
-                <div id="results"></div>
-
-                <div class="col text-center" id="results_not_found">
-                    <img src="{{ url_for('static', filename='img/items/not_found.svg') }}"
-                         style="width: 50%; max-width: 100px; height: auto; margin-top: 30px"/>
-                    <p style="margin-top: 20px">
-                        We have not found any datasets that meet your search criteria. <br>How about trying some others?
-                    </p>
+              <!-- Filtro: fecha -->
+              <div class="mb-3">
+                <label class="form-label mb-0">Creation date</label>
+                <div class="d-flex">
+                  <div class="flex-fill">
+                    <label class="form-text d-block">From</label>
+                    <input id="filter-date-from" type="date" class="form-control" />
+                  </div>
+                  <div class="flex-fill">
+                    <label class="form-text d-block">To</label>
+                    <input id="filter-date-to" type="date" class="form-control" />
+                  </div>
                 </div>
+                <div id="date-error" class="text-danger small mt-1 d-none">⚠️ End date must be after start date</div>
+              </div>
 
-                <div id="results_not_found" style="text-align: center;">
+              <!-- Filtro: orden -->
+              <div class="mb-3">
+                  <label class="form-label">Sort by</label>
+                  <select class="form-select" id="filter-sorting">
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                  </select>
+              </div>
 
+              <!-- Botón de limpiar -->
+              <button class="btn btn-outline-primary w-100" id="clear-filters">Clear filters</button>
+          </div>
+      </div>
+  </div>
+
+
+</div>
+
+<!-- Modal for FITS File Viewer -->
+<div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
+        <div class="modal-content" style="height: 80vh;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title" id="fileViewerModalLabel">.fits File view</h5>
+                <div>
+                    <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton"
+                        style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                        <i data-feather="download"></i>
+                    </a>
+                    <button onclick="copyToClipboard()" class="btn btn-outline-secondary btn-sm"
+                        style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                        <i data-feather="copy"></i>
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-
+            </div>
+            <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
+                <pre id="imgContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+                <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
             </div>
         </div>
-
-        <div class="col-lg-5 fixed-column" id="filters">
-
-            {{ form.hidden_tag() }}
-
-            <div class="row">
-
-                <div class="col-12">
-
-                    <div class="row">
-
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label" for="query">
-                                    Search for datasets by title, description, authors, tags, FITS files...
-                                </label>
-                                <input class="form-control" id="query" name="query" required="" type="text"
-                                       value="" autofocus>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label" for="publication_type">Filter by publication
-                                    type</label>
-                                <select class="form-control" id="publication_type" name="publication_type"
-                                        required="">
-                                    <option value="any">Any</option>
-                                    <option value="none">None</option>
-                                    <option value="annotationcollection">Annotation Collection</option>
-                                    <option value="book">Book</option>
-                                    <option value="section">Book Section</option>
-                                    <option value="conferencepaper">Conference Paper</option>
-                                    <option value="datamanagementplan">Data Management Plan</option>
-                                    <option value="article">Journal Article</option>
-                                    <option value="patent">Patent</option>
-                                    <option value="preprint">Preprint</option>
-                                    <option value="deliverable">Project Deliverable</option>
-                                    <option value="milestone">Project Milestone</option>
-                                    <option value="proposal">Proposal</option>
-                                    <option value="report">Report</option>
-                                    <option value="softwaredocumentation">Software Documentation</option>
-                                    <option value="taxonomictreatment">Taxonomic Treatment</option>
-                                    <option value="technicalnote">Technical Note</option>
-                                    <option value="thesis">Thesis</option>
-                                    <option value="workingpaper">Working Paper</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-6">
-
-                            <div>
-                                Sort results by creation date
-                                <label class="form-check">
-                                    <input class="form-check-input" type="radio" value="newest" name="sorting"
-                                           checked="">
-                                    <span class="form-check-label">
-                                      Newest first
-                                    </span>
-                                </label>
-                                <label class="form-check">
-                                    <input class="form-check-input" type="radio" value="oldest" name="sorting">
-                                    <span class="form-check-label">
-                                      Oldest first
-                                    </span>
-                                </label>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-12">
-
-                            <div class="mt-3">
-
-                                <div id="authors">
-
-                                </div>
-
-                                <button id="clear-filters" class="btn btn-outline-primary">
-                                    <i data-feather="x-circle" style="vertical-align: middle; margin-top: -2px"></i>
-                                    Clear filters
-                                </button>
-
-
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="row">
-
-            </div>
-
-        </div>
-
-
     </div>
-
+</div>
 
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('explore.scripts') }}"></script>
+<script src="{{ url_for('explore.scripts') }}"></script>
+<script>
+    var currentFileId;
+
+    function viewFile(fileId) {
+        fetch(`/file/view/${fileId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.image) {
+                    document.getElementById('imgContent').innerHTML = `<img src="${data.image}" alt="FITS Image" style="max-width: 100%; height: auto;">`;
+                } else {
+                    document.getElementById('imgContent').textContent = data.content || 'No image available';
+                }
+                document.getElementById('fileContent').textContent = data.content;
+                currentFileId = fileId;
+                document.getElementById('downloadButton').href = `/file/download/${fileId}`;
+                var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
+                modal.show();
+            })
+            .catch(error => console.error('Error loading file:', error));
+    }
+    
+    function copyToClipboard() {
+        const text = document.getElementById('fileContent').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            console.log('Text copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+    window.viewFile = viewFile;
+</script>
 {% endblock %}

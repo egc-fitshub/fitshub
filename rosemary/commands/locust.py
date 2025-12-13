@@ -70,7 +70,7 @@ def locust(module):
             "--name",
             "locust_container",
             "--network",
-            "docker_uvlhub_network",
+            "docker_fitshub_network",
             "locust-image",
             "-f",
             locustfile_path,

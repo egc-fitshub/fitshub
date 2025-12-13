@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import BooleanField, StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Optional, Regexp
 
 
@@ -15,4 +15,5 @@ class UserProfileForm(FlaskForm):
         ],
     )
     affiliation = StringField("Affiliation", validators=[Optional(), Length(min=5, max=100)])
+    enabled_two_factor = BooleanField("Enable Two-Factor Authentication")
     submit = SubmitField("Save profile")
