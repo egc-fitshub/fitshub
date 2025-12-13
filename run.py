@@ -2,7 +2,13 @@ import glob
 import os
 import shutil
 import subprocess
+import time
 from sys import argv
+
+import requests
+
+import app
+from app.modules.elasticsearch.utils import init_search_index, reindex_all
 
 CWD = os.getcwd()
 
@@ -25,6 +31,7 @@ def info(args):
     print("\t\t--socket <host:port>\tSpecify Host:Port on which to run app (default is localhost:5000).")
     print("\t\t--migrate\t\tPerform database migrations.")
     print("\t\t--clean\t\t\tClean database and uploads folder.")
+    print("\t\t--stop\t\t\tStop subsidiary services (ElasticSearch, Mailhog).")
     print("\tFor vagrant:")
     print("\t\t--restart\t\tRestart Vagrant VM.")
     print("\t\t--halt\t\t\tHalt Vagrant VM.")
@@ -55,6 +62,40 @@ def local(args):
         subprocess.run(["flask", "db", "upgrade"])
         subprocess.run(["rosemary", "db:seed"])
 
+    if "--stop" in args:
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down", "elasticsearch"])
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down", "mailhog"])
+        return
+
+    # Start ElasticSearch service
+    subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "elasticsearch"])
+
+    # Check for ElasticSearch cluster health
+    print("Checking ElasticSearch cluster health...")
+
+    health = requests.Response()
+    start = time.time()
+
+    while (time.time() - start) < 60 and "green" not in health.text:
+        try:
+            health = requests.get("http://localhost:9200/_cluster/health")
+        except requests.ConnectionError:
+            pass
+
+    if "green" not in health.text:
+        print("ElasticSearch cluster failed.")
+        return
+
+    # Perform flask shell commands
+    fitshub_app = app.create_app()
+
+    with fitshub_app.app_context():
+        init_search_index()
+        reindex_all()
+
+    # Start Mailhog service
+    subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "mailhog"])
+
     # Run Flask app
     command = ["flask", "run", "--debug", "--reload"]
 
@@ -63,8 +104,11 @@ def local(args):
             host, port = (c.strip() for c in args[i + 1].split(":"))
             command.extend(["-h", host])
             command.extend(["-p", port])
-
-    subprocess.run(command)
+            break
+    try:
+        subprocess.run(command)
+    except KeyboardInterrupt:
+        print("FitsHub app terminated by user.")
 
 
 def docker(args):
