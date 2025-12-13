@@ -27,7 +27,10 @@ def info(args):
     print("\t\t--restart\t\tRestart Vagrant VM.")
     print("\t\t--halt\t\t\tHalt Vagrant VM.")
     print("\t\t--destroy\t\tDestroy Vagrant VM.")
-
+    print("\tFor docker:")
+    print("\t\t--stop\t\t\tStops the containers.")
+    print("\tFor docker-prod:")
+    print("\t\t--stop\t\t\tStops the containers.")
 
 def copy_env(env, args):
     if "--no-env" not in args:
@@ -50,10 +53,25 @@ def local(args):
     subprocess.run(command)
 
 def docker(args):
-    pass
+    # Copy .env file
+    copy_env("docker", args)
+
+    # Run Flask app
+    if "--stop" in args:
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down"])
+    else:
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "--build", "--remove-orphans"])
 
 def docker_prod(args):
-    pass
+    # Copy .env file
+    copy_env("docker.production", args)
+
+    # Run Flask app
+    if "--stop" in args:
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.prod.yml", "down"])
+    else:
+        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.prod.yml", "up", "-d", "--build", "--remove-orphans"])
+
 
 def vagrant(args):
     # Remove files that could cause conflicts
