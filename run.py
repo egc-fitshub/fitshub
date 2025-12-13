@@ -29,6 +29,32 @@ def info(args):
     print("\t\t--destroy\t\tDestroy Vagrant VM.")
 
 
+def copy_env(env, args):
+    if "--no-env" not in args:
+        shutil.copyfile(os.path.join(CWD, f".env.{env}.example"), os.path.join(CWD, ".env"))
+
+
+def local(args):
+    # Copy .env file
+    copy_env("local", args)
+
+    # Run Flask app
+    command = ["flask", "run", "--debug", "--reload"]
+
+    for i in range(len(args)):
+        if args[i] == "--socket":
+            host, port = (c.strip() for c in args[i + 1].split(":"))
+            command.extend(["-h", host])
+            command.extend(["-p", port])
+
+    subprocess.run(command)
+
+def docker(args):
+    pass
+
+def docker_prod(args):
+    pass
+
 def vagrant(args):
     # Remove files that could cause conflicts
     shutil.rmtree(os.path.join(CWD, "uploads"), ignore_errors=True)
@@ -38,8 +64,7 @@ def vagrant(args):
         os.remove(log)
 
     # Copy .env file
-    if "--no-env" not in args:
-        shutil.copyfile(os.path.join(CWD, ".env.vagrant.example"), os.path.join(CWD, ".env"))
+    copy_env("vagrant", args)
 
     # Run Vagrant command
     os.chdir(os.path.join(CWD, "vagrant"))
@@ -54,9 +79,8 @@ def vagrant(args):
     else:
         subprocess.run(["vagrant", "up", "--provision"])
 
-
 def main(args):
-    commands = {"info": info, "vagrant": vagrant}
+    commands = {"info": info, "local": local, "docker": docker, "docker-prod": docker_prod, "vagrant": vagrant}
 
     if len(args) < 2:
         info([])
