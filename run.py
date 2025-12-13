@@ -117,9 +117,6 @@ def docker_prod(args):
 
 def vagrant(args):
     # Remove files that could cause conflicts
-    shutil.rmtree(os.path.join(CWD, "uploads"), ignore_errors=True)
-    shutil.rmtree(os.path.join(CWD, "rosemary.egg-info"), ignore_errors=True)
-
     for log in glob.glob(os.path.join(CWD, "app.log*")):
         os.remove(log)
 
