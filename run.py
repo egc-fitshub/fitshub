@@ -22,17 +22,19 @@ def info(args):
     print("\tFor all commands:")
     print("\t\t--no-env\t\tSkip copying .env file from examples (NOTE: .env file must be correct for the command).")
     print("\tFor local:")
-    print("\t\t--socket <ip:port>\tSpecify IP:Port on which to run app (default is localhost:5000).")
+    print("\t\t--socket <host:port>\tSpecify Host:Port on which to run app (default is localhost:5000).")
     print("\t\t--migrate\t\tPerform database migrations.")
-    print("\t\t--clean\t\tClean database and uploads folder.")
+    print("\t\t--clean\t\t\tClean database and uploads folder.")
     print("\tFor vagrant:")
     print("\t\t--restart\t\tRestart Vagrant VM.")
     print("\t\t--halt\t\t\tHalt Vagrant VM.")
     print("\t\t--destroy\t\tDestroy Vagrant VM.")
     print("\tFor docker:")
     print("\t\t--stop\t\t\tStops the containers.")
+    print("\t\t--remove-volumes\tFor use with --stop, removes the volumes.")
     print("\tFor docker-prod:")
     print("\t\t--stop\t\t\tStops the containers.")
+    print("\t\t--remove-volumes\tFor use with --stop, removes the volumes.")
 
 
 def copy_env(env, args):
@@ -71,11 +73,22 @@ def docker(args):
 
     # Run Flask app
     if "--stop" in args:
-        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down"])
+        command = ["docker", "compose", "-f", "docker/docker-compose.dev.yml", "down"]
+
+        if "--remove-volumes" in args:
+            command.append("-v")
     else:
-        subprocess.run(
-            ["docker", "compose", "-f", "docker/docker-compose.dev.yml", "up", "-d", "--build", "--remove-orphans"]
-        )
+        command = [
+            "docker",
+            "compose",
+            "-f",
+            "docker/docker-compose.dev.yml",
+            "up",
+            "-d",
+            "--build",
+            "--remove-orphans",
+        ]
+    subprocess.run(command)
 
 
 def docker_prod(args):
@@ -84,11 +97,22 @@ def docker_prod(args):
 
     # Run Flask app
     if "--stop" in args:
-        subprocess.run(["docker", "compose", "-f", "docker/docker-compose.prod.yml", "down"])
+        command = ["docker", "compose", "-f", "docker/docker-compose.prod.yml", "down"]
+
+        if "--remove-volumes" in args:
+            command.append("-v")
     else:
-        subprocess.run(
-            ["docker", "compose", "-f", "docker/docker-compose.prod.yml", "up", "-d", "--build", "--remove-orphans"]
-        )
+        command = [
+            "docker",
+            "compose",
+            "-f",
+            "docker/docker-compose.prod.yml",
+            "up",
+            "-d",
+            "--build",
+            "--remove-orphans",
+        ]
+    subprocess.run(command)
 
 
 def vagrant(args):
