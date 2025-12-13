@@ -23,6 +23,8 @@ def info(args):
     print("\t\t--no-env\t\tSkip copying .env file from examples (NOTE: .env file must be correct for the command).")
     print("\tFor local:")
     print("\t\t--socket <ip:port>\tSpecify IP:Port on which to run app (default is localhost:5000).")
+    print("\t\t--migrate\t\tPerform database migrations.")
+    print("\t\t--clean\t\tClean database and uploads folder.")
     print("\tFor vagrant:")
     print("\t\t--restart\t\tRestart Vagrant VM.")
     print("\t\t--halt\t\t\tHalt Vagrant VM.")
@@ -41,6 +43,15 @@ def copy_env(env, args):
 def local(args):
     # Copy .env file
     copy_env("local", args)
+
+    # Clean DB & uploads
+    if "--clean" in args:
+        subprocess.run(["rosemary", "db:reset"])
+
+    # Migrate DB
+    if "--migrate" in args:
+        subprocess.run(["flask", "db", "upgrade"])
+        subprocess.run(["rosemary", "db:seed"])
 
     # Run Flask app
     command = ["flask", "run", "--debug", "--reload"]
