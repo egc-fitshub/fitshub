@@ -16,16 +16,6 @@ community_dataset_service = CommunityDataSetService()
 
 
 """
-READ ALL
-"""
-
-
-def index():
-    communities = community_service.get_all_communities()
-    return render_template("community/index.html", communities=communities, authorization=False)
-
-
-"""
 GET ALL FROM USER
 """
 

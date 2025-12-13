@@ -362,7 +362,8 @@ function bindFilters() {
         '#filter-sorting',
         '#filter-tags',
         '#filter-date-from',
-        '#filter-date-to'
+        '#filter-date-to',
+        '#filter-community'
     ];
 
     const scheduleSearch = (immediate = false) => {
@@ -392,12 +393,18 @@ function bindFilters() {
         document.getElementById('filter-tags').value = '';
         document.getElementById('filter-date-from').value = '';
         document.getElementById('filter-date-to').value = '';
+        document.getElementById('filter-community').value = '';
         scheduleSearch(true);
     });
 }
 
 function setPublicationTypeFilter(type) {
     document.getElementById('filter-publication-type').value = type;
+    runSearch();
+}
+
+function setCommunityFilter(community) {
+    document.getElementById('filter-community').value = community;
     runSearch();
 }
 
@@ -412,6 +419,7 @@ function addTagToQuery(tag) {
 }
 
 window.setPublicationTypeFilter = setPublicationTypeFilter;
+window.setCommunityFilter = setCommunityFilter;
 window.addTagToQuery = addTagToQuery;
 window.addTextToQuery = addTextToQuery;
 
@@ -493,6 +501,7 @@ function runSearch(reset = true) {
     const tags = document.getElementById('filter-tags').value.trim();
     const date_from = fromInput.value;
     const date_to = toInput.value;
+    const community = document.getElementById('filter-community').value;
 
     const params = new URLSearchParams({
         q: query,
@@ -505,6 +514,7 @@ function runSearch(reset = true) {
     if (tags) params.append('tags', tags);
     if (date_from) params.append('date_from', date_from);
     if (date_to) params.append('date_to', date_to);
+    if (community) params.append('community', community);
 
     const controller = new AbortController();
     currentSearchController = controller;

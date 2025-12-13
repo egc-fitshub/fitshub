@@ -220,6 +220,32 @@ def test_explore_dataset_by_publication_type():
         close_driver(driver)
 
 
+def test_explore_dataset_by_community():
+    driver = initialize_driver()
+
+    try:
+        open_explore_page(driver)
+
+        custom_select = driver.find_element(By.ID, "custom-community-select")
+        custom_select.click()
+
+        wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+        wait.until(EC.visibility_of_element_located((By.ID, "community-options")))
+
+        options = driver.find_elements(By.CSS_SELECTOR, "#community-options .custom-option")
+        for option in options:
+            if "Test community 1" in option.text:
+                option.click()
+                break
+
+        wait.until(EC.visibility_of_element_located((By.ID, "results-container")))
+        results_container = driver.find_element(By.ID, "results-container")
+        assert results_container.is_displayed(), "Results container should be displayed"
+
+    finally:
+        close_driver(driver)
+
+
 def test_mixed_filters_yield_results():
     driver = initialize_driver()
 
