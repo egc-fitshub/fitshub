@@ -380,6 +380,24 @@ def download_dataset(dataset_id):
     return resp
 
 
+@dataset_bp.route("/dataset/download/fits/<int:fits_id>", methods=["GET"])
+def download_fits(fits_id):
+    from app.modules.fitsmodel.models import FitsModel
+
+    fits_model = FitsModel.query.get_or_404(fits_id)
+    dataset = fits_model.data_set
+    if not fits_model.files:
+        abort(404, description="No files found for this FITS model")
+
+    file = fits_model.files[0]
+    filename = file.name
+
+    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+    resp = send_from_directory(file_path, filename, as_attachment=True, mimetype="application/fits")
+    return resp
+
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
     # Check if the DOI is an old DOI

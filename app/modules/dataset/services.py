@@ -69,7 +69,22 @@ class DataSetService(BaseService):
 
         for fits_model in dataset.fits_models:
             fits_filename = fits_model.fm_meta_data.fits_filename
-            shutil.move(os.path.join(source_dir, fits_filename), dest_dir)
+            src = os.path.join(source_dir, fits_filename)
+
+            # destination path for the file
+            dest_file = os.path.join(dest_dir, fits_filename)
+
+            # If destination exists, find a non-colliding filename like "name (1).ext"
+            if os.path.exists(dest_file):
+                base, extension = os.path.splitext(fits_filename)
+                i = 1
+                new_filename = f"{base} ({i}){extension}"
+                while os.path.exists(os.path.join(dest_dir, new_filename)):
+                    i += 1
+                    new_filename = f"{base} ({i}){extension}"
+                dest_file = os.path.join(dest_dir, new_filename)
+
+            shutil.move(src, dest_file)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)

@@ -136,6 +136,32 @@
 
 </div>
 
+<!-- Modal for FITS File Viewer -->
+<div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
+        <div class="modal-content" style="height: 80vh;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title" id="fileViewerModalLabel">.fits File view</h5>
+                <div>
+                    <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton"
+                        style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                        <i data-feather="download"></i>
+                    </a>
+                    <button onclick="copyToClipboard()" class="btn btn-outline-secondary btn-sm"
+                        style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                        <i data-feather="copy"></i>
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
+                <pre id="imgContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+                <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -238,5 +264,37 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
 });
+</script>
+<script>
+    var currentFileId;
+
+    function viewFile(fileId) {
+        fetch(`/file/view/${fileId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.image) {
+                    document.getElementById('imgContent').innerHTML = `<img src="${data.image}" alt="FITS Image" style="max-width: 100%; height: auto;">`;
+                } else {
+                    document.getElementById('imgContent').textContent = data.content || 'No image available';
+                }
+                document.getElementById('fileContent').textContent = data.content;
+                currentFileId = fileId;
+                document.getElementById('downloadButton').href = `/file/download/${fileId}`;
+                var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
+                modal.show();
+            })
+            .catch(error => console.error('Error loading file:', error));
+    }
+    
+    function copyToClipboard() {
+        const text = document.getElementById('fileContent').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            console.log('Text copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+    window.viewFile = viewFile;
 </script>
 {% endblock %}
