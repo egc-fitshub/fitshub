@@ -1,7 +1,6 @@
 import base64
 import os
 import shutil
-from datetime import datetime, timezone
 
 import numpy as np
 import pytest
@@ -58,7 +57,7 @@ def sample_hubfile(test_client):
     dir_path = os.path.join(base_path, f"uploads/user_{user.id}/dataset_{dataset.id}/")
     os.makedirs(dir_path, exist_ok=True)
     file_path = os.path.join(dir_path, "test_file.fits")
-    
+
     # Create a valid FITS file
     data = np.arange(100).reshape((10, 10)).astype(np.float32)
     hdu = fits.PrimaryHDU(data)
@@ -118,7 +117,7 @@ def test_download_file_no_cookie(test_client, sample_hubfile):
     response = test_client.get(f"/file/download/{sample_hubfile.id}")
     assert response.status_code == 200
     assert "file_download_cookie" in response.headers.get("Set-Cookie", "")
-    
+
     with test_client.application.app_context():
         record = HubfileDownloadRecord.query.filter_by(file_id=sample_hubfile.id).first()
         assert record is not None
@@ -132,12 +131,12 @@ def test_download_file_no_existing_record(test_client):
 
 def test_download_file_with_cookie(test_client, sample_hubfile):
     response1 = test_client.get(f"/file/download/{sample_hubfile.id}")
-    cookie = response1.headers.get("Set-Cookie").split('=')[1].split(';')[0]
-    
+    cookie = response1.headers.get("Set-Cookie").split("=")[1].split(";")[0]
+
     test_client.set_cookie("file_download_cookie", cookie)
     response2 = test_client.get(f"/file/download/{sample_hubfile.id}")
     assert response2.status_code == 200
-    
+
     with test_client.application.app_context():
         records = HubfileDownloadRecord.query.filter_by(file_id=sample_hubfile.id, download_cookie=cookie).all()
         assert len(records) == 1
@@ -163,12 +162,12 @@ def test_view_file_with_cookie(test_client, sample_hubfile):
 
     response1 = test_client.get(f"/file/view/{sample_hubfile.id}")
     assert response1.status_code == 200
-    cookie = response1.headers.get("Set-Cookie").split('=')[1].split(';')[0]
-    
+    cookie = response1.headers.get("Set-Cookie").split("=")[1].split(";")[0]
+
     test_client.set_cookie("view_cookie", cookie)
     response2 = test_client.get(f"/file/view/{sample_hubfile.id}")
     assert response2.status_code == 200
-    
+
     with test_client.application.app_context():
         records = HubfileViewRecord.query.filter_by(file_id=sample_hubfile.id, view_cookie=cookie).all()
         assert len(records) == 1
@@ -191,10 +190,12 @@ def test_service_get_dataset_by_hubfile(test_client, sample_hubfile):
 def test_service_get_path_by_hubfile(test_client, sample_hubfile, monkeypatch):
     # Mock WORKING_DIR to ensure consistent path construction
     monkeypatch.setenv("WORKING_DIR", "/tmp/fitshub")
-    
+
     service = HubfileService()
     path = service.get_path_by_hubfile(sample_hubfile)
-    
-    expected_path = f"/tmp/fitshub/uploads/user_{sample_hubfile.fits_model.data_set.user_id}/dataset_{sample_hubfile.fits_model.data_set_id}/{sample_hubfile.name}"
-    assert path == expected_path
 
+    user_id = sample_hubfile.fits_model.data_set.user_id
+    dataset_id = sample_hubfile.fits_model.data_set_id
+    filename = sample_hubfile.name
+    expected_path = f"/tmp/fitshub/uploads/user_{user_id}/dataset_{dataset_id}/{filename}"
+    assert path == expected_path

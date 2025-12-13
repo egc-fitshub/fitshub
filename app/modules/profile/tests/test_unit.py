@@ -1,9 +1,9 @@
 import pytest
+from flask import url_for
 
 from app import db
 from app.modules.auth.models import User
 from app.modules.conftest import login, logout
-from flask import url_for
 from app.modules.profile.models import UserProfile
 
 
@@ -82,7 +82,7 @@ def test_edit_profile_post_failure(test_client):
     }
     response = test_client.post("/profile/edit", data=form_data, follow_redirects=True)
     assert response.status_code == 200, "Failed to submit profile edit form."
-    
+
     assert b"Edit profile" in response.data
 
     logout(test_client)
@@ -101,7 +101,7 @@ def test_my_profile_get(test_client):
 
 def test_edit_profile_no_profile(test_client):
     login(test_client, "noprofile@example.com", "test1234")
-    
+
     response = test_client.get("/profile/edit", follow_redirects=True)
     assert response.request.path == url_for("public.index")
 
