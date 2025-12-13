@@ -69,7 +69,22 @@ class DataSetService(BaseService):
 
         for fits_model in dataset.fits_models:
             fits_filename = fits_model.fm_meta_data.fits_filename
-            shutil.move(os.path.join(source_dir, fits_filename), dest_dir)
+            src = os.path.join(source_dir, fits_filename)
+
+            # destination path for the file
+            dest_file = os.path.join(dest_dir, fits_filename)
+
+            # If destination exists, find a non-colliding filename like "name (1).ext"
+            if os.path.exists(dest_file):
+                base, extension = os.path.splitext(fits_filename)
+                i = 1
+                new_filename = f"{base} ({i}){extension}"
+                while os.path.exists(os.path.join(dest_dir, new_filename)):
+                    i += 1
+                    new_filename = f"{base} ({i}){extension}"
+                dest_file = os.path.join(dest_dir, new_filename)
+
+            shutil.move(src, dest_file)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -147,11 +162,83 @@ class DataSetService(BaseService):
         return dataset
 
     def update_dsmetadata(self, id, **kwargs):
-        return self.dsmetadata_repository.update(id, **kwargs)
+        dsmetadata = self.dsmetadata_repository.get_by_id(id)
+        previous_doi = dsmetadata.dataset_doi if dsmetadata else None
+
+        updated = self.dsmetadata_repository.update(id, **kwargs)
+
+        new_doi = updated.dataset_doi if updated else None
+        dataset = updated.data_set if updated else None
+
+        should_index = updated and dataset and new_doi and new_doi != previous_doi
+
+        if should_index:
+            try:
+                self.repository.session.refresh(dataset)
+            except Exception:
+                dataset = self.repository.get_by_id(dataset.id)
+
+            self._index_dataset_records(dataset)
+
+        return updated
 
     def get_fitshub_doi(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
+
+    def _index_dataset_records(self, dataset: DataSet) -> bool:
+        if not dataset or not dataset.ds_meta_data:
+            return False
+
+        dataset_doi = dataset.ds_meta_data.dataset_doi
+        if not dataset_doi:
+            logger.info(
+                "[INDEX SKIP] Dataset %s sin DOI, se omite indexación",
+                dataset.id,
+            )
+            return False
+
+        try:
+            from elasticsearch import ConnectionError as ESConnectionError
+
+            from app.modules.elasticsearch.utils import (
+                index_dataset,
+                index_hubfile,
+            )
+        except ImportError as exc:
+            logger.warning(
+                "[INDEX SKIP] Elasticsearch no disponible (%s)",
+                exc,
+            )
+            return False
+
+        try:
+            fits_models = list(dataset.fits_models)
+            index_dataset(dataset)
+            for fits_model in fits_models:
+                files = list(getattr(fits_model, "files", []))
+                for hubfile in files:
+                    index_hubfile(hubfile)
+
+            logger.info(
+                "[INDEX] Dataset %s indexado correctamente en Elasticsearch",
+                dataset.id,
+            )
+            return True
+        except ESConnectionError as exc:
+            logger.warning(
+                "[INDEX SKIP] ES no disponible al indexar dataset %s",
+                dataset.id,
+                exc_info=exc,
+            )
+        except Exception as exc:
+            logger.exception(
+                "[INDEX ERROR] Falló la indexación del dataset %s",
+                dataset.id,
+                exc_info=exc,
+            )
+
+        return False
 
     def get_trending_datasets(self, limit: int = 5, period_days: int = 7):
         return self.repository.trending_datasets(limit, period_days)
@@ -188,7 +275,11 @@ class DSViewRecordService(BaseService):
     def the_record_exists(self, dataset: DataSet, user_cookie: str):
         return self.repository.the_record_exists(dataset, user_cookie)
 
-    def create_new_record(self, dataset: DataSet, user_cookie: str) -> DSViewRecord:
+    def create_new_record(
+        self,
+        dataset: DataSet,
+        user_cookie: str,
+    ) -> DSViewRecord:
         return self.repository.create_new_record(dataset, user_cookie)
 
     def create_cookie(self, dataset: DataSet) -> str:
@@ -196,7 +287,10 @@ class DSViewRecordService(BaseService):
         if not user_cookie:
             user_cookie = str(uuid.uuid4())
 
-        existing_record = self.the_record_exists(dataset=dataset, user_cookie=user_cookie)
+        existing_record = self.the_record_exists(
+            dataset=dataset,
+            user_cookie=user_cookie,
+        )
 
         if not existing_record:
             self.create_new_record(dataset=dataset, user_cookie=user_cookie)

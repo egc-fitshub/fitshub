@@ -4,21 +4,16 @@
 
 {% block content %}
 
-    {% if current_user.is_anonymous  or current_user.role.value == "user" %}
+    <h1 class="h3 mb-3">My Communities</h1>
 
-        <h1 class="h3 mb-3">Communities</h1>
-
-    {% else %}
-        <h1 class="h3 mb-3">My Communities</h1>
-
-        <div class="row">
-            <div class="col-12 text-end mb-3">
-                <a href="{{ url_for('community.create_community') }}" class="btn btn-primary">
-                    Crear Nueva Comunidad
-                </a>
-            </div>
+    <div class="row">
+        <div class="col-12 text-end mb-3">
+            <a href="{{ url_for('community.create_community') }}" class="btn btn-primary">
+                Crear Nueva Comunidad
+            </a>
         </div>
-    {% endif %}
+    </div>
+
 
     {% if messages %}
         <ul>

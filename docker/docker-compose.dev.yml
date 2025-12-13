@@ -9,6 +9,7 @@ services:
       - db
       - selenium-hub
       - mailhog
+      - elasticsearch
     build:
       context: ../
       dockerfile: docker/images/Dockerfile.dev
@@ -44,6 +45,20 @@ services:
       - "80:80"
     depends_on:
       - web
+    networks:
+      - fitshub_network
+
+  elasticsearch:
+    container_name: elasticsearch_container
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
     networks:
       - fitshub_network
 
@@ -94,6 +109,7 @@ services:
 
 volumes:
   db_data:
+  es_data:
 
 networks:
   fitshub_network:

@@ -28,7 +28,7 @@
 
 <div class="row mb-3">
     <div class="col-12">
-        <a href="{{ url_for('community.index') }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+        <a href="{{ url_for('community.get_communities_user') }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
             <i data-feather="arrow-left" class="center-button-icon"></i>
             Back to Communities
         </a>
@@ -173,10 +173,6 @@
                     <i data-feather="edit"></i> Edit Community Details
                 </a>
             {% endif %}
-
-            <a href="#" class="list-group-item list-group-item-action option-button btn btn-outline-success">
-                <i data-feather="upload-cloud"></i> Submit a Dataset
-            </a>
 
             {% if current_user.is_authenticated and current_user.id in community.curators.all()|map(attribute='id')|list and community.curators.count() > 1 %}
                 <form method="POST" action="{{ url_for('community.leave_community', community_id=community.id) }}">
