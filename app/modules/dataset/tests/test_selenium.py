@@ -221,6 +221,8 @@ def test_upload_dataset():
 
         upload_agree_and_submit(driver)
 
+        # Wait up to 20 seconds for the redirect to the dataset list page
+        WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
         assert driver.current_url == f"{host}/dataset/list", "Test failed!"
 
         # Count final datasets
@@ -259,8 +261,11 @@ def test_upload_one_zip_dataset():
 
         upload_agree_and_submit(driver)
 
-        # Verify redirect and dataset count increment
+        # Wait up to 20 seconds for the redirect to the dataset list page
+        WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
         assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+
+        # Verify dataset count increment
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
 
@@ -294,8 +299,11 @@ def test_upload_multiple_zip_dataset():
 
         upload_agree_and_submit(driver)
 
-        # Verify redirect and dataset count increment
+        # Wait up to 20 seconds for the redirect to the dataset list page
+        WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
         assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+
+        # Verify dataset count increment
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
 
@@ -337,8 +345,11 @@ def test_upload_folder_zip_dataset():
 
         upload_agree_and_submit(driver)
 
-        # Verify redirect and dataset count increment
+        # Wait up to 20 seconds for the redirect to the dataset list page
+        WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
         assert driver.current_url == f"{host}/dataset/list", "Upload via ZIP did not redirect to dataset list"
+
+        # Verify dataset count increment
         final_datasets = count_datasets(driver, host)
         assert final_datasets == initial_datasets + 1, "Dataset count did not increase after ZIP upload"
 
@@ -435,6 +446,10 @@ def test_upload_from_github():
             assert len(file_items) == 2, "Not all files listed from GitHub repository"
 
             upload_agree_and_submit(driver)
+
+            # Wait up to 20 seconds for the redirect to the dataset list page
+            WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
+            assert driver.current_url == f"{host}/dataset/list", "Upload from GitHub did not redirect to dataset list"
             wait_for_page_to_load(driver)
 
             # Assert that the first upload has the correct title, then open the dataset page
