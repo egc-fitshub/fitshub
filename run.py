@@ -7,9 +7,6 @@ from sys import argv
 
 import requests
 
-import app
-from app.modules.elasticsearch.utils import init_search_index, reindex_all
-
 CWD = os.getcwd()
 
 
@@ -87,6 +84,9 @@ def local(args):
         return
 
     # Perform flask shell commands
+    import app
+    from app.modules.elasticsearch.utils import init_search_index, reindex_all
+
     fitshub_app = app.create_app()
 
     with fitshub_app.app_context():
