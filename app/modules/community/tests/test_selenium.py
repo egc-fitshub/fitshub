@@ -1,6 +1,6 @@
 import time
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoAlertPresentException, NoSuchElementException
 from selenium.webdriver.common.by import By
 
 from core.environment.host import get_host_for_selenium_testing
@@ -128,12 +128,15 @@ def test_delete_community():
             driver.find_element(By.LINK_TEXT, "My communities").click()
             driver.find_element(By.LINK_TEXT, "Create").click()
             driver.find_element(By.CSS_SELECTOR, ".btn-outline-danger").click()
-            assert driver.switch_to.alert.text == "Are you sure you want to delete this community? This action cannot be undone."
+            assert (
+                driver.switch_to.alert.text
+                == "Are you sure you want to delete this community? This action cannot be undone."
+            )
             driver.switch_to.alert.accept()
             time.sleep(2)
         except NoSuchElementException as e:
             raise AssertionError(f"Test failed! Element not found: {e}")
-            
+
         except NoAlertPresentException:
             raise AssertionError("Test failed! JavaScript confirmation dialog did not appear.")
 
