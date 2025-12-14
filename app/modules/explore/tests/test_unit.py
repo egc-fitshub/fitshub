@@ -89,6 +89,7 @@ def test_api_search_success_with_filters(monkeypatch, test_client):
         "date_to": "2024-01-31",
         "page": 3,
         "size": 5,
+        "community": None,
     }
 
 
@@ -124,6 +125,7 @@ def test_api_search_defaults_without_parameters(monkeypatch, test_client):
         "date_to": None,
         "page": 1,
         "size": 10,
+        "community": None,
     }
 
 
@@ -204,21 +206,9 @@ def test_api_search_filters_by_community(monkeypatch, test_client):
 
         def search(self, **kwargs):
             captured_kwargs.update(kwargs)
-            return ([{"id": 1}, {"id": 2}, {"id": 3}], 3)
+            return ([{"id": 1, "community_ids": [5]}, {"id": 3, "community_ids": [5]}], 2)
 
     monkeypatch.setattr(ES_SERVICE_PATH, DummyService)
-
-    class MockQuery:
-        def filter_by(self, **kwargs):
-            self.kwargs = kwargs
-            return self
-
-        def first(self):
-            if self.kwargs.get("dataset_id") in [1, 3]:
-                return object()
-            return None
-
-    monkeypatch.setattr("app.modules.explore.routes.CommunityDataSet.query", MockQuery())
 
     response = test_client.get(
         API_SEARCH_URL,
@@ -231,6 +221,7 @@ def test_api_search_filters_by_community(monkeypatch, test_client):
     assert response.status_code == 200
     payload = response.get_json()
 
+    assert captured_kwargs["community"] == "5"
     assert len(payload["results"]) == 2
     assert payload["results"][0]["id"] == 1
     assert payload["results"][1]["id"] == 3
@@ -262,6 +253,8 @@ def test_api_search_no_community_returns_all_results(monkeypatch, test_client):
     assert response.status_code == 200
     payload = response.get_json()
 
+    assert captured_kwargs["community"] is None
+
     assert len(payload["results"]) == 3
     assert payload["total"] == 3
 
@@ -272,18 +265,9 @@ def test_api_search_community_no_matching_datasets(monkeypatch, test_client):
             pass
 
         def search(self, **kwargs):
-            return ([{"id": 1}, {"id": 2}], 2)
+            return ([], 0)
 
     monkeypatch.setattr(ES_SERVICE_PATH, DummyService)
-
-    class MockQuery:
-        def filter_by(self, **kwargs):
-            return self
-
-        def first(self):
-            return None
-
-    monkeypatch.setattr("app.modules.explore.routes.CommunityDataSet.query", MockQuery())
 
     response = test_client.get(
         API_SEARCH_URL,

@@ -157,6 +157,7 @@ class ElasticsearchService(BaseService):
                                 },
                                 "url": {"type": "keyword"},
                                 "dataset_id": {"type": "integer"},
+                                "community_ids": {"type": "integer"},
                                 "fits_model_id": {"type": "integer"},
                                 "dataset_title": {
                                     "type": "text",
@@ -214,6 +215,7 @@ class ElasticsearchService(BaseService):
         date_to=None,
         page=1,
         size=10,
+        community=None,
     ):
         try:
             print(
@@ -222,7 +224,8 @@ class ElasticsearchService(BaseService):
                 f"tipo: {publication_type}, "
                 f"tags: {tags}, "
                 f"orden: {sorting}, "
-                f"página: {page}, tamaño: {size}"
+                f"página: {page}, tamaño: {size}, "
+                f"comunidad: {community}"
             )
 
             must_clauses = []
@@ -301,6 +304,10 @@ class ElasticsearchService(BaseService):
                 except ValueError as e:
                     print(f"[WARN] Formato de fecha inválido recibido: from={date_from}, to={date_to}. Error: {e}")
 
+            community_filter = self._normalize_community_filter(community)
+            if community_filter:
+                filter_clauses.append({"terms": {"community_ids": community_filter}})
+
             # Ordenación
             sort_clause = [
                 {"created_at": {"order": "desc"}} if sorting == "newest" else {"created_at": {"order": "asc"}}
@@ -340,6 +347,22 @@ class ElasticsearchService(BaseService):
         except Exception as e:
             print(f"[ERROR] Fallo en la búsqueda: {e}")
             raise
+
+    def _normalize_community_filter(self, community):
+        if community in (None, "", [], "any"):
+            return []
+        if isinstance(community, (list, tuple)):
+            raw_values = community
+        else:
+            raw_values = [value.strip() for value in str(community).split(",")]
+        normalized = []
+        for value in raw_values:
+            if not value:
+                continue
+            if not str(value).isdigit():
+                raise ValueError(f"El valor de comunidad inválido: {value}")
+            normalized.append(int(value))
+        return normalized
 
     def _format_hit(self, hit):
         from datetime import datetime

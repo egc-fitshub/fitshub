@@ -8,6 +8,10 @@ from app.modules.auth.services import AuthenticationService
 from app.modules.community.models import CommunityDataSet, CommunityDataSetStatus
 from app.modules.community.repositories import CommunityDataSetRepository, CommunityRepository
 from app.modules.dataset.services import DataSetService
+from app.modules.elasticsearch.utils import (
+    index_dataset,
+    index_hubfile,
+)
 from app.services.upload_service import UploadService
 from core.services.BaseService import BaseService
 
@@ -192,6 +196,13 @@ class CommunityDataSetService(BaseService):
 
             association.status = new_status
             self.repository.session.commit()
+            if new_status == CommunityDataSetStatus.ACCEPTED:
+                index_dataset(association.dataset)
+                fitsmodels = list(association.dataset.fits_models)
+                for f in fitsmodels:
+                    files = list(getattr(f, "files", []))
+                    for hubfile in files:
+                        index_hubfile(hubfile)
             return association
 
         except Exception as e:
