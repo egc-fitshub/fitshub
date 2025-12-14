@@ -1,0 +1,42 @@
+---
+- name: Install Elasticsearch
+  hosts: all
+  become: yes
+  vars:
+    common_environment:
+      FLASK_APP_NAME: "{{ flask_app_name }}"
+      FLASK_ENV: "{{ flask_env }}"
+      DOMAIN: "{{ domain }}"
+      MARIADB_HOSTNAME: "{{ mariadb_hostname }}"
+      MARIADB_PORT: "{{ mariadb_port }}"
+      MARIADB_DATABASE: "{{ mariadb_database }}"
+      MARIADB_TEST_DATABASE: "{{ mariadb_test_database }}"
+      MARIADB_USER: "{{ mariadb_user }}"
+      MARIADB_PASSWORD: "{{ mariadb_password }}"
+      MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+      WORKING_DIR: "{{ working_dir }}"
+
+  tasks:
+    - name: Check Elasticsearch cluster health
+      uri:
+        url: http://localhost:9200/_cluster/health
+        method: GET
+        status_code: 200
+      register: cluster_health
+      retries: 10
+      delay: 5
+      until: cluster_health.json.status == "green"
+
+    - name: Initialize Flask search index
+      shell: |
+        source {{ working_dir }}vagrant_venv/bin/activate
+        cd {{ working_dir }}
+        flask shell <<'EOF'
+        from app.modules.elasticsearch.utils import init_search_index, reindex_all
+        init_search_index()
+        reindex_all()
+        exit()
+        EOF
+      args:
+        executable: /bin/bash
+      environment: "{{ common_environment }}"
