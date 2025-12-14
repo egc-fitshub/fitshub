@@ -33,9 +33,16 @@ end
 
 
 Vagrant.configure("2") do |config|
+  host_arch = `uname -m`.strip
 
-  # Choose a base box
-  config.vm.box = "ubuntu/jammy64"
+  if host_arch == "arm64" || host_arch == "aarch64"
+    config.vm.box = "bento/ubuntu-22.04"
+    config.vm.provider "virtualbox" do |vb|
+      vb.customize ["modifyvm", :id, "--cpu-profile", "cortex-a57"]
+    end
+  else
+    config.vm.box = "ubuntu/jammy64"
+  end
   config.vm.boot_timeout = 600
   
   # Network configuration
