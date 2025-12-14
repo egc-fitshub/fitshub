@@ -84,9 +84,11 @@ This project contains a workflow that sends a notification through *Telegram* wh
 
 ## Development environment
 
-### Docker Compose (recommended)
+This section provides a guide on how to properly set up the ancillary modules that are needed for Fitshub to run without any issues.
 
-Spin up the full stack, including the new Elasticsearch node used for search:
+### Docker Compose
+
+Spin up the full stack, including the ancillary Elasticsearch node used for search and Mailhog node for e-mail management:
 
 ```bash
 docker compose -f docker/docker-compose.dev.yml up -d
@@ -104,9 +106,17 @@ A response with `status` set to `green` or `yellow` means the search cluster is 
 > [!WARNING]
 > To complete the configuration succesfully, it is important that all dependencies, as well as your database, are up to date.
 
-Fitshub expects an instance of **Elasticsearch** to be running at port 9200. In order for this feature to work, please follow the following steps:
+Fitshub expects an instance of **Elasticsearch** to be running at port 9200, as well as an instance of **Mailhog** to be running at port 1025. In order for this feature to work, please follow the following steps:
 
 - Copy the environment variables from ```.env.local.example``` into your ``.env`` and make sure that the variable ```ELASTICSEARCH_HOST```is set to ```http://localhost:9200```
+
+- Start the instance of **Mailhog** in port 1025. To do so, run the following command:
+
+``` bash 
+docker compose -f ./docker/docker-compose.dev.yml up -d mailhog 
+```
+
+
 - Start the instance of **Elasticsearch** in port 9200. To do so, run the following command: 
 
 ``` bash 
