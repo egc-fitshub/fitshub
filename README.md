@@ -135,3 +135,83 @@ exit()
 ```
 
 - Once the instructions have been executed succesfully, you may start your project as usual.
+
+### Run Script
+We have provided a command line utility in the form of a script that allows to more easily run the application in multiple environments. It can be found in the root directory of the project as `run.py`.
+
+#### Usage
+In order to execute the run script, the following command should be executed from the root directory of the project (using the same Python environment used to run the application):
+
+```bash
+python -m run
+```
+
+This will show a list of the subcommands and arguments available.
+
+In order to run the project using the script, a subcommand should be executed following the pattern below:
+
+```bash
+python -m run <command> <args>
+```
+
+#### Subcommands and arguments
+The available subcommands are the following:
+
+- **`info`**: Shows the script usage and help. Same as calling the script without specifying a subcommand.
+
+
+- **`local`**: Executes the application in the local host (using `flask run`). This includes starting the subsidiary services (ElasticSearch, Mailhog). The following arguments are available for this command:
+
+
+  - **`--no-env`**: Skips copying the `.env` file from the corresponding example file. If this argument is specified, the `.env` file of the project must be the correct one for the specified environment.
+
+
+  - **`--socket <host:port>`**: Used to specify the host and port on which to run the application. If not specified, the default value will be `localhost:5000`.
+
+
+  - **`--migrate`**: Performs database migrations before executing the application.
+
+
+  - **`--clean`**: Cleans the database and the `uploads` folder (if `--migrate` is also specified, the cleanup process is executed before the migrations).
+
+
+  - **`--stop`**: Stops the subsidiary services (ElasticSearch, Mailhog) and exits the script without executing the application.
+
+
+- **`vagrant`**: Executes the application using a Vagrant Virtual Machine. The provision script is also executed. The available arguments for this command are the following:
+
+
+  - **`--no-env`**: Skips copying the `.env` file from the corresponding example file. If this argument is specified, the `.env` file of the project must be the correct one for the specified environment.
+
+
+  - **`--restart`**: Restarts the Vagrant VM, executing the provision script as well.
+  
+  
+  - **`--halt`**: Halts the Vagrant VM and exits without running the application.
+
+
+  - **`--destroy`**: Destroys the Vagrant VM, removing the `.vagrant` subdirectory from within the `vagrant` directory in the process, and exits without running the application.
+
+
+- **`docker`**: Executes the application in Docker, configured for a development environment (using `docker-compose`). The following arguments are available for this command:
+
+
+  - **`--no-env`**: Skips copying the `.env` file from the corresponding example file. If this argument is specified, the `.env` file of the project must be the correct one for the specified environment.
+
+
+  - **`--stop`**: Stops the containers and exits without running the application.
+
+
+  - **`--remove-volumes`**: Used in conjunction with `--stop`, removes the volumes as when stopping the containers. If `--stop` is not specified, this argument will have no effect.
+
+
+- **`docker-prod`**: Executes the application in Docker, configured for a production environment (using `docker-compose`). The following arguments are available for this command:
+
+
+  - **`--no-env`**: Skips copying the `.env` file from the corresponding example file. If this argument is specified, the `.env` file of the project must be the correct one for the specified environment.
+
+
+  - **`--stop`**: Stops the containers and exits without running the application.
+
+
+  - **`--remove-volumes`**: Used in conjunction with `--stop`, removes the volumes as when stopping the containers. If `--stop` is not specified, this argument will have no effect.
