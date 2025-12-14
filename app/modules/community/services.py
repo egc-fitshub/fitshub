@@ -8,12 +8,12 @@ from app.modules.auth.services import AuthenticationService
 from app.modules.community.models import CommunityDataSet, CommunityDataSetStatus
 from app.modules.community.repositories import CommunityDataSetRepository, CommunityRepository
 from app.modules.dataset.services import DataSetService
+from app.modules.elasticsearch.utils import (
+    index_dataset,
+    index_hubfile,
+)
 from app.services.upload_service import UploadService
 from core.services.BaseService import BaseService
-from app.modules.elasticsearch.utils import (
-                index_dataset,
-                index_hubfile,
-            )
 
 logger = logging.getLogger(__name__)
 

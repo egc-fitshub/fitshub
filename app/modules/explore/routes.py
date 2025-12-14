@@ -1,7 +1,7 @@
 from elasticsearch import ConnectionError as ESConnectionError
 from flask import current_app, jsonify, render_template, request
 
-from app.modules.community.models import Community, CommunityDataSet, CommunityDataSetStatus
+from app.modules.community.models import Community
 from app.modules.dataset.models import PublicationType
 from app.modules.explore import explore_bp
 

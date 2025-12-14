@@ -1,4 +1,5 @@
 import logging
+
 from app.modules.community.models import CommunityDataSetStatus
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ def init_search_index():
         print(f"[ERROR init_search_index] {e}")
         raise
 
+
 def _accepted_community_ids(dataset):
     if not dataset:
         return []
@@ -28,6 +30,7 @@ def _accepted_community_ids(dataset):
         for assoc in associations
         if getattr(assoc, "status", None) == CommunityDataSetStatus.ACCEPTED
     ]
+
 
 def index_dataset(dataset):
     from app.modules.elasticsearch.services import ElasticsearchService

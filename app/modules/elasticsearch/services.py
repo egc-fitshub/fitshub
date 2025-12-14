@@ -307,7 +307,7 @@ class ElasticsearchService(BaseService):
             community_filter = self._normalize_community_filter(community)
             if community_filter:
                 filter_clauses.append({"terms": {"community_ids": community_filter}})
-            
+
             # Ordenación
             sort_clause = [
                 {"created_at": {"order": "desc"}} if sorting == "newest" else {"created_at": {"order": "asc"}}
@@ -349,7 +349,7 @@ class ElasticsearchService(BaseService):
             raise
 
     def _normalize_community_filter(self, community):
-        if community in (None, "",  [], "any"):
+        if community in (None, "", [], "any"):
             return []
         if isinstance(community, (list, tuple)):
             raw_values = community
@@ -362,7 +362,7 @@ class ElasticsearchService(BaseService):
             if not str(value).isdigit():
                 raise ValueError(f"El valor de comunidad inválido: {value}")
             normalized.append(int(value))
-        return normalized    
+        return normalized
 
     def _format_hit(self, hit):
         from datetime import datetime

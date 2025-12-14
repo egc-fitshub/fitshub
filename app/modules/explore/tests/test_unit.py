@@ -252,7 +252,7 @@ def test_api_search_no_community_returns_all_results(monkeypatch, test_client):
 
     assert response.status_code == 200
     payload = response.get_json()
-    
+
     assert captured_kwargs["community"] is None
 
     assert len(payload["results"]) == 3
