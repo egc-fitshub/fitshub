@@ -84,7 +84,7 @@ This project contains a workflow that sends a notification through *Telegram* wh
 
 ## Development environment
 
-### NEW!
+This section provides a guide on how to properly set up the ancillary modules that are needed for Fitshub to run without any issues.
 
 ### Docker Compose
 
