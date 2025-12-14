@@ -644,22 +644,21 @@ def test_download_counter_increments():
         driver.find_element(By.ID, "email").send_keys("user1@example.com")
         driver.find_element(By.ID, "password").send_keys("1234")
         driver.find_element(By.ID, "submit").click()
-        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)").click()
+        driver.get(f"{host}/dataset/upload")
         driver.find_element(By.ID, "title").click()
         driver.find_element(By.ID, "title").send_keys("Test Download Counter Dataset")
         driver.find_element(By.ID, "desc").click()
         driver.find_element(By.ID, "desc").send_keys("This is a test for download counters")
 
         # Obtén las rutas absolutas de los archivos
-        file1_path = os.path.abspath("app/modules/dataset/fits_examples/file1.fits")
+        file1_path = os.path.abspath("app/modules/dataset/fits_examples/file5.fits")
 
         # Subir el primer archivo
         dropzone = wait_for_element(driver, By.CLASS_NAME, "dz-hidden-input")
         dropzone.send_keys(file1_path)
-        wait_for_page_to_load(driver)
         upload_agree_and_submit(driver)
-
-        assert driver.current_url == f"{host}/dataset/list", "Test failed!"
+        WebDriverWait(driver, 20).until(lambda d: d.current_url == f"{host}/dataset/list")
+        assert driver.current_url == f"{host}/dataset/list", "Upload did not redirect to dataset list"
 
         driver.find_element(By.LINK_TEXT, "Test Download Counter Dataset").click()
         driver.find_element(By.ID, "download_counter").click()
@@ -668,7 +667,7 @@ def test_download_counter_increments():
         driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) > .card-body:nth-child(1)").click()
         driver.find_element(By.CSS_SELECTOR, ".d-flex > .d-flex").click()
         driver.find_element(By.ID, "download_counter").click()
-        driver.find_element(By.LINK_TEXT, "Download all (241.88 KB)").click()
+        driver.find_element(By.LINK_TEXT, "Download all (109.69 KB)").click()
         driver.refresh()
         wait_for_page_to_load(driver)
 
