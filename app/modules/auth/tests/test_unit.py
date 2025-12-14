@@ -15,6 +15,8 @@ from app import db
 from app.modules.auth.models import RoleType, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
+from app.modules.community.models import Community
+from app.modules.conftest import logout
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 
@@ -602,3 +604,107 @@ def test_logout_clears_two_factor_session(test_client, two_factor_user):
     with test_client.session_transaction() as session:
         assert "pending_user_id" not in session
         assert "temp_token" not in session
+
+
+def test_service_get_authenticated_user_none(test_client):
+    logout(test_client)
+
+    authenticated_user = AuthenticationService().get_authenticated_user()
+
+    assert authenticated_user is None
+
+
+def test_service_update_user_role_to_administrator_success(clean_database):
+    service = AuthenticationService()
+    user = service.create_with_profile(name="Role", surname="Test", email="role_admin@example.com", password="test1234")
+
+    service.update_user_role(user.id, "administrator")
+
+    db.session.refresh(user)
+    assert user.role == RoleType.ADMINISTRATOR
+
+
+def test_service_update_user_role_to_curator_success(clean_database):
+    service = AuthenticationService()
+    user = service.create_with_profile(
+        name="Role", surname="Test", email="role_curator@example.com", password="test1234"
+    )
+
+    service.update_user_role(user.id, "curator")
+
+    db.session.refresh(user)
+    assert user.role == RoleType.CURATOR
+
+
+def test_service_update_user_role_to_user_success(clean_database):
+    service = AuthenticationService()
+    user = User(email="role_user@example.com", password="test1234", role=RoleType.ADMINISTRATOR)
+    user.profile = UserProfile(name="Role", surname="Test")
+    db.session.add(user)
+    db.session.commit()
+
+    service.update_user_role(user.id, "user")
+
+    db.session.refresh(user)
+    assert user.role == RoleType.USER
+
+
+def test_service_update_user_role_invalid_role_fail(clean_database):
+    service = AuthenticationService()
+    user = service.create_with_profile(
+        name="Role", surname="Test", email="role_invalid@example.com", password="test1234"
+    )
+
+    with pytest.raises(ValueError, match="Invalid role 'invalid_role'"):
+        service.update_user_role(user.id, "invalid_role")
+
+    db.session.refresh(user)
+    assert user.role == RoleType.USER
+
+
+def test_service_get_curated_communities_by_id_success(clean_database):
+    service = AuthenticationService()
+
+    user = service.create_with_profile(name="Curator", surname="Test", email="curator@example.com", password="test1234")
+    user.role = RoleType.CURATOR
+
+    comm1 = Community(name="Community One", description="Desc 1")
+    comm2 = Community(name="Community Two", description="Desc 2")
+
+    db.session.add_all([comm1, comm2])
+    db.session.commit()
+
+    comm1.curators.append(user)
+    comm2.curators.append(user)
+    db.session.commit()
+
+    communities = service.get_curated_communities_by_id(user.id).all()
+
+    assert communities is not None
+    assert len(communities) == 2
+    community_names = [c.name for c in communities]
+    assert "Community One" in community_names
+    assert "Community Two" in community_names
+
+
+def test_service_get_curated_communities_by_id_none(clean_database):
+    service = AuthenticationService()
+
+    user = service.create_with_profile(
+        name="Simple", surname="User", email="simple_user@example.com", password="test1234"
+    )
+
+    communities = service.get_curated_communities_by_id(user.id).all()
+
+    if not communities:
+        communities = None
+
+    assert communities is None
+
+
+def test_service_get_curated_communities_by_id_404_not_found(clean_database):
+    service = AuthenticationService()
+    invalid_user_id = 999999
+
+    with pytest.raises(Exception):
+        service.get_curated_communities_by_id(invalid_user_id)
