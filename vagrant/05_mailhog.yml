@@ -1,5 +1,5 @@
 ---
-- name: Install MailHog
+- name: Install MailHog and Elasticsearch
   hosts: all
   become: true
 
@@ -32,9 +32,40 @@
         name: mailhog
         enabled: yes
         state: started
+    - name: Add Elasticsearch repo
+      shell: |
+        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+        echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list
 
-    - name: Ensure MailHog is running
-      systemd:
-        name: mailhog
-        state: started
-        enabled: yes
+    - name: Install Java and Elasticsearch
+      apt:
+        name: [openjdk-17-jdk, elasticsearch]
+        update_cache: yes
+
+    - name: Setup Elasticsearch
+      shell: |
+        systemctl stop elasticsearch
+        rm -f /etc/elasticsearch/elasticsearch.keystore
+        rm -rf /var/lib/elasticsearch/* /usr/share/elasticsearch/data/*
+        mkdir -p /usr/share/elasticsearch/{data,logs}
+        chown -R elasticsearch:elasticsearch /etc/elasticsearch /var/lib/elasticsearch /usr/share/elasticsearch
+
+    - name: Configure
+      copy:
+        content: |
+          cluster.name: fitshub
+          node.name: node-1
+          discovery.type: single-node
+          xpack.security.enabled: false
+          http.host: 0.0.0.0
+        dest: /etc/elasticsearch/elasticsearch.yml
+
+    - name: Heap and start
+      shell: |
+        tee /etc/elasticsearch/jvm.options.d/heap.options > /dev/null <<'EOF'
+        -Xms512m
+        -Xmx512m
+        EOF
+        systemctl start elasticsearch
+        systemctl enable elasticsearch
+        sleep 15

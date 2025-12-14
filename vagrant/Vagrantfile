@@ -43,6 +43,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8089, host: 8089
   config.vm.network "forwarded_port", guest: 1025, host: 1025
   config.vm.network "forwarded_port", guest: 8025, host: 8025
+  config.vm.network "forwarded_port", guest: 9200, host: 9200
 
   # Synced folders
   config.vm.synced_folder "../", "/vagrant"
@@ -69,7 +70,8 @@ Vagrant.configure("2") do |config|
       mail_debug: ENV['mail_debug'],
       mail_username: ENV['mail_username'],
       mail_password: ENV['mail_password'],
-      mail_default_sender: ENV['mail_default_sender']
+      mail_default_sender: ENV['mail_default_sender'],
+      elasticsearch_host: ENV['ELASTICSEARCH_HOST'],
     }
   end
 
