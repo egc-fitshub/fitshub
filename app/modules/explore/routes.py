@@ -90,6 +90,7 @@ def api_search():
             date_to=date_to,
             page=page,
             size=size,
+            community=community,
         )
     except ESConnectionError as exc:
         current_app.logger.warning(
@@ -114,20 +115,6 @@ def api_search():
             exc_info=exc,
         )
         return jsonify({"error": "Unexpected search error"}), 500
-
-    if community:
-        filtered_results = []
-        for result in results:
-            dataset_id = result.get("id")
-            association = CommunityDataSet.query.filter_by(
-                community_id=community,
-                dataset_id=dataset_id,
-                status=CommunityDataSetStatus.ACCEPTED,
-            ).first()
-            if association:
-                filtered_results.append(result)
-        results = filtered_results
-        total = len(results)
 
     return jsonify(
         {

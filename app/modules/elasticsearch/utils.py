@@ -1,4 +1,5 @@
 import logging
+from app.modules.community.models import CommunityDataSetStatus
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,19 @@ def init_search_index():
         print(f"[ERROR init_search_index] {e}")
         raise
 
+def _accepted_community_ids(dataset):
+    if not dataset:
+        return []
+    associations = getattr(dataset, "community_associations", None)
+    if associations is None:
+        return []
+    if hasattr(associations, "all"):
+        associations = associations.all()
+    return [
+        assoc.community_id
+        for assoc in associations
+        if getattr(assoc, "status", None) == CommunityDataSetStatus.ACCEPTED
+    ]
 
 def index_dataset(dataset):
     from app.modules.elasticsearch.services import ElasticsearchService
@@ -27,6 +41,7 @@ def index_dataset(dataset):
     doc = {
         "type": "dataset",
         "id": dataset.id,
+        "community_ids": _accepted_community_ids(dataset),
         "title": dataset.ds_meta_data.title,
         "description": dataset.ds_meta_data.description,
         "publication_doi": dataset.ds_meta_data.publication_doi,
@@ -79,6 +94,7 @@ def index_hubfile(hubfile):
         "content": hubfile.name,
         "fits_model_id": hubfile.fits_model_id,
         "dataset_id": dataset.id,
+        "community_ids": _accepted_community_ids(dataset),
         "dataset_doi": dataset.get_fitshub_doi(),
         "dataset_title": dataset.ds_meta_data.title,
         "checksum": hubfile.checksum,
