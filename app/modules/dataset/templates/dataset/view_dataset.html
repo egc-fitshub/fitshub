@@ -45,7 +45,7 @@
                 <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                     <div class="d-flex">
                         <i data-feather="download" class="center-button-icon" style="margin-top: 0.5px"></i>
-                        <p class="text-secondary" id="download_counter">{{ dataset.get_download_counter() }} {{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
+                        <p class="text-secondary" id="download_counter"><span id="download_counter_value">{{ dataset.get_download_counter() }}</span> &nbsp{{ 'download' if dataset.get_download_counter() == 1 else 'downloads' }}</p>
                     </div>
                 </div>
                 <div class="row mb-4">
