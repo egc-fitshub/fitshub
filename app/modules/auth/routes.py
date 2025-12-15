@@ -142,7 +142,7 @@ def login():
             if user is None or not user.check_password(password):
                 return render_template("auth/login_form.html", form=form, error="Invalid credentials")
 
-            if not user.profile.enabled_two_factor:
+            if user.profile is None or not user.profile.enabled_two_factor:
                 login_user(user, remember=form.remember_me.data)
                 return redirect(url_for("public.index"))
 
