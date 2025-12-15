@@ -243,6 +243,9 @@ class DataSetService(BaseService):
     def get_trending_datasets(self, limit: int = 5, period_days: int = 7):
         return self.repository.trending_datasets(limit, period_days)
 
+    def recommended_datasets(self, reference_dataset_id: int, limit: int = 10):
+        return self.repository.recommended_datasets(reference_dataset_id=reference_dataset_id, limit=limit)
+
 
 class AuthorService(BaseService):
     def __init__(self):

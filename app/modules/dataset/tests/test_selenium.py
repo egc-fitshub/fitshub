@@ -1,13 +1,82 @@
+import datetime
+import json
 import os
 import re
 import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
+
+
+def dump_debug_info(driver, prefix="debug"):
+    """Dump page HTML, element outerHTML, screenshot and console logs to /tmp with timestamp.
+
+    Files are written under /tmp so you can `docker cp` them out of the container.
+    Returns the directory and timestamp used.
+    """
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    out_dir = "/tmp"
+    try:
+        url = driver.current_url
+    except Exception:
+        url = "N/A"
+    try:
+        title = driver.title
+    except Exception:
+        title = "N/A"
+    meta_path = f"{out_dir}/{prefix}_{ts}_meta.txt"
+    try:
+        with open(meta_path, "w", encoding="utf-8") as fh:
+            fh.write(f"URL: {url}\n")
+            fh.write(f"Title: {title}\n")
+    except Exception:
+        pass
+
+    # Page source / outerHTML
+    try:
+        html = driver.execute_script("return document.documentElement.outerHTML;")
+    except Exception:
+        try:
+            html = driver.page_source
+        except Exception:
+            html = ""
+    try:
+        with open(f"{out_dir}/{prefix}_{ts}.html", "w", encoding="utf-8") as fh:
+            fh.write(html)
+    except Exception:
+        pass
+
+    # Specific element outerHTML (download_counter_value)
+    try:
+        elem_html = driver.execute_script(
+            "var e = document.getElementById('download_counter_value'); return e ? e.outerHTML : null;"
+        )
+        with open(f"{out_dir}/{prefix}_{ts}_elem.html", "w", encoding="utf-8") as fh:
+            fh.write(elem_html or "NULL")
+    except Exception:
+        pass
+
+    # Screenshot
+    try:
+        screenshot_path = f"{out_dir}/{prefix}_{ts}.png"
+        driver.save_screenshot(screenshot_path)
+    except Exception:
+        pass
+
+    # Browser console logs (best-effort)
+    try:
+        logs = driver.get_log("browser")
+        with open(f"{out_dir}/{prefix}_{ts}_console.json", "w", encoding="utf-8") as fh:
+            json.dump(logs, fh, indent=2)
+    except Exception:
+        pass
+
+    return out_dir, ts
 
 
 def login(driver, host):
@@ -436,7 +505,7 @@ def test_upload_from_github():
         errors = driver.find_elements(By.ID, "github_error")
         if errors and errors[0].is_displayed():
             warning = errors[0]
-            if "403" in warning.text:
+            if "too many requests" in warning.text:
                 print("GitHub API rate limit reached; skipping GitHub upload test.")
             else:
                 raise AssertionError(f"GitHub error during fetch: {warning.text}")
@@ -500,10 +569,12 @@ def test_upload_from_github_non_existing_repo():
         )
 
         warning_elems = driver.find_elements(By.ID, "github_error")
-        if warning_elems and "403" in warning_elems[0].text:
+        if warning_elems and "too many requests" in warning_elems[0].text:
             print("GitHub API rate limit reached; skipping non-existing GitHub repository upload test.")
         else:
-            assert warning_elems and "404" in warning_elems[0].text, "Expected 404 error for non-existing repository"
+            assert warning_elems and "The FITS file or the repository does not exist." in warning_elems[0].text, (
+                "Expected 404 error for non-existing repository"
+            )
             print("Upload from GitHub non-existing repository test passed!")
 
     finally:
@@ -603,8 +674,8 @@ def test_view_dataset():
         close_driver(driver)
 
 
-def test_download_counter():
-    """Test download counter functionality."""
+def test_download_counter_rendering():
+    """Test download counter rendering."""
     driver = initialize_driver()
 
     try:
@@ -627,7 +698,33 @@ def test_download_counter():
         assert driver.find_element(By.ID, "download_counter") is not None
         assert driver.find_element(By.ID, "download_counter").text is not None
 
-        print("Download counter test passed!")
+        print("Download counter rendering test passed!")
+    finally:
+        close_driver(driver)
+
+
+def test_download_counter_increments():
+    """Test download counter increments after being created."""
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/doi/10.1234/dataset3")
+
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "download_counter_value")))
+        value = driver.find_element(By.ID, "download_counter_value")
+        value = int(value.text)
+
+        assert driver.find_element(By.ID, "download_counter") is not None
+        driver.find_element(By.LINK_TEXT, "Download all (92.25 MB)").click()
+        driver.refresh()
+        wait_for_page_to_load(driver)
+
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "download_counter_value")))
+        new_value = driver.find_element(By.ID, "download_counter_value")
+        new_value = int(new_value.text)
+
+        assert new_value == value + 1, "Download counter did not increment correctly"
+        print("Download counter increment test passed!")
     finally:
         close_driver(driver)
 
@@ -646,9 +743,10 @@ def test_trending_dataset():
         trending_download_counters = len(driver.find_elements(By.ID, "trending_download_counter"))
         titles = len(driver.find_elements(By.ID, "trending_title"))
         authors = len(driver.find_elements(By.ID, "trending_authors"))
+        communities = len(driver.find_elements(By.ID, "trending_communities"))
         fire_icon = driver.find_element(By.ID, "fire_icon")
         assert fire_icon is not None
-        assert trending_datasets == trending_download_counters == titles == authors
+        assert trending_datasets == trending_download_counters == titles == authors == communities
 
         print("Trending datasets test passed!")
     finally:
@@ -691,6 +789,43 @@ def test_badge_is_shown():
         assert html_value.startswith("<a href="), "HTML value is incorrect"
         assert "doi/10.1234/dataset3" in html_value, "HTML value is incorrect"
         print("Badge test passed!")
+
+    finally:
+        close_driver(driver)
+
+
+def test_recommended_datasets():
+    """Test viewing recommended datasets."""
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        #  Login
+        login(driver, host)
+
+        # Ensure we're on the dataset list page, then navigate to a dataset page
+        driver.get(f"{host}/dataset/list")
+        wait_for_page_to_load(driver)
+
+        open_dataset_detail_by_title(driver, host, "Sample dataset 3")
+        driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn").click()
+
+        # If there are recommended datasets, check titles and download counts
+        recommended_datasets = len(driver.find_elements(By.CLASS_NAME, "recommended-item"))
+        if recommended_datasets > 0:
+            recommended_datasets_titles = driver.find_elements(By.CLASS_NAME, "recommended-item-title")
+            recommended_datasets_downloads = driver.find_elements(By.CLASS_NAME, "recommended-item-downloads")
+            assert recommended_datasets_titles is not None
+            assert recommended_datasets_downloads is not None
+            assert len(recommended_datasets_titles) == len(recommended_datasets_downloads) == recommended_datasets
+        # Else, check fallback message is shown
+        else:
+            fallback_message = driver.find_element(By.CLASS_NAME, "recommendation_fallback_message").click()
+            assert fallback_message is not None
+            assert "No recommended datasets." in fallback_message.text
+
+        print("Dataset recommendations passed!")
 
     finally:
         close_driver(driver)

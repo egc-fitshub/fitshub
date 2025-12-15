@@ -1,0 +1,57 @@
+---
+- name: Install MailHog and Elasticsearch
+  hosts: all
+  become: true
+  vars:
+    mailhog_smtp_port: 1025
+    mailhog_web_port: 8025
+    mailhog_image: "albertsai/mailhog:arm64"
+    elasticsearch_version: "8.15.3"
+    elasticsearch_java_opts: "-Xms512m -Xmx512m"
+
+  tasks:
+    - name: Include x86 tasks
+      include_tasks: mailhog_x86.yml
+      when: ansible_architecture == "x86_64"
+
+    - name: Include ARM tasks
+      include_tasks: mailhog_arm.yml
+      when: ansible_architecture == "aarch64"
+
+    - name: Add Elasticsearch repo
+      shell: |
+        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+        echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list
+
+    - name: Install Java and Elasticsearch
+      apt:
+        name: [openjdk-17-jdk, elasticsearch]
+        update_cache: yes
+
+    - name: Setup Elasticsearch
+      shell: |
+        systemctl stop elasticsearch
+        rm -f /etc/elasticsearch/elasticsearch.keystore
+        rm -rf /var/lib/elasticsearch/* /usr/share/elasticsearch/data/*
+        mkdir -p /usr/share/elasticsearch/{data,logs}
+        chown -R elasticsearch:elasticsearch /etc/elasticsearch /var/lib/elasticsearch /usr/share/elasticsearch
+
+    - name: Configure
+      copy:
+        content: |
+          cluster.name: fitshub
+          node.name: node-1
+          discovery.type: single-node
+          xpack.security.enabled: false
+          http.host: 0.0.0.0
+        dest: /etc/elasticsearch/elasticsearch.yml
+
+    - name: Heap and start
+      shell: |
+        tee /etc/elasticsearch/jvm.options.d/heap.options > /dev/null <<'EOF'
+        -Xms512m
+        -Xmx512m
+        EOF
+        systemctl start elasticsearch
+        systemctl enable elasticsearch
+        sleep 15
