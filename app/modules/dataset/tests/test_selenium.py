@@ -1,13 +1,82 @@
+import datetime
+import json
 import os
 import re
 import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
+
+
+def dump_debug_info(driver, prefix="debug"):
+    """Dump page HTML, element outerHTML, screenshot and console logs to /tmp with timestamp.
+
+    Files are written under /tmp so you can `docker cp` them out of the container.
+    Returns the directory and timestamp used.
+    """
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    out_dir = "/tmp"
+    try:
+        url = driver.current_url
+    except Exception:
+        url = "N/A"
+    try:
+        title = driver.title
+    except Exception:
+        title = "N/A"
+    meta_path = f"{out_dir}/{prefix}_{ts}_meta.txt"
+    try:
+        with open(meta_path, "w", encoding="utf-8") as fh:
+            fh.write(f"URL: {url}\n")
+            fh.write(f"Title: {title}\n")
+    except Exception:
+        pass
+
+    # Page source / outerHTML
+    try:
+        html = driver.execute_script("return document.documentElement.outerHTML;")
+    except Exception:
+        try:
+            html = driver.page_source
+        except Exception:
+            html = ""
+    try:
+        with open(f"{out_dir}/{prefix}_{ts}.html", "w", encoding="utf-8") as fh:
+            fh.write(html)
+    except Exception:
+        pass
+
+    # Specific element outerHTML (download_counter_value)
+    try:
+        elem_html = driver.execute_script(
+            "var e = document.getElementById('download_counter_value'); return e ? e.outerHTML : null;"
+        )
+        with open(f"{out_dir}/{prefix}_{ts}_elem.html", "w", encoding="utf-8") as fh:
+            fh.write(elem_html or "NULL")
+    except Exception:
+        pass
+
+    # Screenshot
+    try:
+        screenshot_path = f"{out_dir}/{prefix}_{ts}.png"
+        driver.save_screenshot(screenshot_path)
+    except Exception:
+        pass
+
+    # Browser console logs (best-effort)
+    try:
+        logs = driver.get_log("browser")
+        with open(f"{out_dir}/{prefix}_{ts}_console.json", "w", encoding="utf-8") as fh:
+            json.dump(logs, fh, indent=2)
+    except Exception:
+        pass
+
+    return out_dir, ts
 
 
 def login(driver, host):
@@ -639,41 +708,22 @@ def test_download_counter_increments():
     driver = initialize_driver()
     try:
         host = get_host_for_selenium_testing()
-        driver.get(f"{host}/")
-        driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
-        driver.find_element(By.ID, "email").send_keys("user1@example.com")
-        driver.find_element(By.ID, "password").send_keys("1234")
-        driver.find_element(By.ID, "submit").click()
-        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)").click()
-        driver.find_element(By.ID, "title").click()
-        driver.find_element(By.ID, "title").send_keys("Test Download Counter Dataset")
-        driver.find_element(By.ID, "desc").click()
-        driver.find_element(By.ID, "desc").send_keys("This is a test for download counters")
+        driver.get(f"{host}/doi/10.1234/dataset3")
 
-        # Obtén las rutas absolutas de los archivos
-        file1_path = os.path.abspath("app/modules/dataset/fits_examples/file1.fits")
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "download_counter_value")))
+        value = driver.find_element(By.ID, "download_counter_value")
+        value = int(value.text)
 
-        # Subir el primer archivo
-        dropzone = wait_for_element(driver, By.CLASS_NAME, "dz-hidden-input")
-        dropzone.send_keys(file1_path)
-        wait_for_page_to_load(driver)
-        upload_agree_and_submit(driver)
-
-        assert driver.current_url == f"{host}/dataset/list", "Test failed!"
-
-        driver.find_element(By.LINK_TEXT, "Test Download Counter Dataset").click()
-        driver.find_element(By.ID, "download_counter").click()
         assert driver.find_element(By.ID, "download_counter") is not None
-        assert driver.find_element(By.ID, "download_counter").text == "0 downloads"
-        driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) > .card-body:nth-child(1)").click()
-        driver.find_element(By.CSS_SELECTOR, ".d-flex > .d-flex").click()
-        driver.find_element(By.ID, "download_counter").click()
-        driver.find_element(By.LINK_TEXT, "Download all (241.88 KB)").click()
+        driver.find_element(By.LINK_TEXT, "Download all (92.25 MB)").click()
         driver.refresh()
         wait_for_page_to_load(driver)
 
-        assert driver.find_element(By.ID, "download_counter").text == "1 download"
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "download_counter_value")))
+        new_value = driver.find_element(By.ID, "download_counter_value")
+        new_value = int(new_value.text)
 
+        assert new_value == value + 1, "Download counter did not increment correctly"
         print("Download counter increment test passed!")
     finally:
         close_driver(driver)

@@ -6,3 +6,4 @@
 - import_playbook: 05_mailhog.yml
 - import_playbook: 06_run_app.yml
 - import_playbook: 07_utilities.yml
+- import_playbook: 08_elasticsearch.yml

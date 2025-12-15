@@ -33,9 +33,16 @@ end
 
 
 Vagrant.configure("2") do |config|
+  host_arch = `uname -m`.strip
 
-  # Choose a base box
-  config.vm.box = "ubuntu/jammy64"
+  if host_arch == "arm64" || host_arch == "aarch64"
+    config.vm.box = "bento/ubuntu-22.04"
+    config.vm.provider "virtualbox" do |vb|
+      vb.customize ["modifyvm", :id, "--cpu-profile", "cortex-a57"]
+    end
+  else
+    config.vm.box = "ubuntu/jammy64"
+  end
   config.vm.boot_timeout = 600
   
   # Network configuration
@@ -43,6 +50,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8089, host: 8089
   config.vm.network "forwarded_port", guest: 1025, host: 1025
   config.vm.network "forwarded_port", guest: 8025, host: 8025
+  config.vm.network "forwarded_port", guest: 9200, host: 9200
 
   # Synced folders
   config.vm.synced_folder "../", "/vagrant"
@@ -69,7 +77,8 @@ Vagrant.configure("2") do |config|
       mail_debug: ENV['mail_debug'],
       mail_username: ENV['mail_username'],
       mail_password: ENV['mail_password'],
-      mail_default_sender: ENV['mail_default_sender']
+      mail_default_sender: ENV['mail_default_sender'],
+      elasticsearch_host: ENV['ELASTICSEARCH_HOST'],
     }
   end
 

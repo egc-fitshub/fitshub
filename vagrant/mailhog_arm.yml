@@ -1,0 +1,54 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install prerequisites for Docker
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+
+- name: Ensure vagrant user can run Docker
+  user:
+    name: vagrant
+    groups: docker
+    append: yes
+
+- name: Pull MailHog Docker image (ARM64)
+  community.docker.docker_image:
+    name: "{{ mailhog_image }}"
+    source: pull
+
+- name: Run MailHog container
+  community.docker.docker_container:
+    name: mailhog
+    image: "{{ mailhog_image }}"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ mailhog_smtp_port }}:1025"
+      - "{{ mailhog_web_port }}:8025"
