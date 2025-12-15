@@ -225,4 +225,3 @@ The available subcommands are the following:
 
 
   - **`--remove-volumes`**: Used in conjunction with `--stop`, removes the volumes as when stopping the containers. If `--stop` is not specified, this argument will have no effect.
-  
