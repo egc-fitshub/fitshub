@@ -53,5 +53,5 @@ def my_profile():
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count,
-        fa_status=fa_status
+        fa_status=fa_status,
     )
