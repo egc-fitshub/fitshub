@@ -16,10 +16,13 @@
                 <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Profile Information</h5>
             </div>
             <div class="card-body">
+                <div class="role-container"></div>
+                <span class="badge bg-info text-dark mb-3"><i class="fa fa-user-shield"></i> {{ user.role.name}}</span>
                 <p class="card-text h5"><i class="fa fa-user"></i> <strong>Name:</strong> {{user_profile.name}}</p>
                 <p class="card-text h5"><i class="fa fa-user-circle"></i> <strong>Surname:</strong> {{user_profile.surname}}</p>
                 <p class="card-text h5"><i class="fa fa-building"></i> <strong>Affiliation:</strong> {{user_profile.affiliation}}</p>
                 <p class="card-text h5"><i class="fa fa-id-card"></i> <strong>Orcid:</strong> {{user_profile.orcid}}</p>
+                <p class=" card-text h5"><i class="fa fa-shield-alt"></i> <strong>Two-Factor Authentication:</strong> {{ fa_status }}</p>
                 <p class="card-text h5"><i class="fa fa-envelope"></i> <strong>Email:</strong> {{user.email}}</p>
                 <p class="card-text h5"><i class="fa fa-database"></i> <strong>Uploaded datasets:</strong> {{ total_datasets }} datasets</p>
             </div>

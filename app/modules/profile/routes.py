@@ -44,6 +44,7 @@ def my_profile():
     total_datasets_count = db.session.query(DataSet).filter(DataSet.user_id == current_user.id).count()
 
     print(user_datasets_pagination.items)
+    fa_status = "Enabled" if current_user.profile.enabled_two_factor else "Disabled"
 
     return render_template(
         "profile/summary.html",
@@ -52,4 +53,5 @@ def my_profile():
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count,
+        fa_status=fa_status,
     )
